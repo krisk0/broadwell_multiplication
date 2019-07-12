@@ -51,4 +51,5 @@ main() {
     _32::test();
     
     printf("Test passed\n");
+    return 0;
 }

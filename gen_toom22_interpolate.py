@@ -324,23 +324,6 @@ def spread_carry_code(src, var_no):
     return src.replace('@r', var).\
             replace('@done', 'done' + no).replace('@again', 'again' + no)
 
-g_amp_save_pattern = re.compile(r'@save (\S+)\b')
-def replace_amp_save(src):
-    while 1:
-        m = re.search(g_amp_save_pattern, src)
-        if not m:
-            return src
-        src = src.replace(m.group(0), 'movq %s, -8(%%rsp)' % m.group(1))
-
-g_amp_restore_pattern = re.compile(r'@restore (\S+)\b')
-def replace_amp_restore(src):
-    while 1:
-        m = re.search(g_amp_restore_pattern, src)
-        if not m:
-            return src
-        src = src.replace(m.group(0), 'movq -8(%rsp), ' + m.group(1))
-
-g_ofs_pattern = re.compile(r' \+([0-9]+)\(')
 g_xmm_restore_pattern = re.compile(r'\!restore w(.)')
 g_spread_carry_pattern = re.compile(r'--spread_carry\((.+)\)')
 def do_16_s(o):
@@ -368,16 +351,11 @@ def do_16_s(o):
     for i in range(len(protected_regs)):
         register_map['w%X' % (7 + i)] = protected_regs[i]
     register_map = dict([(k,'%' + v) for k,v in register_map.items()])
-    # replace +x( by 8*x(
-    while 1:
-        m = re.search(g_ofs_pattern, code)
-        if not m:
-            break
-        n = int(m.group(1)) * 8
-        code = code.replace(m.group(0), ' %s(' % n)
+    # fix offsets
+    code = P.replace_positive_offsets(code)
     # replace '@save wY' by 'store below sp' instructon, '@restore' by ...
-    code = replace_amp_save(code)
-    code = replace_amp_restore(code)
+    code = P.replace_amp_save(code)
+    code = P.replace_amp_restore(code)
     while 1:
         m = re.search(g_xmm_restore_pattern, code)
         if not m:

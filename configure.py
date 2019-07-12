@@ -12,6 +12,8 @@ g_opt = {
         'python': sys.executable,
         }
 
+g_always_used_script = 'gen_mul4.py'
+
 g_asm_source_pattern = re.compile(r'.+ (\S+)\.s\b')
 def s_to_o(src):
     '''
@@ -28,6 +30,15 @@ def s_to_o(src):
         m = m.group(1)
         g_s_to_o.add(m)
         src = src.replace(m + '.s', '$o/' + m + '.o')
+
+def append_gen_mul4(x):
+    '''
+    append g_always_used_script to x, if necessary
+    '''
+    y = x.split(' ')
+    if y[-1] == g_always_used_script:
+        return x
+    return x + ' ' + g_always_used_script
 
 g_expand_0_pattern = re.compile(r'(\S+): \b(\S+)\b$')
 g_expand_1_pattern = re.compile(r'(\S+): \b(\S+)\b \[(.+)\]')
@@ -59,14 +70,14 @@ def expand_ampersand(src):
     '''
     m = g_expand_0_pattern.match(src)
     if m:
-        return ['build $o/%s: create_c_code gen_%s.py' % m.groups()]
+        return [append_gen_mul4('build $o/%s: create_c_code gen_%s.py' % m.groups())]
     m = g_expand_1_pattern.match(src)
     if m:
         tgt = []
         for x in m.group(3).split(' '):
             r = m.group(1).replace('@', x)
-            tgt += ['build $o/%s: create_c_code gen_%s.py' % (r, m.group(2)),
-                    '    extra = %s' % x]
+            tgt += [append_gen_mul4('build $o/%s: create_c_code gen_%s.py' % \
+                    (r, m.group(2))), '    extra = %s' % x]
         return tgt
     m = g_expand_2_pattern.match(src)
     if m:

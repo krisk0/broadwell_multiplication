@@ -36,14 +36,19 @@ subtract_lesser_from_bigger_n(mp_ptr tgt, mp_srcptr a, mp_size_t n, uint16_t loo
     return less;
 }
 
+extern "C" {
 mp_limb_t
-mpn_add_2_4arg(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n, uint16_t l) {
+mpn_add_2_4arg(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n, uint16_t l);
+}
+
+// ?slow? version of mpn_add_2_4arg(). TODO: benchmark it
+mp_limb_t
+mpn_add_2_4arg_slow(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n, uint16_t l) {
     mp_limb_t result = 0;
     // mpn_add_4k_inplace() destroys its arguments, so make copies
     auto l_copy = l;
     auto tgt_copy = tgt;
     auto b_p = ab_p + n;
-    // TODO: it should be faster to add a and b simultaneously with adcx/adox
     mpn_add_4k_inplace(result, tgt, ab_p, l);
     mpn_add_4k_inplace(result, tgt_copy, b_p, l_copy);
     return result;
@@ -57,19 +62,7 @@ subtract_in_place_then_add(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n, uint16_t l) 
     auto tgt_copy = tgt;
     auto b_p = ab_p + n;
     mpn_sub_4k_inplace(result, tgt, ab_p, l);
-    #if 0
-        printf("After subtraction in subtract_in_place_then_add(): \n" PRINTF_FORMAT " ",
-                result);
-        dump_number(tgt_copy, n);
-        auto tgt_2copy = tgt_copy;
-    #endif
     mpn_add_4k_inplace(result, tgt_copy, b_p, l_copy);
-    // reduce result modulo 2
-    #if 0
-        printf("subtract_in_place_then_add() result: \n" PRINTF_FORMAT,
-                result & 1);
-        dump_number(tgt_2copy, n);
-    #endif
     // reduce result modulo 2
     return result & 1;
 }

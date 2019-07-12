@@ -21,6 +21,7 @@ vmovdqu mem, ymm0             p23
 vmovdqu ymm0, mem             p237 p4
 vpxor xmm0, xmm0              p015
 
+parameters: rdi, rsi, rdx, rcx, r8, r9
 general purpose registers: rax, rbx, rcx, rdx, rbp, rsi, rdi, rsp and r8-r15
 scratch registers: rax, rcx, rdx, rsi, rdi, r8-r11, ymm0-ymm15
 
@@ -383,6 +384,55 @@ def write_cpp_code(o, macro_body, info):
         write_macro_code(o, macro_body, info)
     if info.has_key('subroutine_name'):
         write_subroutine(o, info)
+
+g_amp_save_pattern = re.compile(r'@save (\S+)\b')
+def replace_amp_save(src):
+    while 1:
+        m = re.search(g_amp_save_pattern, src)
+        if not m:
+            return src
+        src = src.replace(m.group(0), 'movq %s, -8(%%rsp)' % m.group(1))
+
+g_amp_restore_pattern = re.compile(r'@restore (\S+)\b')
+def replace_amp_restore(src):
+    while 1:
+        m = re.search(g_amp_restore_pattern, src)
+        if not m:
+            return src
+        src = src.replace(m.group(0), 'movq -8(%rsp), ' + m.group(1))
+
+g_positive_ofs_pattern = re.compile(r' \+([0-9]+)\(')
+def replace_positive_offsets(code):
+    '''
+    replace +x( by 8*x(
+    '''
+    while 1:
+        m = re.search(g_positive_ofs_pattern, code)
+        if not m:
+            return code
+        n = int(m.group(1)) * 8
+        code = code.replace(m.group(0), ' %s(' % n)
+
+g_negative_ofs_pattern = re.compile(r' \-([0-9]+)\(')
+def replace_negative_offsets(code):
+    '''
+    replace +x( by 8*x(
+    '''
+    minus_replacer = 'MiNuS'
+    while 1:
+        m = re.search(g_negative_ofs_pattern, code)
+        if not m:
+            return code.replace(minus_replacer, '-')
+        n = int(m.group(1)) * 8
+        code = code.replace(m.group(0), ' %s%s(' % (minus_replacer, n))
+
+def handle_dec(dec, code):
+    patt = re.compile(dec + r' \b(.+)\b')
+    while 1:
+        m = re.search(patt, code)
+        if not m:
+            return code
+        code = code.replace(m.group(0), 'lea -1(@), @'.replace('@', m.group(1)))
 
 if __name__ == '__main__':
     # create one of two files: .h or .s
