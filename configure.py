@@ -5,7 +5,7 @@ if (len(sys.argv) == 2) and (sys.argv[1] == 'clean'):
     sys.exit(0)
 
 g_opt = {
-        'flags': '-O3 -march=broadwell -fomit-frame-pointer -static -fmax-errors=3',
+        'flags': '-O3 -march=broadwell -fomit-frame-pointer -static -fmax-errors=3 -std=gnu++17',
         'c_compiler': 'gcc',
         'cpp_compiler': 'g++',
         'gmp_location': '-lgmp',
@@ -171,6 +171,7 @@ for v in g_vv:
     if u:
         g_opt[v] = u
 
+# magic headers
 g_int_h_pattern = re.compile(r'.+\-.+\.h')
 g_int_h = sorted([v for v in os.listdir('.') if g_int_h_pattern.match(v)])
 g_int_h = ' '.join(g_int_h)

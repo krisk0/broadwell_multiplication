@@ -1,4 +1,4 @@
-// test subroutine toom22_deg2_broadwell()
+// test subroutine toom22_deg2_broadwell() or toom22_deg2_broadwell_n<>()
 
 #include <cstdint>
 
@@ -19,6 +19,11 @@ INT g_b[MAX_N];
 INT g_result_good[2 * MAX_N];
 INT g_result_baad[2 * MAX_N];
 
+#if TEMPLATE
+    #define BAAD(a, b, c, d) toom22_deg2_broadwell_n<SIZE>(a, b, c, d)
+#else
+    #define BAAD(a, b, c, d) toom22_deg2_broadwell(a, b, c, d, SIZE)
+#endif
 
 #define NS(x)                                                                        \
     namespace _ ## x {                                                               \
@@ -29,7 +34,7 @@ INT g_result_baad[2 * MAX_N];
     }                                                                                \
                                                                                      \
     void call_baad() {                                                               \
-        toom22_deg2_broadwell(g_result_baad + 0, g_scratch, g_a + 0, g_b + 0, SIZE); \
+        BAAD(g_result_baad + 0, g_scratch, g_a + 0, g_b + 0);                        \
     }
 
 NS(32)
@@ -49,7 +54,9 @@ main() {
     g_scratch = (INT*)malloc(sizeof(INT) * toom22_generic_itch(MAX_N));
 
     _32::test();
-    
+    _64::test();
+    _128::test();
+
     printf("Test passed\n");
     return 0;
 }

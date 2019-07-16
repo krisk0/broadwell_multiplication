@@ -12,6 +12,7 @@ uint64_t g_scratch[256]; // TODO: use posix_memalign() to ensure no page boundar
 #define MULN(x, y, z) __gmpn_mul(x, y, SIZE, z, SIZE)
 #define TOOM_GMP(x, y, z) __gmpn_toom22_mul(x, y, SIZE, z, SIZE, g_scratch + 0)
 #define TOOM_CUSTOM(x, y, z) toom22_deg2_broadwell(x, g_scratch + 0, y, z, SIZE)
+#define TOOM_CUSTOM_T(x, y, z) toom22_deg2_broadwell_n<SIZE>(x, g_scratch + 0, y, z)
 #define VOLUME (1000*1000*20)
 
 #define HELLO
