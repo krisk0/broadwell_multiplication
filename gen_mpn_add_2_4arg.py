@@ -9,7 +9,7 @@ length of numbers is 4 + 4 * lc
 
 vv: 128-bit scratch register
 
-pointers tt, aa, bb destroyed
+all 4 registers used as input parameters modified
 """
 
 g_code = '''
