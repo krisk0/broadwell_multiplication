@@ -75,6 +75,8 @@ mpn_add_4k_inplace.h: mpn_add_4k_inplace
 
 mpn_sub_4k_inplace.h: mpn_sub_4k_inplace
 
+mpn_sub_n_small.h: mpn_sub_n_small
+
 mpn_sub_@.h: mpn_sub [4 6 8]
 
 mpn_add_2_4arg.s: mpn_add_2_4arg
@@ -92,7 +94,8 @@ toom22_mul_16.h: mpn_le_8.h mpn_sub_8.h subtract_lesser_from_bigger_8.h $
         mul8_store_once.h toom22_interpolate_16.h toom22_mul_16_raw.h
 
 toom22_generic_aux.h: mpn_less_3arg.h mpn_sub_4k.h mpn_add_4k_inplace.h $
-		mpn_sub_4k_inplace.h
+		mpn_sub_4k_inplace.h mpn_sub_6.h mpn_le_6.h subtract_lesser_from_bigger_6.h $
+        mpn_sub_n_small.h
 
 benchm8_basecase.exe: benchmark8.cpp @int_h0_plain benchmark-internal.c $
         $o/mul8_store_once.h [+flags -DSUBR=BASECASE]

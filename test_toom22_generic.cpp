@@ -1,9 +1,10 @@
 /*
 test subroutines
-* toom22_deg2_broadwell()
-* toom22_deg2_broadwell_n<>()
-* toom22_12_broadwell()
-* toom22_12_broadwell_n<>()
+ * toom22_deg2_broadwell()
+ * toom22_deg2_broadwell_n<>()
+ * toom22_12_broadwell()
+ * toom22_12e_broadwell()
+ * toom22_12_broadwell_n<>()
 */
 
 #include <cstdint>
@@ -34,7 +35,7 @@ INT g_result_baad[2 * MAX_N];
 
 #define NS(x)                                                                        \
     namespace _ ## x {                                                               \
-    static constexpr uint16_t SIZE = x;                                              \
+    constexpr uint16_t SIZE = x;                                                     \
                                                                                      \
     void call_good() {                                                               \
         mpn_mul_n(g_result_good + 0, g_a + 0, g_b + 0, SIZE);                        \
@@ -56,26 +57,42 @@ NS(128)
 #include "test-toom22_generic-internal.h"
 }
 
-#undef BAAD
-#if TEMPLATE
-    #define BAAD(a, b, c, d) toom22_12_broadwell_n<SIZE>(a, b, c, d)
-#else
-    #define BAAD(a, b, c, d) toom22_12_broadwell(a, b, c, d, SIZE)
-#endif
+template <uint16_t N>
+void
+toom22_12(mp_ptr a, mp_ptr b, mp_srcptr c, mp_srcptr d) {
+    #if TEMPLATE
+        toom22_12_broadwell_n<N>(a, b, c, d);
+    #else
+        if constexpr (N == 12) {
+            toom22_12e_broadwell(a, b, c, d);
+        } else {
+            toom22_12_broadwell(a, b, c, d, N);
+        }
+    #endif
+}
 
 #define NS_12(x)                                                                     \
     namespace _ ## x {                                                               \
-    static constexpr uint16_t SIZE = x;                                              \
+    constexpr uint16_t SIZE = x;                                                     \
                                                                                      \
     void call_good() {                                                               \
         mpn_mul_n(g_result_good + 0, g_a + 0, g_b + 0, SIZE);                        \
     }                                                                                \
                                                                                      \
     void call_baad() {                                                               \
-        BAAD(g_result_baad + 0, g_scratch, g_a + 0, g_b + 0);                        \
+        toom22_12<SIZE>(g_result_baad + 0, g_scratch, g_a + 0, g_b + 0);             \
     }
 
+NS_12(12)
+#include "test-toom22_generic-internal.h"
+}
 NS_12(24)
+#include "test-toom22_generic-internal.h"
+}
+NS_12(48)
+#include "test-toom22_generic-internal.h"
+}
+NS_12(96)
 #include "test-toom22_generic-internal.h"
 }
 
@@ -88,11 +105,12 @@ main() {
     _128::test();
     free(g_scratch);
 
-    #if 0
-    g_scratch = (INT*)malloc(sizeof(INT) * toom22_12_itch(48));
+    g_scratch = (INT*)malloc(sizeof(INT) * toom22_12_itch(96));
+    _12::test();
     _24::test();
+    _48::test();
+    _96::test();
     free(g_scratch);
-    #endif
 
     printf("Test passed\n");
     return 0;

@@ -12,8 +12,9 @@ Low-level big-integer arithmetic subroutines in C/C++/asm, including `mul8_broad
 python2 configure.py
 ninja
 automagic/test4.exe
-automagic/benchm8_custom.exe
+automagic/benchm8_custom.exe 0
 ```
+, where 0 is randomness generator seed.
 
 # Benchmarks
 
