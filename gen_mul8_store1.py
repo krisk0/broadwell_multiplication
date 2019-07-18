@@ -2,8 +2,11 @@
       rdi -< rp
       rsi -< up
 w7 -< rcx -< vp
-rbx, rbp, r12, r13, r14, r15         saved
+rbx, rbp, r12, r13, r14, r15
  wA   w9   w8   w6   w5   w4
+
+w5 w6 w8 w9 wA saved
+
 @save ... -- store in stack (push)
 !save ... -- store in xmm. (vmovq)
 """
@@ -11,7 +14,7 @@ rbx, rbp, r12, r13, r14, r15         saved
 g_mul1='''
 movq (w7), dd
 @save w5
-vpxor vZ, vZ, vZ               | vZ := 0
+vpxor zV, zV, zV               | zV := 0
 vmovdqu (w7), jV               | ready v[0]...v[3]
 mulx (up), w1, w0
 movq w1, (rp)                  | w0
@@ -35,13 +38,13 @@ mulx 48(up), w5, w8            | w8 w5+w6' w4 w3 w2 w1 w0
 adcq w6, w5                    | w8' w5 w4 w3 w2 w1 w0
 |--
 mulx 56(up), w6, w7            | w7 w6+w8' w5 w4 w3 w2 w1 w0
-vpextrq $0x1,128_jV, dd        | ready v[1]
+vpextrq $0x1, 128_jV, dd       | ready v[1]
 adcq w8, w6                    | w7' w6 w5 w4 w3 w2 w1 w0
 adcq $0, w7                    | w7 w6 w5 w4 w3 w2 w1 w0
 '''
 
 """
-! vZ := 0
+! zV := 0
 ! wA := 0
 ! dd := v[i]
 ! w7" w6 w5 w4 w3 w2 w1 w0
@@ -57,8 +60,8 @@ vperm2i128 $0x81,jV,jV,jV      | ready v[i+1], i odd
 mulx 8(up), q8, qA             | q7 q6 q5 q4 q3 q2+qA q1+q8+q9' q0
 adcx q9, q1                    | q7 q6 q5 q4 q3 q2+qA' q1+q8 q0
 movq q0, @i(rp)                | q7 q6 q5 q4 q3 q2+qA' q1+q8
-mulx 16(up), q0, q9            | q7 q6 q5 q4 q3+q9 q0+q2+qA'" q1
-adox q8, q1                    | q7 q6 q5 q4 q3 q2+qA'" q1
+mulx 16(up), q0, q9            | q7 q6 q5 q4 q3+q9 q0+q2+qA' q1+q8
+adox q8, q1                    | q7 q6 q5 q4 q3+q9 q0+q2+qA'" q1
 adcx qA, q0                    | q7 q6 q5 q4 q3+q9' q0+q2" q1
 mulx 24(up), q8, qA            | q7 q6 q5 q4+qA q3+q8+q9' q0+q2" q1
 adox q2, q0                    | q7 q6 q5 q4+qA q3+q8+q9'" q0 q1
@@ -74,7 +77,7 @@ adox q8, q5                    | q7+q9 q4+q6+qA'" q5 q2 q3 q0 q1
 adcx qA, q6                    | q7+q9' q4+q6" q5 q2 q3 q0 q1
 mulx 56(up), q8, qA            | qA q7+q8+q9' q4+q6" q5 q2 q3 q0 q1
 adox q6, q4                    | qA q7+q8+q9'" q4 q5 q2 q3 q0 q1
-movq vZ, q6                    | q6 := 0
+movq zV, q6                    | q6 := 0
 adcx q9, q7                    | qA' q7+q8" q4 q5 q2 q3 q0 q1
 movq 128_jV, dd                | dd := v[i+1], i odd
 adox q8, q7                    | qA'" q7 q4 q5 q2 q3 q0 q1
@@ -114,7 +117,7 @@ mulx 48(up), q4, q9            | q7+q9 q4+q6+qA' q5+q8"
 adox q8, q5                    | q7+q9 q4+q6+qA'" q5
 adcx qA, q6                    | q7+q9' q4+q6" q5
 mulx 56(up), q8, qA            | qA q7+q8+q9' q4+q6" q5
-movq vZ, dd
+movq zV, dd
 movq q5, 96(rp)                | qA q7+q8+q9' q4+q6"
 !restore q5
 adox q6, q4                    | qA q7+q8+q9'" q4
@@ -151,29 +154,6 @@ sys.dont_write_bytecode = 1
 
 import gen_mul4 as P
 
-def cutoff_comments(s):
-    result = [P.strip_off_comment(x) for x in s.split('\n')]
-    return [x for x in result if x]
-
-g_save_pattern = re.compile('.save w(.)')
-def save_registers(xx):
-    # returns dictionary that lists saved registers
-    n = len(xx)
-    result = {}
-    for i in range(n):
-        x = xx[i]
-        m = g_save_pattern.match(x)
-        if not m:
-            continue
-        m = m.group(1)
-        if x[0] == '@':
-            xx[i] = 'push w' + m
-            result['w' + m] = None
-        else:
-            xx[i] = 'movq w@, s@'.replace('@', m)
-            result['w' + m] = 's' + m
-    return result
-
 def mul1_code(v_index, src, perm):
     tgt = []
     for l in src:
@@ -191,7 +171,7 @@ def mul1_code(v_index, src, perm):
         k = '%X' % i
         tgt = re.sub(r'\bq%s\b' % k, 'w' + j, tgt)
     if v_index >= 3:
-        # v comes from vS, not jV
+        # v comes from sV, not jV
         tgt = re.sub(r'\bjV\b', 'sV', tgt)
         tgt = re.sub(r'\b128_jV\b', '128_sV', tgt)
     if (v_index % 2 == 0):
@@ -214,11 +194,11 @@ def replace_wi(src, mapping):
         src = re.sub(r'\bw%X\b' % k, '%%' + v, src)
     return src.rstrip()
 
-def replace_ymm(src, mapping):
+def replace_ymm(src, limit, mapping):
     src += ' '
     for k,v in mapping.items():
-        if v >= 14:
-            # only two 256-bit registers used
+        if v >= limit:
+            # only few 256-bit registers used
             src = re.sub(r'\b128_%s\b' % k, '%%' + ('xmm%s' % v), src)
             src = re.sub(r'\b%s\b' % k, '%%' + ('ymm%s' % v), src)
         else:
@@ -226,7 +206,7 @@ def replace_ymm(src, mapping):
     return src.rstrip()
 
 def cook_asm(out, code, save):
-    ymm_map = {'jV': 15, 'sV': 14, 'vZ': 13}
+    ymm_map = {'jV': 15, 'sV': 14, 'zV': 13}
     append_save_registers(ymm_map, 12, save.values())
     scratch = ['%%ymm%s' % i for i in ymm_map.values()]
     rr_map = {7: 'rcx', 10: 'rbx', 9: 'rbp', 8: 'r12', 6: 'r13', 5: 'r14'}
@@ -234,14 +214,14 @@ def cook_asm(out, code, save):
     scratch += ['%' + i for i in scratch_map.values()]
     rr_map.update(scratch_map)
     code = replace_wi(code, rr_map)
-    code = replace_ymm(code, ymm_map)
+    code = replace_ymm(code, 14, ymm_map)
     code = re.sub(r'\bdd\b', '%%rdx', code)
     for v in 'up', 'rp':
         code = re.sub(r'\b%s\b' % v, '%%[%s]' % v, code)
     data = {
             'input': ['up S u_p', 'rp D r_p'],
             'input_output': ['vp +c v_p'],
-            'clobber': 'cc memory rdx ' + ' '.join(scratch),
+            'clobber': 'cc memory %rdx ' + ' '.join(scratch),
             'macro_name': 'mul8_broadwell_store_once',
             'macro_parameters': 'r_p u_p v_p',
             'source': os.path.basename(sys.argv[0]),
@@ -254,12 +234,11 @@ def cook_asm(out, code, save):
     out.write('    }\n')
 
 def do_it(out):
-    mul1 = cutoff_comments(g_mul1)
-    muladd = cutoff_comments(g_muladd)
-    tail = cutoff_comments(g_tail)
+    meat = P.cutoff_comments(g_mul1)
+    muladd = P.cutoff_comments(g_muladd)
+    tail = P.cutoff_comments(g_tail)
 
-    xmm_save = save_registers(mul1)
-    meat = mul1[:]
+    xmm_save = P.save_registers(meat)
 
     permutation = list(range(11))
     s = [int(y) for y in g_permutation.split(' ')]
@@ -278,5 +257,6 @@ def do_it(out):
     meat += tail.split('\n')
     cook_asm(out, '\n'.join(meat), xmm_save)
 
-with open(sys.argv[1], 'wb') as g_out:
-    do_it(g_out)
+if __name__ == '__main__':
+    with open(sys.argv[1], 'wb') as g_out:
+        do_it(g_out)

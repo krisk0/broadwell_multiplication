@@ -116,6 +116,21 @@ movq w2, +16(rp)
 movq w3, +24(rp)
 '''
 
+g_tail_6 = '''
+sbbq 16(vp), w2
+sbbq 24(vp), w3                      | w3 w2 w1 w0
+movq w0, (rp)
+movq w1, 8(rp)                       | w3 w2
+movq 32(up), w0
+movq 40(up), w1                      | (w1) (w0) w3 w2
+movq w2, 16(rp)
+movq w3, 24(rp)                      | (w1) (w0)
+sbbq 32(vp), w0
+sbbq 40(vp), w1
+movq w0, 32(rp)
+movq w1, 40(rp)
+'''
+
 g_ofs_patt = re.compile(r' \+([0-9]+)(\(.+\))')
 def update_ofs_slave(src, offset):
     while 1:
@@ -131,9 +146,19 @@ def update_ofs(src, offset):
         tgt.append(update_ofs_slave(l, offset))
     return '\n'.join(tgt)
 
+def do_it_6(tgt, data):
+    code = (g_code_0 + g_tail_6).strip()
+    all_vars = P.extract_int_vars_name(data['scratch']) + \
+            P.extract_int_vars_name(data['input'])
+    for v in all_vars:
+        code = re.sub(r'\b%s\b' % v, '%%[%s]' % v, code)
+
+    vars_type = dict((v, '') for v in P.extract_ext_vars_name(data['scratch']))
+    data['vars_type'] = vars_type
+
+    P.write_cpp_code(tgt, code, data)
+
 def do_it(tgt):
-    # TODO: call mpn_sub_n() for big n
-    assert g_n % 4 == 0
     data = {
             'macro_name': 'mpn_sub%s' % g_n,
             'input': ['rp r_p', 'up u_p', 'vp v_p'],
@@ -145,6 +170,11 @@ def do_it(tgt):
             'code_language': 'asm',
             'default_type': 'uint64_t',
             }
+    if g_n == 6:
+        do_it_6(tgt, data)
+        return
+    # TODO: call mpn_sub_n() for big n
+    assert g_n % 4 == 0
     loop_count = g_n / 4 - 1
     code = g_code_0.strip()
     ofs = 0

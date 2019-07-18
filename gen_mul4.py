@@ -214,6 +214,10 @@ def strip_off_comment(i):
         i = i[:p]
     return i.strip()
 
+def cutoff_comments(s):
+    result = [strip_off_comment(x) for x in s.split('\n')]
+    return [x for x in result if x]
+
 def define_asm_vars(i):
     try:
         d = i['vars_type']
@@ -434,14 +438,33 @@ def handle_dec(dec, code):
             return code
         code = code.replace(m.group(0), 'lea -1(@), @'.replace('@', m.group(1)))
 
+g_save_pattern = re.compile('.save w(.)')
+def save_registers(xx):
+    # returns dictionary that lists saved registers
+    n = len(xx)
+    result = {}
+    for i in range(n):
+        x = xx[i]
+        m = g_save_pattern.match(x)
+        if not m:
+            continue
+        m = m.group(1)
+        if x[0] == '@':
+            xx[i] = 'push w' + m
+            result['w' + m] = None
+        else:
+            xx[i] = 'movq w@, s@'.replace('@', m)
+            result['w' + m] = 's' + m
+    return result
+
 if __name__ == '__main__':
-    # create one of two files: .h or .s
     g_out = sys.argv[1]
     try:
         os.makedirs(os.path.dirname(g_out))
     except:
         pass
     
+    # create one of two files: .h or .s
     if g_out[-1] == 'h':
         with open(g_out, 'wb') as g_file:
             do_it(g_file, g_code)

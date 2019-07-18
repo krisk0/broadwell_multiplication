@@ -19,6 +19,25 @@ toom22_generic_itch(mp_size_t w) {
     return ((1 << (k+1)) - 1) << 4;
 }
 
+/*
+returns scratch size for n valid for toom22_12_broadwell()
+
+scratch size for 12 * 2**k is 12 * (2**(k + 1) - 1)
+*/
+int
+toom22_12_itch(mp_size_t n) {
+    int k = 62 - _lzcnt_u64(n);
+    mp_size_t m = 3 << k;
+    if (m != n) {
+        return -1;
+    }
+    k -= 2;
+    if (k < 0) {
+        return 0;
+    }
+    return 12 * ((1 << (k+1)) - 1);
+}
+
 // memory layout: a+0 a+1 ... a+n-1 b+0 b+1 ... a+n-1
 uint8_t
 subtract_lesser_from_bigger_n(mp_ptr tgt, mp_srcptr a, mp_size_t n, uint16_t loops) {
@@ -116,7 +135,7 @@ memory layout:
                b(n-1) ... b(1) b(0) a(n-1) ... a(0)
                                                  ^
                                                  |
-                                                ap
+                                               ab_p
 
 g := n-word number at g_p
 
@@ -148,6 +167,63 @@ toom22_deg2_interpolate(mp_ptr ab_p, mp_ptr g_p, uint8_t sign, mp_size_t n) {
     mpn_add_n_plus_1(ab_p + (n / 2), t_senior, g_p, l);
 }
 
+#if defined(mul6_broadwell_wr)
+void
+toom22_12e_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
+    #if 0
+    auto sign = subtract_lesser_from_bigger_6(rp, ap);                // a0-a1
+    sign ^= subtract_lesser_from_bigger_6(rp + h, bp);                // b0-b1
+    mul6_broadwell_wr(scratch, rp, rp + h);
+    mul6_broadwell_wr(rp, ap, bp);
+    mul6_broadwell_wr(rp + n, ap + h, bp + h);
+    toom22_deg2_interpolate_12(rp, scratch, sign);
+    #endif
+}
+
+// n=3 * 2**k, k >= 2, n <= 2**16
+void
+toom22_12_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
+        mp_size_t n) {
+    // warning: this subroutine currently does nothing useful
+    mp_size_t h = n / 2;
+    uint16_t l = (h >> 2) - 1;                // count of loops inside mpn_sub_4k()
+    auto sign = subtract_lesser_from_bigger_n(rp, ap, h, l);                // a0-a1
+    sign ^= subtract_lesser_from_bigger_n(rp + h, bp, h, l);                // b0-b1
+    auto slave_scratch = scratch + n;
+    if (h == 12) {
+        toom22_12e_broadwell(scratch, slave_scratch, rp, rp + h);
+        toom22_12e_broadwell(rp, slave_scratch, ap, bp);
+        toom22_12e_broadwell(rp + n, slave_scratch, ap + h, bp + h);
+    } else {
+        toom22_12_broadwell(scratch, slave_scratch, rp, rp + h, h);       // vm1
+        toom22_12_broadwell(rp, slave_scratch, ap, bp, h);                // v0
+        toom22_12_broadwell(rp + n, slave_scratch, ap + h, bp + h, h);    // vinf
+    }
+    toom22_deg2_interpolate(rp, scratch, sign, n);
+}
+
+template <uint16_t N>
+void
+toom22_12_broadwell_n(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
+    // warning: this subroutine currently does nothing useful
+    constexpr auto h = N / 2;
+    constexpr auto l = (h >> 2) - 1;                // count of loops inside mpn_sub_4k()
+    auto sign = subtract_lesser_from_bigger_n(rp, ap, h, l);                // a0-a1
+    sign ^= subtract_lesser_from_bigger_n(rp + h, bp, h, l);                // b0-b1
+    if constexpr (h == 6) {
+        mul6_broadwell_wr(scratch, rp, rp + h);
+        mul6_broadwell_wr(rp, ap, bp);
+        mul6_broadwell_wr(rp + N, ap + h, bp + h);
+    } else {
+        auto slave_scratch = scratch + N;
+        toom22_12_broadwell(scratch, slave_scratch, rp, rp + h, h);       // vm1
+        toom22_12_broadwell(rp, slave_scratch, ap, bp, h);                // v0
+        toom22_12_broadwell(rp + N, slave_scratch, ap + h, bp + h, h);    // vinf
+    }
+    toom22_deg2_interpolate(rp, scratch, sign, N);
+}
+#endif
+
 // n: degree of two, 32 <= n <= 2**16
 void
 toom22_deg2_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
@@ -163,35 +239,35 @@ toom22_deg2_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
         printf("|b0-b1|=\n");
         dump_number(rp + h, h);
     #endif
-    if (h >= 32) {
-        toom22_deg2_broadwell(scratch, slave_scratch, rp, rp + h, h);       // vm1
-        toom22_deg2_broadwell(rp, slave_scratch, ap, bp, h);                // v0
-        toom22_deg2_broadwell(rp + n, slave_scratch, ap + h, bp + h, h);    // vinf
-    } else {
+    if (h < 32) {
         toom22_mul16_broadwell(scratch, slave_scratch, rp, rp + h);
         toom22_mul16_broadwell(rp, slave_scratch, ap, bp);
         toom22_mul16_broadwell(rp + n, slave_scratch, ap + h, bp + h);
+    } else {
+        toom22_deg2_broadwell(scratch, slave_scratch, rp, rp + h, h);       // vm1
+        toom22_deg2_broadwell(rp, slave_scratch, ap, bp, h);                // v0
+        toom22_deg2_broadwell(rp + n, slave_scratch, ap + h, bp + h, h);    // vinf
     }
     toom22_deg2_interpolate(rp, scratch, sign, n);
 }
 
-// n: degree of two, 32 <= n <= 2**16
+// N: degree of two, 32 <= N <= 2**16
 template <uint16_t N>
 void
 toom22_deg2_broadwell_n(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     constexpr auto h = N / 2;
-    auto l = (h >> 2) - 1;                // count of loops inside mpn_sub_4k()
+    constexpr auto l = (h >> 2) - 1;                // count of loops inside mpn_sub_4k()
     auto slave_scratch = scratch + N;
     auto sign = subtract_lesser_from_bigger_n(rp, ap, h, l);                // a0-a1
     sign ^= subtract_lesser_from_bigger_n(rp + h, bp, h, l);                // b0-b1
-    if constexpr (h >= 32) {
-        toom22_deg2_broadwell_n<h>(scratch, slave_scratch, rp, rp + h);       // vm1
-        toom22_deg2_broadwell_n<h>(rp, slave_scratch, ap, bp);                // v0
-        toom22_deg2_broadwell_n<h>(rp + N, slave_scratch, ap + h, bp + h);    // vinf
-    } else {
+    if constexpr (h < 32) {
         toom22_mul16_broadwell(scratch, slave_scratch, rp, rp + h);
         toom22_mul16_broadwell(rp, slave_scratch, ap, bp);
         toom22_mul16_broadwell(rp + N, slave_scratch, ap + h, bp + h);
+    } else {
+        toom22_deg2_broadwell_n<h>(scratch, slave_scratch, rp, rp + h);       // vm1
+        toom22_deg2_broadwell_n<h>(rp, slave_scratch, ap, bp);                // v0
+        toom22_deg2_broadwell_n<h>(rp + N, slave_scratch, ap + h, bp + h);    // vinf
     }
     toom22_deg2_interpolate(rp, scratch, sign, N);
 }
