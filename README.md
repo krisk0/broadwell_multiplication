@@ -1,10 +1,10 @@
-Low-level big-integer arithmetic subroutines in C/C++/asm, including `mul8_broadwell_store_once()` and `toom22_mul16_broadwell()`.
+Low-level big-integer arithmetic subroutines in C/C++/asm.
 
-`mul8_broadwell_store_once()` multiplies 512-bit (8-word) numbers faster than `GMP` subroutine `gmpn_mul(,, 8, , 8)`.
+`mul8_broadwell_store_once()` multiplies 512-bit (8-limb) numbers faster than `GMP` subroutine `gmpn_mul(,, 8, , 8)`.
 
-`toom22_mul16_broadwell()` multiplies 16-word numbers faster than `gmpn_mul(,, 16, , 16)`.
+`toom22_mul16_broadwell()` multiplies 16-limb numbers faster than `gmpn_mul(,, 16, , 16)`.
 
-`toom22_deg2_broadwell()` multiplies k-word numbers faster than `gmpn_toom22_mul()`, where k is a degree of 2, in range 32...65536.
+`toom22_deg2_broadwell()` multiplies k-limb numbers faster than `gmpn_toom22_mul()`, where k is a small degree of 2.
 
 # Quick start
 
@@ -14,7 +14,7 @@ ninja
 automagic/test4.exe
 automagic/benchm8_custom.exe 0
 ```
-, where 0 is randomness generator seed.
+, where 0 is a randomness generator seed.
 
 # Benchmarks
 
@@ -60,7 +60,7 @@ A0. Supposing `gmp` static library is at `/opt/gmp/lib64/libgmp.a`, call `config
 c_compiler=/opt/bin/gcc-9.9 \
 cpp_compiler=/opt/bin/g++-9.9 \
 flags='-O9 -march=broadwell -static' \
-gmp_location=/opt/gmp/lib64/libgmp.a
+gmp_location=/opt/gmp/lib64/libgmp.a \
 /usr/bin/python2 \
 configure.py
 ```
@@ -79,7 +79,7 @@ where `/usr/bin/python2` is full path to your `Python2` interpreter, `flags` are
 
 *A3*. If this OS uses the same calling convention (System V ABI for 64-bit Unix systems), then probably yes. If not, then some subroutines are unusable.
 
-*Q4*. Benchmark of `GMP` code shows bigger tact numbers than found above in this README.
+*Q4*. My benchmark of `GMP` code shows bigger tact numbers than found above in this README.
 
 *A4*. Did you install `GMP` via packet manager? Probably it is not optimized for Broadwell.
 
@@ -112,7 +112,7 @@ than
 
 *Q8*. Why do you generate `ninja.build` instead of writing it directly?
 
-*A8*. Because `ninja` is about speed, not user convenience. `ninja.build` is redundant and unreadable, compared to `Makefile`.
+*A8*. Because `ninja` is about speed, not user convenience. `ninja.build` is redundant and unreadable, compared to `Makefile`. It is hard and unpleasant to manually edit `ninja.build`.
 
 *Q9*. How do I remove all generated code to start from scratch?
 

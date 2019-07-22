@@ -1,7 +1,7 @@
 """
 mpn_sub_4k(r_p, a_p, b_p, loop_count)
 
-a, b -- numbers of equal word-length: loop_count * 4 + 4
+a, b -- numbers of equal word-length: loop_count * 4 + 4, loop_count > 0
 
 subtract b from a, put result at r_p: r := a - b
 

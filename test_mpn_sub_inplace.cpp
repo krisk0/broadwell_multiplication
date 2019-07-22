@@ -1,63 +1,68 @@
-// test of macro mpn_sub_4k_inplace()
+// test of macro mpn_sub_inplace()
 
 #include <stdlib.h>
 #include <cstdint>
 
 #include <gmp.h>
 
-#include "automagic/mpn_sub_4k_inplace.h"
+#include "automagic/mpn_sub_inplace.h"
 
 #define INT mp_limb_t
-#define RAND_SEED 20190626
+#define RAND_SEED 20190719
 
 #include "test-internal.h"
 
+#define MAX_SIZE 33
 
-INT g_src[48 * 2];                    // a, b taken from here
-INT g_tgt_good[48];                   // r = a-b gets here
-INT g_a_saved[48];
+INT g_src[MAX_SIZE * 2];                    // a, b taken from here
+INT g_tgt_good[MAX_SIZE];                   // r = a-b gets here
+INT g_a_saved[MAX_SIZE];
 
 
 #define NS(x)                                                            \
     namespace _ ## x {                                                   \
-    static constexpr uint16_t SIZE = x;                                  \
+    constexpr uint16_t SIZE = x;                                         \
                                                                          \
-    mp_limb_t                                                            \
+    INT                                                                  \
     call_good() {                                                        \
         memcpy(g_a_saved, g_src, SIZE * sizeof(INT));                    \
         return mpn_sub_n(g_tgt_good + 0, g_src + SIZE, g_src + 0, SIZE); \
     }                                                                    \
                                                                          \
-    mp_limb_t                                                            \
+    INT                                                                  \
     call_baad() {                                                        \
         auto a_p = g_src + 0;                                            \
         auto b_p = g_src + SIZE;                                         \
-        uint16_t loop_count = (SIZE / 4) - 1;                            \
-        mp_limb_t carry = 0;                                             \
-        mpn_sub_4k_inplace(carry, a_p, b_p, loop_count);                 \
-        return carry;                                                    \
+        INT n = SIZE;                                                    \
+        mpn_sub_inplace(a_p, b_p, n);                                    \
+        return n;                                                        \
     }
 
 
-NS(8)
+NS(5)
 // can't include line with # in macro definition, so add 2 lines
 #include "test-mpn_add_4k-internal.h"
 }
 
-NS(16)
+NS(10)
 #include "test-mpn_add_4k-internal.h"
 }
 
-NS(48)
+NS(23)
+#include "test-mpn_add_4k-internal.h"
+}
+
+NS(33)
 #include "test-mpn_add_4k-internal.h"
 }
 
 
 int
 main() {
-    _8::test();
-    _16::test();
-    _48::test();
+    _5::test();
+    _10::test();
+    _23::test();
+    _33::test();
 
     printf("Test passed\n");
     return 0;

@@ -7,16 +7,9 @@ test subroutines
  * toom22_12_broadwell_n<>()
 */
 
-#include <cstdint>
-
-#include <gmp.h>
+#include "toom22_generic.h"
 
 #include "test-internal.h"
-
-#include "automagic/toom22_mul_16.h"
-#include "automagic/toom22_generic_aux.h"
-#include "automagic/mul6.h"
-#include "toom22_generic.h"
 
 #define MAX_N 128
 #define RAND_SEED 20190626
@@ -99,7 +92,6 @@ NS_12(96)
 int
 main() {
     g_scratch = (INT*)malloc(sizeof(INT) * toom22_generic_itch(MAX_N));
-
     _32::test();
     _64::test();
     _128::test();

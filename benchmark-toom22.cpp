@@ -1,5 +1,3 @@
-#include "automagic/toom22_mul_16.h"
-#include "automagic/toom22_generic_aux.h"
 #include "toom22_generic.h"
 
 extern "C" {

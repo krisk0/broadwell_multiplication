@@ -63,7 +63,7 @@ test() {
     for(unsigned i = 0; i < SIZE; i++) {
         g_a[i] = ((INT)0x3) << 62;
     }
-    memset(g_b, 0, sizeof(g_b));
+    memset(g_b, 0, OPERAND_SIZE);
     g_b[1] = g_b[0] = g_a[0];
     do_test();
 

@@ -27,7 +27,7 @@ main(int c, char** v) {
     auto t = __rdtsc();
     for(long k = 0; k < VOLUME / 2; k++) {
         SUBR(pool_0 + j, pool_1 + i, g_a + 0);
-        SUBR(pool_1 + j,  g_a + 0, pool_0 + i);
+        SUBR(pool_1 + j, g_a + 0, pool_0 + i);
         i = (i + 1) & mask;
         j = (j + SIZE * 2) & mask;
     }
@@ -36,6 +36,6 @@ main(int c, char** v) {
     j = (j + mask - 1 - SIZE * 2) & mask;
     printf("spent %lld   ticks %lld   result %lX\n", t, cycles, pool_1[j]);
     GOODBYE
-    
+
     return 0;
 }
