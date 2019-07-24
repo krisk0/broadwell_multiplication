@@ -92,7 +92,7 @@ toom22_12_itch(mp_size_t n) {
      :                            \
      :"memory", "cc");
 
-// memory layout: a+0 a+1 ... a+n-1 b+0 b+1 ... a+n-1,   loops = (n >> 2) - 1
+// memory layout: a+0 a+1 ... a+n-1 b+0 b+1 ... b+n-1,   loops = (n >> 2) - 1
 uint8_t
 subtract_lesser_from_bigger_n(mp_ptr tgt, mp_srcptr a, uint16_t n, uint16_t loops) {
     uint8_t less;
@@ -110,7 +110,7 @@ subtract_lesser_from_bigger_n(mp_ptr tgt, mp_srcptr a, uint16_t n, uint16_t loop
 }
 
 /*
-memory layout: a+0 a+1 ... a+n-1 b+0 b+1 ... a+n-1
+memory layout: a+0 a+1 ... a+n-1 b+0 b+1 ... b+n-1
 
 n not a multiple of 4, TOOM_2X_BOUND <= n
 */
@@ -245,11 +245,6 @@ n even, not a multiple of 4; TOOM_2X_BOUND <= n < 2**16
 */
 void
 mpn_add_n_plus_1(mp_ptr y_p, mp_limb_t t_s, mp_srcptr t_p, mp_size_t n) {
-    #if 0
-    t_s += mpn_add_n(y_p, y_p, t_p, n);
-    auto carry_p = y_p + n;
-    mpn_add_1_2arg(carry_p, t_s);
-    #endif
     auto carry_p = y_p + n;
     mp_limb_t carry = n;
     mpn_add_inplace(y_p, t_p, carry);
@@ -343,7 +338,7 @@ toom22_12_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
 // N = 3 * 2**k, k >= 2
 template <uint16_t N>
 void
-toom22_12_broadwell_n(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
+toom22_12_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     if constexpr (N == 12) {
         toom22_12e_broadwell(rp, scratch, ap, bp);
         return;
@@ -353,9 +348,9 @@ toom22_12_broadwell_n(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     auto sign = subtract_lesser_from_bigger_n(rp, ap, h, l);              // a0-a1
     sign ^= subtract_lesser_from_bigger_n(rp + h, bp, h, l);              // b0-b1
     auto slave_scratch = scratch + N;
-    toom22_12_broadwell_n<h>(scratch, slave_scratch, rp, rp + h);         // at -1
-    toom22_12_broadwell_n<h>(rp, slave_scratch, ap, bp);                  // at 0
-    toom22_12_broadwell_n<h>(rp + N, slave_scratch, ap + h, bp + h);      // at infinity
+    toom22_12_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);         // at -1
+    toom22_12_broadwell_t<h>(rp, slave_scratch, ap, bp);                  // at 0
+    toom22_12_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);      // at infinity
     toom22_interpolate_4x(rp, scratch, sign, N);
 }
 #endif
@@ -409,7 +404,7 @@ toom22_deg2_broadwell_careful(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr
 // N: degree of two, 32 <= N < 2**16
 template <uint16_t N>
 void
-toom22_deg2_broadwell_n(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
+toom22_deg2_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     constexpr auto h = N / 2;
     constexpr uint16_t l = (h >> 2) - 1;             // count of loops inside mpn_sub_4k()
     auto slave_scratch = scratch + N;
@@ -420,9 +415,9 @@ toom22_deg2_broadwell_n(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         toom22_mul16_broadwell(rp, slave_scratch, ap, bp);
         toom22_mul16_broadwell(rp + N, slave_scratch, ap + h, bp + h);
     } else {
-        toom22_deg2_broadwell_n<h>(scratch, slave_scratch, rp, rp + h);     // at -1
-        toom22_deg2_broadwell_n<h>(rp, slave_scratch, ap, bp);              // at 0
-        toom22_deg2_broadwell_n<h>(rp + N, slave_scratch, ap + h, bp + h);  // at infinity
+        toom22_deg2_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);     // at -1
+        toom22_deg2_broadwell_t<h>(rp, slave_scratch, ap, bp);              // at 0
+        toom22_deg2_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);  // at infinity
     }
     toom22_interpolate_4x(rp, scratch, sign, N);
 }
@@ -494,6 +489,49 @@ toom22_2x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
     #endif
 }
 
+#if 0
+/*
+N even, TOOM_2X_BOUND <= N
+
+scratch size: s(2*h) = 2*h + s(h)
+*/
+template <uint16_t N>
+void
+toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
+    if constexpr (!(N & 7)) {
+        toom22_8x_broadwell_t<N>(rp, scratch, ap, bp);
+    }
+    if constexpr (N == 12) {
+        toom22_12e_broadwell(rp, scratch, ap, bp);
+        return;
+    }
+    constexpr auto h = n / 2;
+    auto sign = subtract_lesser_from_bigger_1x(rp, ap, h);
+    sign ^= subtract_lesser_from_bigger_1x(rp + h, bp, h);
+    if constexpr (h < TOOM_2X_BOUND) {
+        __gmpn_mul_basecase(scratch, rp, h, rp + h, h);
+        __gmpn_mul_basecase(rp, ap, h, bp, h);
+        __gmpn_mul_basecase(rp + n, ap + h, h, bp + h, h);
+    } else {
+        auto slave_scratch = scratch + n;
+        if constexpr (h & 1) {
+            toom22_1x_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
+            toom22_1x_broadwell_t<h>(rp, slave_scratch, ap, bp);
+            toom22_1x_broadwell_t<h>(rp + n, slave_scratch, ap + h, bp + h);
+        } else {
+            toom22_2x_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
+            toom22_2x_broadwell_t<h>(rp, slave_scratch, ap, bp);
+            toom22_2x_broadwell_t<h>(rp + n, slave_scratch, ap + h, bp + h);
+        }
+    }
+    if constexpr (N & 3) {
+        toom22_interpolate(rp, scratch, sign, N);
+    } else {
+        toom22_interpolate_4x(rp, scratch, sign, N);
+    }
+}
+#endif
+
 void
 mul_1by1(mp_ptr tgt, mp_limb_t a, mp_limb_t b) {
     mp_limb_t r0, r1;
@@ -546,6 +584,7 @@ toom22_1x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
     #endif
 }
 
+// n: multiple of 8, 16 <= n <= 2**15; zeroes = count of junior zeroes in n
 void
 toom22_8x_broadwell_6arg(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
         uint16_t n, uint16_t zeroes) {
@@ -566,8 +605,34 @@ toom22_8x_broadwell_6arg(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
     toom22_interpolate_4x(rp, scratch, sign, n);
 }
 
+#if 0
+// N: multiple of 8, 16 <= N < 2**16;
+template <uint16_t N>
+toom22_8x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
+    if constexpr ((N == 24) || (N == 48) || (N == 96)) {
+        toom22_12_broadwell_t<N>(rp, scratch, ap, bp);
+        return;
+    }
+    constexpr auto h = N / 2;
+    constexpr auto l = h / 4 - 1;
+    auto slave_scratch = scratch + N;
+    auto sign = subtract_lesser_from_bigger_n(rp, ap, h, l);                // a0-a1
+    sign ^= subtract_lesser_from_bigger_n(rp + h, bp, h, l);                // b0-b1
+    if constexpr (N & 8) {
+        toom22_2x_broadwell_t<h>(scratch, slave_scratch, rp, rp + h, h);
+        toom22_2x_broadwell_t<h>(rp, slave_scratch, ap, bp);
+        toom22_2x_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);
+    } else {
+        toom22_8x_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);       // at -1
+        toom22_8x_broadwell_t<h>(rp, slave_scratch, ap, bp);                // at 0
+        toom22_8x_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);    // at infinity
+    }
+    toom22_interpolate_4x(rp, scratch, sign, N);
+}
+#endif
+
 /*
-n: multiple of 8, 16 <= n <= 2**15;
+n: multiple of 8, 16 <= n < 2**16;
 
 scratch: enough for any subroutine that might be called
 */
@@ -612,7 +677,23 @@ toom22_xx_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
         toom22_deg2_broadwell_careful(rp, scratch, ap, bp, n);
         return;
     case 3:
-        // TODO: call toom22_12_broadwell_n() instead
+        // TODO: calling toom22_12_broadwell_t<>() is better?
+        #if 1
+        switch (zeroes) {
+        case 2:
+            toom22_12_broadwell_t<12>(rp, scratch, ap, bp);
+            return;
+        case 3:
+            toom22_12_broadwell_t<24>(rp, scratch, ap, bp);
+            return;
+        case 4:
+            toom22_12_broadwell_t<48>(rp, scratch, ap, bp);
+            return;
+        case 5:
+            toom22_12_broadwell_t<96>(rp, scratch, ap, bp);
+            return;
+        }
+        #endif
         toom22_12_broadwell(rp, scratch, ap, bp, n);
         return;
     }

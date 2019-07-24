@@ -1,7 +1,7 @@
 /*
 test subroutines
  * toom22_deg2_broadwell()
- * toom22_deg2_broadwell_n<>()
+ * toom22_deg2_broadwell_t<>()
  * toom22_12_broadwell()
  * toom22_12e_broadwell()
  * toom22_12_broadwell_n<>()
@@ -21,7 +21,7 @@ INT g_result_good[2 * MAX_N];
 INT g_result_baad[2 * MAX_N];
 
 #if TEMPLATE
-    #define BAAD(a, b, c, d) toom22_deg2_broadwell_n<SIZE>(a, b, c, d)
+    #define BAAD(a, b, c, d) toom22_deg2_broadwell_t<SIZE>(a, b, c, d)
 #else
     #define BAAD(a, b, c, d) toom22_deg2_broadwell(a, b, c, d, SIZE)
 #endif
@@ -54,7 +54,7 @@ template <uint16_t N>
 void
 toom22_12(mp_ptr a, mp_ptr b, mp_srcptr c, mp_srcptr d) {
     #if TEMPLATE
-        toom22_12_broadwell_n<N>(a, b, c, d);
+        toom22_12_broadwell_t<N>(a, b, c, d);
     #else
         if constexpr (N == 12) {
             toom22_12e_broadwell(a, b, c, d);
