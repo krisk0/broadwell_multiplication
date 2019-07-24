@@ -6,9 +6,13 @@ Low-level big-integer arithmetic subroutines in C/C++/asm.
 
 `toom22_deg2_broadwell()` multiplies k-limb numbers faster than `gmpn_toom22_mul()`, where k is a small degree of 2.
 
+`toom22_xx_broadwell()` can be called for any number longer than 11 limbs.
+
 # Status
 
 Work-in-progress. Code needs cleaning. Some subroutines might not work as expected. However, if there is a benchmark published for a procedure, then this procedure is thoroughly tested and expected to be bug-free.
+
+Currently my code significantly outperforms GMP for the following limb sizes: 16, 32, 48, 64.
 
 # Quick start
 
@@ -24,16 +28,20 @@ automagic/benchm8_custom.exe 0
 
 subroutine | tacts 
 :---: | ---:
-gmpn_mul 8 | 131
+mpn_mul_n 8 | 131
 gmpn_mul_basecase 8 | 114
 mul8_broadwell_store_once | 98
-gmpn_mul 16 | 427
-gmpn_mul_basecase 16 | 408
+mpn_mul_n 16 | 420
+gmpn_mul_basecase 16 | 419
+toom22_xx_broadwell | 354
 toom22_mul16_broadwell | 350
-mpn_mul 32 | 1395
+mpn_mul_n 32 | 1395
 gmpn_toom22_mul 32 | 1404
 toom22_deg2_broadwell 32 | 1217
-mpn_mul 64 | 4512
+mpn_mul_n 48 | 2970
+gmpn_toom22_mul 48 | 2946
+toom22_xx_broadwell 48 | 2798
+mpn_mul_n 64 | 4512
 gmpn_toom22_mul 64 | 4482
 toom22_deg2_broadwell 64 | 3941
 
@@ -104,7 +112,7 @@ tar xf /distfiles/gmp-6.1.2.tar.xz
 
 *Q7*. Why do you generate C/assembler code instead of writing it directly?
 
-*A7*. Because it is a lot easier to write and examine
+*A7*. Because it is a lot easier to write and read
 ```
 mulx 8(up), w3, w4
 ```
