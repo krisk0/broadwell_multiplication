@@ -1,33 +1,36 @@
-#include <cstring>
-#include <malloc.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <x86intrin.h>
-#include <unistd.h>
+#include <string.h>
 
+#include "bordeless-alloc.h"
 #include "random-number.h"
 
-uint64_t g_a[SIZE];
+#define INT mp_limb_t
+
+INT g_page_size;
+INT g_page_mask;
+INT g_page_unmask;
 
 int
-main(int c, char** v) {
-    srand(atol(v[1]));
-    auto page_size = sysconf(_SC_PAGE_SIZE);
-    auto pool_0 = (uint64_t*)memalign(page_size, page_size);
-    auto pool_1 = (uint64_t*)memalign(page_size, page_size);
+main(int, char** p) {
+    bordeless_alloc_prepare(g_page_mask, g_page_unmask);
+    g_page_size = 1 + g_page_mask;
+    srand(atol(p[1]));
+    bordeless_alloc(INT, pool_0, g_page_size, g_page_mask, g_page_unmask);
+    bordeless_alloc(INT, pool_1, g_page_size, g_page_mask, g_page_unmask);
+    bordeless_alloc(INT, ap, SIZE * sizeof(INT), g_page_mask, g_page_unmask);
 
-    random_number<uint64_t>(g_a + 0, SIZE);
-    random_number<uint64_t>(pool_0, SIZE);
-    random_number<uint64_t>(pool_1, SIZE);
+    random_number<INT>(ap, SIZE);
+    random_number<INT>(pool_0, SIZE);
+    random_number<INT>(pool_1, SIZE);
 
-    auto mask = (page_size / sizeof(uint64_t) / 2) - 1;
+    auto mask = (g_page_size / sizeof(INT) / 2) - 1;
 
     HELLO
     unsigned i = 0, j = SIZE;
     auto t = __rdtsc();
-    for(long k = 0; k < VOLUME / 2; k++) {
-        SUBR(pool_0 + j, pool_1 + i, g_a + 0);
-        SUBR(pool_1 + j, g_a + 0, pool_0 + i);
+    for(unsigned k = VOLUME / 2; k--;) {
+        SUBR(pool_0 + j, pool_1 + i, ap);
+        SUBR(pool_1 + j, ap, pool_0 + i);
         i = (i + 1) & mask;
         j = (j + SIZE * 2) & mask;
     }

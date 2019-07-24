@@ -1,5 +1,6 @@
 '''
-n: not a multiple of 4, >4
+n not a multiple of 4, n>4
+
 mpn_sub_inplace(tgt, src, n)
 
 subtract r := src - tgt. Place r at tgt. Put borrow (0 or 1) into n.
@@ -23,7 +24,7 @@ movq (ap), w0
 jz done_short
 sbbq (cp), w0
 jmp loop_short
-| m = n & 3 subtractions done, w0 = tgt[m]
+| m = n & 3 subtractions done, w0 = src[m]
 done_short:
 movq 8(ap), w1
 movq w3, nn

@@ -6,6 +6,10 @@ Low-level big-integer arithmetic subroutines in C/C++/asm.
 
 `toom22_deg2_broadwell()` multiplies k-limb numbers faster than `gmpn_toom22_mul()`, where k is a small degree of 2.
 
+# Status
+
+Work-in-progress. Code needs cleaning. Some subroutines might not work as expected. However, if there is a benchmark published for a procedure, then this procedure is thoroughly tested and expected to be bug-free.
+
 # Quick start
 
 ```
