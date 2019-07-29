@@ -6,12 +6,13 @@ build benchmarks: phony $o/benchm8_basecase.exe $o/benchm8_official.exe $
         $o/benchm32_toom22.exe $o/benchm32_toom22_gmp.exe $o/benchm32_official.exe $
         $o/benchm64_toom22.exe $o/benchm64_toom22_gmp.exe $o/benchm64_official.exe $
         $o/benchm32_toom22_n.exe $o/benchm64_toom22_n.exe $o/benchm_xx_official.exe $
-        $o/benchm_xx_shortcut.exe $o/benchm_xx_custom.exe $o/benchm_xx_basecase.exe
+        $o/benchm_xx_shortcut.exe $o/benchm_xx_custom.exe $o/benchm_xx_basecase.exe $
+        $o/benchm_sub.exe
         
 build tests: phony $o/test4.exe $o/test8.exe $o/test16.exe $o/test_mpn_less.exe $
         $o/test_mpn_sub.exe $o/test_mpn_sub_4k.exe $o/test_mpn_add_4k.exe $
         $o/test_toom22_generic.exe $o/test_toom22_generic_n.exe $o/test6.exe $
-        $o/test_mpn_sub_inplace.exe $o/test_toom22_xx.exe
+        $o/test_mpn_sub_inplace.exe $o/test_toom22_xx.exe $o/test_toom22_broadwell_t.exe
 
 build exe: phony tests benchmarks
 
@@ -66,6 +67,9 @@ test_mpn_sub_inplace.exe: test_mpn_sub_inplace.cpp @int_h $o/mpn_sub_inplace.h
 test_mpn_add_2_4arg.exe: test_mpn_add_2_4arg.cpp toom22_interpolate_16.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h
 
+test_toom22_broadwell_t.exe: $o/test_toom22_broadwell_t.cpp toom22_interpolate_16.s @int_h $
+        toom22_generic.h $o/toom22_generic_aux.h
+
 mul4_broadwell.s: mul4
 mul4_broadwell.h: mul4
 
@@ -78,6 +82,8 @@ mul6.h: mul6
 mul8_store_once.h: mul8_store1
 
 mpn_less_3arg.h: mpn_less_3arg
+
+mpn_less_3arg_hole.h: mpn_less_3arg_hole
 
 mpn_sub_4k.h: mpn_sub_4k
 
@@ -106,10 +112,12 @@ build $o/toom22_interpolate_16.s: catenate $o/toom22_interpolate_16_raw.s $
 
 toom22_interpolate_@.h: toom22_interpolate [8 16]
 
+test_toom22_broadwell_t.cpp: test_toom22_broadwell_t
+
 toom22_mul_16.h: mpn_le_8.h mpn_sub_8.h subtract_lesser_from_bigger_8.h $
         mul8_store_once.h toom22_interpolate_16.h toom22_mul_16_raw.h
 
-toom22_generic_aux.h: mpn_less_3arg.h mpn_sub_4k.h mpn_add_4k_inplace.h $
+toom22_generic_aux.h: mpn_less_3arg.h mpn_less_3arg_hole.h mpn_sub_4k.h mpn_add_4k_inplace.h $
 		mpn_sub_4k_inplace.h mpn_sub_6.h mpn_le_6.h subtract_lesser_from_bigger_6.h $
         mpn_sub_n_small.h mpn_sub_inplace.h mpn_add_inplace.h mul6.h toom22_mul_16.h $
         mpn_sub_1x.h
@@ -177,3 +185,6 @@ benchm_xx_custom.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
 
 benchm_xx_basecase.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h [+flags -DSUBR=3]
+
+benchm_sub.exe: benchmark_sub.cpp @int_h $o/mpn_sub_1x.h $o/mpn_sub_inplace.h $
+        $o/mpn_sub_4k_inplace.h $o/mpn_sub_4k.h

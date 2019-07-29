@@ -30,7 +30,8 @@ def read_input(name):
         q0 = read_line(i, ':')
         qi = read_line(i, ':')
         r = read_line(i, '=')
-    globals()['size'] = 4 * len(a)
+    globals()['size'] = 4 * len(a)            # size in bits
+    globals()['N'] = 4 * len(a) // 64         # size in limbs
     globals()['a'] = int(a, 0x10)
     globals()['b'] = int(b, 0x10)
     globals()['qm'] = int(qm, 0x10)
@@ -39,16 +40,14 @@ def read_input(name):
     globals()['qr'] = int(r, 0x10)
 
 read_input(sys.argv[1])
-size_half = size / 2
+h = (N + 1) // 2
 
-a0 = a % 2**size_half
-a1 = a >> size_half
-b0 = b % 2**size_half
-b1 = b >> size_half
+a0 = a % 2**(64*h)
+a1 = a >> (64*h)
+b0 = b % 2**(64*h)
+b1 = b >> (64*h)
 
-fmt = '%0@X'.replace('@', '%s' % (size / 4))
-
-gm = (a0 - a1) * (b0 - b1)
+gm = abs((a0 - a1) * (b0 - b1))
 g0 = a0 * b0
 gi = a1 * b1
 gr = a * b
@@ -57,6 +56,8 @@ if gm != qm:
     print 'mismatch at -1'
     print 'good = %X' % gm
     print 'baad = %X' % qm
+    print '|a0-a1| = %X' % abs(a0-a1)
+    print '|b0-b1| = %X' % abs(b0-b1)
 
 if g0 != q0:
     print 'mismatch at 0'
