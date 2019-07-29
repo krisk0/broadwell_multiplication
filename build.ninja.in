@@ -7,7 +7,8 @@ build benchmarks: phony $o/benchm8_basecase.exe $o/benchm8_official.exe $
         $o/benchm64_toom22.exe $o/benchm64_toom22_gmp.exe $o/benchm64_official.exe $
         $o/benchm32_toom22_n.exe $o/benchm64_toom22_n.exe $o/benchm_xx_official.exe $
         $o/benchm_xx_shortcut.exe $o/benchm_xx_custom.exe $o/benchm_xx_basecase.exe $
-        $o/benchm_sub.exe
+        $o/benchm_sub.exe $o/benchm_toom22_broadwell_t.exe $
+        $o/benchm_toom22_broadwell_t_c.exe
         
 build tests: phony $o/test4.exe $o/test8.exe $o/test16.exe $o/test_mpn_less.exe $
         $o/test_mpn_sub.exe $o/test_mpn_sub_4k.exe $o/test_mpn_add_4k.exe $
@@ -188,3 +189,9 @@ benchm_xx_basecase.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
 
 benchm_sub.exe: benchmark_sub.cpp @int_h $o/mpn_sub_1x.h $o/mpn_sub_inplace.h $
         $o/mpn_sub_4k_inplace.h $o/mpn_sub_4k.h
+
+benchm_toom22_broadwell_t.exe: benchmark_toom22_broadwell_t.cpp toom22_interpolate_16.s $
+        @int_h toom22_generic.h $o/toom22_generic_aux.h [+flags -DCUSTOM=1]
+
+benchm_toom22_broadwell_t_c.exe: benchmark_toom22_broadwell_t.cpp toom22_interpolate_16.s $
+        @int_h toom22_generic.h $o/toom22_generic_aux.h [+flags -DCUSTOM=0]
