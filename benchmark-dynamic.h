@@ -10,7 +10,7 @@ INT* g_pool_0;
 INT* g_pool_1;
 INT* g_a;
 
-template <uint16_t ALPHA, uint16_t NOW, uint16_t BETTA>
+template <uint16_t NOW, uint16_t LIMIT>
 void
 do_test(INT volume) {
     random_number<INT>(g_a, NOW);
@@ -43,8 +43,8 @@ do_test(INT volume) {
         volume *= 10;
     }
     
-    if constexpr (NOW < BETTA) {
-        do_test<ALPHA, 1 + NOW, BETTA>(volume);
+    if constexpr (NOW < LIMIT) {
+        do_test<1 + NOW, LIMIT>(volume);
     }
 }
 
@@ -55,7 +55,7 @@ test(INT volume) {
     bordeless_alloc_nodefine(INT, g_pool_1, g_page_size, g_page_mask, g_page_unmask);
     bordeless_alloc_nodefine(INT, g_a, BETTA * sizeof(INT), g_page_mask, g_page_unmask);
     
-    do_test<ALPHA, ALPHA, BETTA>(volume);
+    do_test<ALPHA, BETTA>(volume);
 }
 
 } // end namespace benchmark_dynamic

@@ -26,7 +26,7 @@ call_gmp_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         // for small N call mpn_mul_basecase() directly -- this is what mpn_mul_n() does
         __gmpn_mul_basecase(rp, ap, N, bp, N);
     } else {
-        // let mpn_mul_n() select subroutine to call and scratch
+        // let mpn_mul_n() select subroutine to call and scratch storage
         mpn_mul_n(rp, ap, bp, (INT)N);
     }
 }

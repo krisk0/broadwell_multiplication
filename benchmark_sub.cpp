@@ -25,6 +25,10 @@ INT* g_pool_0;
 INT* g_pool_1;
 #define RAND_SEED 20190725
 
+extern "C" {
+INT __gmpn_bdiv_dbm1c(mp_ptr, mp_srcptr, mp_size_t, INT, INT);
+}
+
 namespace _1x {
 
 constexpr INT VOLUME = 1000*1000*800;
@@ -54,6 +58,12 @@ subtr(mp_ptr u, mp_ptr v) {
     if constexpr (WHAT == 5) {
         uint16_t loop_count = (SIZE >> 2) - 1;
         mpn_sub_4k(t, u, v, loop_count);
+    }
+    if constexpr (WHAT == 6) {
+        (void)__gmpn_bdiv_dbm1c(u, v, SIZE, GMP_NUMB_MASK / 3, 0);
+    }
+    if constexpr (WHAT == 7) {
+        (void)mpn_lshift(u, v, SIZE, 1);
     }
 }
 
@@ -94,4 +104,11 @@ main(int c, char** p) {
     _1x::benchmark<4, 8>("mpn_sub_4k_inplace 8");
     _1x::benchmark<0, 8>("mpn_sub_n 8");
     _1x::benchmark<5, 8>("mpn_sub_4k 8");
+    _1x::benchmark<0, 16>("mpn_sub_n 16");
+    _1x::benchmark<5, 16>("mpn_sub_4k 16");
+    _1x::benchmark<0, 16>("mpn_sub_n 17");
+    _1x::benchmark<6, 16>("/3 16");
+    _1x::benchmark<6, 17>("/3 17");
+    _1x::benchmark<7, 16>("<< 16");
+    _1x::benchmark<7, 17>("<< 17");
 }
