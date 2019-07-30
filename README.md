@@ -6,13 +6,13 @@ Low-level big-integer arithmetic subroutines in C/C++/asm.
 
 `toom22_deg2_broadwell()` multiplies k-limb numbers faster than `gmpn_toom22_mul()`, where k is a small degree of 2.
 
-`toom22_xx_broadwell()` can be called for any number longer than 11 limbs.
+`toom22_xx_broadwell()` and `toom22_broadwell_t<>()` can be called for any number longer than 11 limbs.
 
 # Status
 
 Work-in-progress. Code needs cleaning. Some subroutines might not work as expected. However, if there is a benchmark published for a procedure, then this procedure is thoroughly tested and expected to be bug-free.
 
-Currently my code significantly outperforms GMP for the following limb sizes: 16, 32, 48, 64.
+Currently my code outperforms GMP for at least the following limb sizes: 8, 16, 24, 32, 48, 64, 127.
 
 # Quick start
 
@@ -33,17 +33,24 @@ gmpn_mul_basecase 8 | 114
 mul8_broadwell_store_once | 98
 mpn_mul_n 16 | 420
 gmpn_mul_basecase 16 | 419
-toom22_xx_broadwell | 354
-toom22_mul16_broadwell | 350
+toom22_xx_broadwell 16 | 354
+toom22_broadwell_t 16 | 350
+mpn_mul_n 24 | 915
+toom22_broadwell_t 24 | 844
 mpn_mul_n 32 | 1395
 gmpn_toom22_mul 32 | 1404
 toom22_deg2_broadwell 32 | 1217
 mpn_mul_n 48 | 2970
 gmpn_toom22_mul 48 | 2946
 toom22_xx_broadwell 48 | 2798
+toom22_broadwell_t | 2780
 mpn_mul_n 64 | 4512
 gmpn_toom22_mul 64 | 4482
 toom22_deg2_broadwell 64 | 3941
+mpn_mul_n 96 | 8583
+toom22_xx_broadwell 96 | 8865
+mpn_mul_n 127 | 14078
+toom22_broadwell_t 127 | 12350
 
 Left column contains subroutine name and size indicator. For instance, 
 `gmpn_mul_basecase 16` indicates that `gmpn_mul_basecase(target, operand_a, 16, operand_b, 16)` was called.
