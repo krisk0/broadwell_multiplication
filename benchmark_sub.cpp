@@ -40,7 +40,7 @@ subtr(mp_ptr u, mp_ptr v) {
     INT size = SIZE;
     if constexpr (WHAT == 0) {
         mpn_sub_n(t, u, v, size);
-    } 
+    }
     if constexpr (WHAT == 1) {
         mpn_sub_1x(t, u, v, size);
     }
@@ -65,6 +65,9 @@ subtr(mp_ptr u, mp_ptr v) {
     if constexpr (WHAT == 7) {
         (void)mpn_lshift(u, v, SIZE, 1);
     }
+    if constexpr (WHAT == 8) {
+        (void)mpn_rshift(u, v, SIZE, 1);
+    }
 }
 
 template <uint16_t WHAT, uint16_t SIZE>
@@ -72,7 +75,7 @@ void benchmark(const char* id) {
     random_number<INT>(g_pool_0, SIZE);
     random_number<INT>(g_pool_1, SIZE);
     auto mask = (g_page_size / sizeof(INT) / 2) - 1;
-    
+
     INT i = 0, j = 0;
     auto t = __rdtsc();
     for(unsigned k = VOLUME / 2; k--;) {
@@ -95,11 +98,13 @@ main(int c, char** p) {
     srand(RAND_SEED);
     bordeless_alloc_nodefine(INT, g_pool_0, g_page_size, g_page_mask, g_page_unmask);
     bordeless_alloc_nodefine(INT, g_pool_1, g_page_size, g_page_mask, g_page_unmask);
-    
+
     _1x::benchmark<0, 7>("mpn_sub_n 7");
-    _1x::benchmark<1, 7>("mpn_sub_1x 7");
+    _1x::benchmark<1, 7>("mpn_sub_1x 7");              // a lot slower, don't use
     _1x::benchmark<2, 7>("mpn_sub_n inplace 7");
-    _1x::benchmark<3, 7>("mpn_sub_inplace 7");
+    _1x::benchmark<3, 7>("mpn_sub_inplace 7");         // slightly slower, don't use
+    _1x::benchmark<3, 17>("mpn_sub_inplace 17");
+    _1x::benchmark<2, 17>("mpn_sub_n inplace 17");     //                            this
     _1x::benchmark<2, 8>("mpn_sub_n inplace 8");
     _1x::benchmark<4, 8>("mpn_sub_4k_inplace 8");
     _1x::benchmark<0, 8>("mpn_sub_n 8");
@@ -109,6 +114,11 @@ main(int c, char** p) {
     _1x::benchmark<0, 16>("mpn_sub_n 17");
     _1x::benchmark<6, 16>("/3 16");
     _1x::benchmark<6, 17>("/3 17");
-    _1x::benchmark<7, 16>("<< 16");
-    _1x::benchmark<7, 17>("<< 17");
+    _1x::benchmark<6, 61>("/3 61");
+    _1x::benchmark<7, 16>("<<1 16");
+    _1x::benchmark<7, 17>("<<1 17");     // 1.6 ticks per limb
+    _1x::benchmark<7, 61>("<<1 61");     // 1.3 ticks per limb
+    _1x::benchmark<8, 16>(">>1 16");
+    _1x::benchmark<8, 17>(">>1 17");     // same as left shift
+    _1x::benchmark<8, 61>(">>1 61");
 }

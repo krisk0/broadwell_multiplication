@@ -42,9 +42,20 @@ t5 := t3 - 2*vi             | put into v2   (0 1 0 0 0)
 8 subtractions, one division by 3, two divisions by 2, one multiplication by 2
 
 for n=24:
-3*131 + 12*27 + 8*29 + 54 + 3*30 = 1093 > 844
+5*131 + 12*27 + 8*29 + 54 + 3*30 = 1355 > 844
+for n=30:
+5*242 + 12*11*1.6 + 9*21*1.6 + 2*1.6*21 = 1790 > 1248
+                     /
+                    /
+            9 subtractions, no left shift
+                     
 for n=72:
-3*844 + 12*24*1.6 + 8*49*1.6 + 54*3 + 3*30*3 = 4052 < 5947
+2*844 + 3*1000 + 12*25*1.6 + 8*49*1.6 + 54*3 + 3*30*3 = 6227.2 > 5947
+for n=90:
+2*1309 + 3*1221 + 12*31*1.6 + 9*61*1.6 + 211 + 3*84 = 8217.6 > 
+                                         /
+                                        /
+                                  division by 3
 
 Multiplication by 2 should be replaced by subtraction? 
 
