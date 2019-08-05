@@ -52,7 +52,7 @@ g_wr_code = '''
 '''
 
 g_func_code = '''
-void 
+void
 __attribute__ ((noinline))
 mpn_bdiv_dbm1c_4k_inplace_func(mp_ptr r_p, mp_limb_t n, mp_limb_t m) {
     mpn_bdiv_dbm1c_4k_inplace(r_p, n, m);
@@ -101,4 +101,3 @@ except:
 
 with open(g_tgt, 'wb') as g_o:
     do_it(g_o)
-

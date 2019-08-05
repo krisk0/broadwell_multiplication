@@ -8,14 +8,14 @@ build benchmarks: phony $o/benchm8_basecase.exe $o/benchm8_official.exe $
         $o/benchm32_toom22_n.exe $o/benchm64_toom22_n.exe $o/benchm_xx_official.exe $
         $o/benchm_xx_shortcut.exe $o/benchm_xx_custom.exe $o/benchm_xx_basecase.exe $
         $o/benchm_sub.exe $o/benchm_toom22_broadwell_t.exe $
-        $o/benchm_toom22_broadwell_t_c.exe $o/bench_bdiv_dbm1c_4k.exe $
-        $o/bench_bdiv_dbm1c_4k_inplace.exe
+        $o/benchm_toom22_broadwell_t_c.exe $o/benchm_bdiv_dbm1c_4k.exe $
+        $o/benchm_bdiv_dbm1c_4k_inplace.exe
 
 build tests: phony $o/test4.exe $o/test8.exe $o/test16.exe $o/test_mpn_less.exe $
         $o/test_mpn_sub.exe $o/test_mpn_sub_4k.exe $o/test_mpn_add_4k.exe $
         $o/test_toom22_generic.exe $o/test_toom22_generic_n.exe $o/test6.exe $
         $o/test_mpn_sub_inplace.exe $o/test_toom22_xx.exe $o/test_toom22_broadwell_t.exe $
-        $o/test_bdiv_dbm1c_4k.exe $o/test_bdiv_dbm1c_4k_inplace.exe
+        $o/test_bdiv_dbm1c_4k.exe $o/test_bdiv_dbm1c_4k_inplace.exe $o/test_shr.exe
 
 build exe: phony tests benchmarks
 
@@ -78,6 +78,8 @@ test_bdiv_dbm1c_4k.exe: test_bdiv_dbm1c_4k.cpp @int_h $o/bdiv_dbm1c_4k.h
 test_bdiv_dbm1c_4k_inplace.exe: test_bdiv_dbm1c_4k_inplace.cpp @int_h $
         $o/bdiv_dbm1c_4k_inplace.h
 
+test_shr.exe: test_shr.cpp @int_h shift_avx2.h $o/shr1_x_avx2.h
+
 mul4_broadwell.s: mul4
 mul4_broadwell.h: mul4
 
@@ -124,6 +126,12 @@ bdiv_dbm1c_4k.h: bdiv_dbm1c_4k
 
 bdiv_dbm1c_4k_inplace.h: bdiv_dbm1c_4k_inplace
 
+shr1_4_avx2.h: shr1_4_avx2
+shr1_7_avx2.h: shr1_7_avx2
+shr1_10_avx2.h: shr1_10_avx2
+shr1_6k_plus1_avx2.h: shr1_6k_plus1_avx2
+shr1_9k_plus1_avx2.h: shr1_9k_plus1_avx2
+
 test_toom22_broadwell_t.cpp: test_toom22_broadwell_t
 
 toom22_mul_16.h: mpn_le_8.h mpn_sub_8.h subtract_lesser_from_bigger_8.h $
@@ -133,6 +141,9 @@ toom22_generic_aux.h: mpn_less_3arg.h mpn_less_3arg_hole.h mpn_sub_4k.h mpn_add_
 		mpn_sub_4k_inplace.h mpn_sub_6.h mpn_le_6.h subtract_lesser_from_bigger_6.h $
         mpn_sub_n_small.h mpn_sub_inplace.h mpn_add_inplace.h mul6.h toom22_mul_16.h $
         mpn_sub_1x.h
+
+shr1_x_avx2.h: shr1_4_avx2.h shr1_7_avx2.h shr1_10_avx2.h shr1_6k_plus1_avx2.h $
+        shr1_9k_plus1_avx2.h
 
 benchm8_basecase.exe: benchmark8.cpp @int_h benchmark-internal.c $
         $o/mul8_store_once.h [+flags -DSUBR=BASECASE]
@@ -199,7 +210,7 @@ benchm_xx_basecase.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h [+flags -DSUBR=3]
 
 benchm_sub.exe: benchmark_sub.cpp @int_h $o/mpn_sub_1x.h $o/mpn_sub_inplace.h $
-        $o/mpn_sub_4k_inplace.h $o/mpn_sub_4k.h
+        $o/mpn_sub_4k_inplace.h $o/mpn_sub_4k.h shift_avx2.h $o/shr1_x_avx2.h 
 
 benchm_toom22_broadwell_t.exe: benchmark_toom22_broadwell_t.cpp toom22_interpolate_16.s $
         @int_h toom22_generic.h $o/toom22_generic_aux.h [+flags -DCUSTOM=1]
@@ -207,7 +218,7 @@ benchm_toom22_broadwell_t.exe: benchmark_toom22_broadwell_t.cpp toom22_interpola
 benchm_toom22_broadwell_t_c.exe: benchmark_toom22_broadwell_t.cpp toom22_interpolate_16.s $
         @int_h toom22_generic.h $o/toom22_generic_aux.h [+flags -DCUSTOM=0]
 
-bench_bdiv_dbm1c_4k.exe: bench_bdiv_dbm1c_4k.cpp @int_h $o/bdiv_dbm1c_4k.h
+benchm_bdiv_dbm1c_4k.exe: benchm_bdiv_dbm1c_4k.cpp @int_h $o/bdiv_dbm1c_4k.h
 
-bench_bdiv_dbm1c_4k_inplace.exe: bench_bdiv_dbm1c_4k_inplace.cpp @int_h $
+benchm_bdiv_dbm1c_4k_inplace.exe: benchm_bdiv_dbm1c_4k_inplace.cpp @int_h $
         $o/bdiv_dbm1c_4k_inplace.h

@@ -48,20 +48,28 @@ for n=30:
                      /
                     /
             9 subtractions, no left shift
-                     
+
 for n=72:
 2*844 + 3*1000 + 12*25*1.6 + 8*49*1.6 + 54*3 + 3*30*3 = 6227.2 > 5947
 for n=90:
-2*1309 + 3*1221 + 12*31*1.6 + 9*61*1.6 + 211 + 3*84 = 8217.6 > 
+2*1309 + 3*1221 + 12*31*1.6 + 9*61*1.6 + 200 + 3*84 = 8207 > 8147
                                          /
                                         /
-                                  division by 3
+                                  division by 3, 197 ticks for size=60
 
-Multiplication by 2 should be replaced by subtraction? 
+5*1200 + 12*31*1.6 + 9*61*1.6 + 200 + 3*84 = 7925 < 8147
+ \
+  \
+  multiply 32*32 instead of 31*31 or 30*30
+
+Multiplication by 2 should be replaced by subtraction?
+
+32 + 31 + 31 = 94
+
 
 k = ceil(n/3)
 h = n - 2*k, h <= k
-    
+
 v0 at rp + 0                | 2*k
 vi at rp + 4*k              | 2*h, except junior limb which is at scratch[4*k+2]
 v1 at rp + 2*k              | 2*k + 1
