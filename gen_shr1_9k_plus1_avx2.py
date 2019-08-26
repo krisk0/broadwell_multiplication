@@ -3,7 +3,7 @@ shr1_9k_plus1_avx2(adr, k)
 
 shift 9k+1-limb number right one bit in-place. k>=1, any number type.
 
-On Haswell 54-58 ticks for k=63, 42 ticks for k=4
+On Haswell 54-58 ticks for k=7, 42 ticks for k=4
 """
 
 g_code = '''
