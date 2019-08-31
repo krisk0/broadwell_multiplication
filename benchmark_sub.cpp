@@ -124,7 +124,7 @@ main(int c, char** p) {
     bordeless_alloc_nodefine(INT, g_pool_0, g_page_size, g_page_mask, g_page_unmask);
     bordeless_alloc_nodefine(INT, g_pool_1, g_page_size, g_page_mask, g_page_unmask);
 
-    #if 0
+    #if 1
     _1x::benchmark<0, 7>("mpn_sub_n 7");
     _1x::benchmark<1, 7>("mpn_sub_1x 7");              // a lot slower, don't use
     _1x::benchmark<2, 7>("mpn_sub_n inplace 7");
@@ -168,8 +168,8 @@ main(int c, char** p) {
     #if 0
     _1x::benchmark<8, 16>(">>1 16");
     _1x::benchmark<8, 17>(">>1 17");     // same as left shift
-    _1x::benchmark<8, 17>(">>1 23");
-    _1x::benchmark<8, 17>(">>1 24");
+    _1x::benchmark<8, 23>(">>1 23");
+    _1x::benchmark<8, 24>(">>1 24");
     _1x::benchmark<8, 61, G_VOLUME/4>(">>1 61");
     #endif
 }

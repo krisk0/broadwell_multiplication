@@ -15,7 +15,8 @@ build tests: phony $o/test4.exe $o/test8.exe $o/test16.exe $o/test_mpn_less.exe 
         $o/test_mpn_sub.exe $o/test_mpn_sub_4k.exe $o/test_mpn_add_4k.exe $
         $o/test_toom22_generic.exe $o/test_toom22_generic_n.exe $o/test6.exe $
         $o/test_mpn_sub_inplace.exe $o/test_toom22_xx.exe $o/test_toom22_broadwell_t.exe $
-        $o/test_bdiv_dbm1c_4k.exe $o/test_bdiv_dbm1c_4k_inplace.exe $o/test_shr.exe
+        $o/test_bdiv_dbm1c_4k.exe $o/test_bdiv_dbm1c_4k_inplace.exe $o/test_shr.exe $
+        $o/test_mpn_mul2_add.exe
 
 build exe: phony tests benchmarks
 
@@ -80,6 +81,8 @@ test_bdiv_dbm1c_4k_inplace.exe: test_bdiv_dbm1c_4k_inplace.cpp @int_h $
 
 test_shr.exe: test_shr.cpp @int_h shift_avx2.h $o/shr1_x_avx2.h
 
+test_mpn_mul2_add.exe: test_mpn_mul2_add.cpp @int_h $o/mpn_mul2_add_4k.h
+
 mul4_broadwell.s: mul4
 mul4_broadwell.h: mul4
 
@@ -131,6 +134,8 @@ shr1_7_avx2.h: shr1_7_avx2
 shr1_10_avx2.h: shr1_10_avx2
 shr1_6k_plus1_avx2.h: shr1_6k_plus1_avx2
 shr1_9k_plus1_avx2.h: shr1_9k_plus1_avx2
+
+mpn_mul2_add_4k.h: mpn_mul2_add_4k
 
 test_toom22_broadwell_t.cpp: test_toom22_broadwell_t
 
