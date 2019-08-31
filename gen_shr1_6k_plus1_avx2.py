@@ -1,7 +1,7 @@
 """
 shr1_6k_plus1_avx2(adr, k)
 
-shift 9k+1-limb number right one bit in-place. k>=1, any number type.
+shift 6k+1-limb number right one bit in-place. k>=1, any number type.
 
 On Haswell 54 ticks for k=61
 """
