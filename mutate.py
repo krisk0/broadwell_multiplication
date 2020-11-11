@@ -5,8 +5,14 @@ def _8_to_6(i, o):
     c = ' '.join("-e 's:%s'" % i for i in c.split(' '))
     os.system("sed %s %s > %s" % (c, i, o))
 
-if sys.argv[1] == '8_to_6':
-    _8_to_6('test8_once.cpp', sys.argv[2])
-    sys.exit(0)
+def sed_minus_i(r, o):
+	os.system("sed -i s:%s:%s:g %s" % (r[0], r[1], o))
 
-assert 0
+g_a = sys.argv[1:-1]
+g_t = sys.argv[-1]
+if '8_to_6' in g_a:
+    _8_to_6('test8_once.cpp', g_t)
+
+for g_p in g_a:
+	if g_p.find('-') != -1:
+		sed_minus_i(g_p.split('-'), g_t)

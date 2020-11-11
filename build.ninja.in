@@ -16,7 +16,7 @@ build tests: phony $o/test4.exe $o/test8.exe $o/test16.exe $o/test_mpn_less.exe 
         $o/test_toom22_generic.exe $o/test_toom22_generic_n.exe $o/test6.exe $
         $o/test_mpn_sub_inplace.exe $o/test_toom22_xx.exe $o/test_toom22_broadwell_t.exe $
         $o/test_bdiv_dbm1c_4k.exe $o/test_bdiv_dbm1c_4k_inplace.exe $o/test_shr.exe $
-        $o/test_mpn_mul2_add.exe
+        $o/test_mpn_mul2_add.exe $o/test6_zen.exe
 
 build exe: phony tests benchmarks
 
@@ -44,8 +44,14 @@ test8.exe: test8_once.cpp @int_h $o/mul8_store_once.h
 
 test6.exe: $o/test6.cpp @int_h $o/mul6.h
 
+test6_zen.exe: $o/test6_zen.cpp @int_h $o/mul6_zen.h
+
+# ups, dependency on test8_once.cpp missing
 build $o/test6.cpp: create_c_code mutate.py
     extra = 8_to_6
+
+build $o/test6_zen.cpp: create_c_code mutate.py
+    extra = 8_to_6 mul6.h-mul6_zen.h broadwell-zen
 
 test16.exe: test16.cpp toom22_interpolate_16.s @int_h $o/toom22_mul_16.h
 
@@ -91,6 +97,8 @@ mpn_le_@.h: mpn_le [4 6 8]
 toom22_mul_@_raw.h: toom22 [8 16]
 
 mul6.h: mul6
+
+mul6_zen.h: mul6_zen
 
 mul8_store_once.h: mul8_store1
 

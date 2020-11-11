@@ -115,6 +115,8 @@ def option_in_brackets(src):
     return m.group(1) + '\n    ' + result + '\n'
 
 def expand_line(src):
+    if src[0] == '#':
+        return src + '\n'
     tgt = exe_rule(src.rstrip())
     tgt = option_in_brackets(tgt)
     if tgt.find('\n') != -1:
