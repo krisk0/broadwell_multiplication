@@ -64,6 +64,7 @@ adox q6, q3                    | q9 q2+q7 q0+q4+qB q5+q8+qA'" q3 q1
 adcx qA, q5                    | q9 q2+q7 q0+q4+qB' q5+q8" q3 q1
 mulx 32(up), q6, qA            | q9+qA q2+q6+q7 q0+q4+qB' q5+q8" q3 q1
 adcx qB, q0                    | q9+qA q2+q6+q7' q0+q4 q5+q8" q3 q1
+!restore qB                    | if i=5, restore qB
 adox q8, q5                    | q9+qA q2+q6+q7' q0+q4" q5 q3 q1
 movq q1, @i(rp)                | q9+qA q2+q6+q7' q0+q4" q5 q3
 mulx 40(up), q1, q8            | q8 q9+qA+q1 q2+q6+q7' q0+q4" q5 q3
@@ -72,6 +73,7 @@ movq zV, q7                    | q7 = 0
 adox q4, q0                    | q8 q9+qA+q1' q2+q6" q0 q5 q3
 movq 128_jV, dd                | dd = v[i+1], if i is odd
 adox q6, q2                    | q8 q9+qA+q1'" q2 q0 q5 q3
+!restore q6                    | if i=5, restore q6
 adox qA, q9                    | q8" q9+q1' q2 q0 q5 q3
 adox q7, q8                    | q8 q9+q1' q2 q0 q5 q3
 '''
@@ -82,10 +84,8 @@ g_permutation = '2 3 1 5 4 0 6 7 9 8 A B'
 
 #TODO: spread the 4 !restore
 g_tail = '''
-!restore q6
 !restore q7
 !restore qA
-!restore qB
                                | q9 q2+q8' q0 q5 q3 q1
 |get rid of trailing movq %xmm...
 movq q9, q4                    | q4 q2+q8' q0 q5 q3 q1
@@ -132,6 +132,9 @@ def mul1_code(v_index, src, perm):
         # new dd value not needed for v_index = 5
         if (v_index == 5) and (l == 'movq 128_jV, dd'):
             continue
+        # don't restore qB unless v_index is 5 or more
+        if (v_index < 5) and (l[:8] == '!restore'):
+			continue
         tgt.append(l)
     tgt = '\n'.join(tgt) + ' '
     for i in range(len(perm)):
@@ -192,6 +195,8 @@ def do_it(o):
     tail = mul1_code(999, tail, p)
     for k,v in xmm_save.items():
         tail = tail.replace('!restore ' + k, 'movq %s, %s | restore' % (v, k))
+        meat = [m.replace('!restore ' + k, 'movq %s, %s | restore' % (v, k)) \
+				for m in meat]
     tail = tail.replace('!restore', '|restore')
     meat += tail.split('\n')
     cook_asm(o, '\n'.join(meat), xmm_save)
