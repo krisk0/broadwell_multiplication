@@ -5,8 +5,8 @@ if (len(sys.argv) == 2) and (sys.argv[1] == 'clean'):
     sys.exit(0)
 
 g_opt = {
-	'flags': '-O3 -march=broadwell -fomit-frame-pointer ' + \
-		'-fno-stack-protector -static -fmax-errors=3 -std=gnu++17',
+    'flags': '-O3 -march=broadwell -fomit-frame-pointer ' + \
+        '-fno-stack-protector -static -fmax-errors=3 -std=gnu++17',
     'c_compiler': 'gcc',
     'cpp_compiler': 'g++',
     'gmp_location': '-lgmp',
@@ -19,7 +19,7 @@ g_asm_source_pattern = re.compile(r'.+ (\S+)\.s\b')
 def s_to_o(src):
     '''
     replace smth.s with $o/smth.o
-    
+
     arrange for appending rule for $o/smth.o
     '''
     global g_s_to_o
@@ -55,7 +55,7 @@ def expand_ampersand(src):
         tgt.h: script
     into
         build $o/tgt.h: create_c_code gen_script.py
-    
+
     turn
         smth_@.s: script [x y]
     into
@@ -63,7 +63,7 @@ def expand_ampersand(src):
             extra = x
         build $o/smth_y.s: create_c_code gen_script.py
             extra = y
-            
+
     turn
         target.h: srcA.h srcB.h ...
     into
@@ -153,7 +153,7 @@ def do_it(o, i):
         else:
             k = expand_line(j)
         o.write(k)
-    
+
     if g_s_to_o:
         o.write('\n')
         for i in g_s_to_o:
