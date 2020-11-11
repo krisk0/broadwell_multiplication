@@ -697,8 +697,6 @@ toom22_xx_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
         toom22_deg2_broadwell_careful(rp, scratch, ap, bp, n);
         return;
     case 3:
-        // TODO: calling toom22_12_broadwell_t<>() is better?
-        #if 1
         switch (zeroes) {
         case 2:
             toom22_12_broadwell_t<12>(rp, scratch, ap, bp);
@@ -713,7 +711,6 @@ toom22_xx_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
             toom22_12_broadwell_t<96>(rp, scratch, ap, bp);
             return;
         }
-        #endif
         toom22_12_broadwell(rp, scratch, ap, bp, n);
         return;
     }
