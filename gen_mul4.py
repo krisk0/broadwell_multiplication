@@ -315,6 +315,8 @@ def asm_epilog_clobber(data):
         clobber = data['clobber'].split(' ')
     except:
         clobber = []
+    # TODO: sort ymm by numbers so that ymm9 < ymm10 < ymm11
+    clobber.sort(reverse=True)
     return ' : ' + ', '.join(['"%s"' % c for c in clobber]) + ');'
 
 def asm_epilog(i):

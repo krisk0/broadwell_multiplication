@@ -5,12 +5,13 @@ if (len(sys.argv) == 2) and (sys.argv[1] == 'clean'):
     sys.exit(0)
 
 g_opt = {
-        'flags': '-O3 -march=broadwell -fomit-frame-pointer -static -fmax-errors=3 -std=gnu++17',
-        'c_compiler': 'gcc',
-        'cpp_compiler': 'g++',
-        'gmp_location': '-lgmp',
-        'python': sys.executable,
-        }
+	'flags': '-O3 -march=broadwell -fomit-frame-pointer ' + \
+		'-fno-stack-protector -static -fmax-errors=3 -std=gnu++17',
+    'c_compiler': 'gcc',
+    'cpp_compiler': 'g++',
+    'gmp_location': '-lgmp',
+    'python': sys.executable,
+}
 
 g_always_used_script = 'gen_mul4.py'
 
