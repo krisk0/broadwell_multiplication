@@ -72,9 +72,9 @@ test_uv(INT* u, INT* v) {
 
 void
 do_test() {
-    for(unsigned a = 0; a < BITS_PER_LIMB; a++) {
+    for(unsigned a = 0; a < BITS_PER_LIMB * SIZE; a++) {
         deg2(g_u + 0, SIZE, a);
-        for(unsigned b = 0; b < BITS_PER_LIMB; b++) {
+        for(unsigned b = 0; b < BITS_PER_LIMB * SIZE; b++) {
             deg2(g_v + 0, SIZE, b);
             GOOD(g_good + 0, g_u + 0, g_v + 0);
             BAAD(g_baad + 0, g_u + 0, g_v + 0);
@@ -105,10 +105,15 @@ do_test() {
 
     for(unsigned a = 0; a <= SIZE; a++) {
         junior_words(g_u + 0, a);
-        for(unsigned b = 1; b <= SIZE; b++) {
+        for(unsigned b = 0; b <= SIZE; b++) {
+			if(a > b) {
+				continue;
+			}
             junior_words(g_v + 0, b);
             test_uv(g_u + 0, g_v + 0);
-            test_uv(g_v + 0, g_u + 0);
+            if(a < b) {
+				test_uv(g_v + 0, g_u + 0);
+			}
         }
     }
 
