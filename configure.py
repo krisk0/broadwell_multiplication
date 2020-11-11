@@ -68,7 +68,10 @@ def expand_ampersand(src):
         target.h: srcA.h srcB.h ...
     into
         build $o/target.h: catenate $o/srcA.h $o/srcB.h ...
+    
+    add $o/ before smth.exe
     '''
+    src = directory_before_exe(src)
     m = g_expand_0_pattern.match(src)
     if m:
         return [append_gen_mul4('build $o/%s: create_c_code gen_%s.py' % m.groups())]
@@ -85,6 +88,16 @@ def expand_ampersand(src):
         ss = ['$o/' + i for i in m.group(2).split(' ')]
         return [('build $o/%s: catenate ' % m.group(1)) + ' '.join(ss)]
     return [src]
+
+g_ends_with_exe_pattern = re.compile(r'.+\.exe$')
+def directory_before_exe(s):
+	m = []
+	for i in s.split(' '):
+		if g_ends_with_exe_pattern.match(i) and (i.find('/') == -1):
+			m.append('$o/' + i)
+		else:
+			m.append(i)
+	return ' '.join(m)
 
 g_exe_rule_pattern = re.compile(r'(\S+)\.exe: (.+)')
 def exe_rule(src):
