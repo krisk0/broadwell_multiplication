@@ -29,8 +29,9 @@ mulx 8(up), w2, w3             | w3 w1+w2 w0
 mulx 16(up), w4, w5            | w5 w3+w4 w1+w2 w0
 movq w0, (rp)                  | w5 w3+w4 w1+w2
 !save w9
+xorq w8, w8                    | zero flags
 mulx 24(up), w6, w7            | w7 w5+w6 w3+w4 w1+w2
-addq w2, w1                    | w7 w5+w6 w3+w4' w1
+adcx w2, w1                    | w7 w5+w6 w3+w4' w1
 mulx 32(up), w0, w8            | w8 w0+w7 w5+w6 w3+w4' w1
 !save wA
 adcx w4, w3                    | w8 w0+w7 w5+w6' w3 w1
@@ -45,6 +46,7 @@ adcx w7, w0                    | w9 w2+w8' w0 w5 w3 w1
 zV = 0
 dd = v[i]
 q9 q2+q8' q0 q5 q3 q1
+OF = 0
 """
 
 g_muladd='''
@@ -55,7 +57,7 @@ mulx 8(up), q7, q8             | q9' q2 q0 q5+q8 q3+q6+q7 q1+q4
 vperm2i128 $0x81, jV, jV, jV   | ready v[i+1], if i is odd
 adcq $0, q9                    | q9 q2 q0 q5+q8 q3+q6+q7 q1+q4
 mulx 16(up), qA, qB            | q9 q2 q0+qB q5+q8+qA q3+q6+q7 q1+q4
-addq q4, q1                    | q9 q2 q0+qB q5+q8+qA q3+q6+q7' q1
+adcx q4, q1                    | q9 q2 q0+qB q5+q8+qA q3+q6+q7' q1
 adcx q7, q3                    | q9 q2 q0+qB q5+q8+qA' q3+q6 q1
 mulx 24(up), q4, q7            | q9 q2+q7 q0+q4+qB q5+q8+qA' q3+q6 q1
 adox q6, q3                    | q9 q2+q7 q0+q4+qB q5+q8+qA'" q3 q1
@@ -78,6 +80,7 @@ adox q7, q8                    | q8 q9+q1' q2 q0 q5 q3
 
 g_permutation = '2 3 1 5 4 0 6 7 9 8 A B'
 
+#TODO: spread the 4 !restore
 g_tail = '''
 !restore q6
 !restore q7
@@ -85,7 +88,7 @@ g_tail = '''
 !restore qB
                                | q9 q2+q8' q0 q5 q3 q1
 |get rid of trailing movq %xmm...
-mov q9, q4                     | q4 q2+q8' q0 q5 q3 q1
+movq q9, q4                    | q4 q2+q8' q0 q5 q3 q1
 !restore q9
 movq q1, 48(rp)                | q4 q2+q8' q0 q5 q3
 !restore q1
@@ -126,7 +129,7 @@ def mul1_code(v_index, src, perm):
         # vperm2i128 only needed for v_index = 1
         if (v_index != 1) and (l[:10] == 'vperm2i128'):
             continue
-        # dd value not needed for v_index = 5
+        # new dd value not needed for v_index = 5
         if (v_index == 5) and (l == 'movq 128_jV, dd'):
             continue
         tgt.append(l)
@@ -141,7 +144,7 @@ def mul1_code(v_index, src, perm):
     if v_index >= 3:
         # v comes from sV, not jV
         tgt = re.sub(r'\b128_jV\b', 'sV', tgt)
-    # TODO: cut off smth for v_index=5
+    # TODO: cut off smth for v_index=5?
     return tgt.replace('@i', '%s' % (8 * v_index)).rstrip()
 
 def cook_asm(out, code, save):
