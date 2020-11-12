@@ -184,6 +184,11 @@ def write_asm_inside(tgt, code):
             tgt.write(' ')
         tgt.write(j + '\n')
 
+def replace_symblic_vars_name(src, m):
+    for k,v in m.items():
+        src = re.sub(r'\b%s\b' % k, v, src)
+    return src
+
 def do_asm_subroutine(tgt, code):
     code = (code + '\nretq').replace('\n||save ', '\n pushq ').\
             replace('\n||restore ', '\n popq ')
