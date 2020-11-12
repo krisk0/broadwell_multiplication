@@ -184,7 +184,12 @@ def write_asm_inside(tgt, code):
             tgt.write(' ')
         tgt.write(j + '\n')
 
-def replace_symblic_vars_name(src, m):
+def replace_symbolic_vars_name(src, m):
+    if isinstance(src, list):
+        for i in range(len(src)):
+            for k,v in m.items():
+                src[i] = re.sub(r'\b%s\b' % k, v, src[i])
+        return src
     for k,v in m.items():
         src = re.sub(r'\b%s\b' % k, v, src)
     return src
