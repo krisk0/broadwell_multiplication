@@ -2,6 +2,8 @@
 AMD Zen is faster than Intel Broadwell (in arithmetic operations per tick).
  However Zen dislikes immediate use of mulx result while Broadwell likes it.
  For this reason, low-level subroutines like mul6_zen must be rewritten.
+
+Arrr, this subroutine is a lot slower than mul_basecase on AMD Ryzen 7 3800X
 '''
 
 """
@@ -82,7 +84,6 @@ adox q7, q8                    | q8 q9+q1' q2 q0 q5 q3
 
 g_permutation = '2 3 1 5 4 0 6 7 9 8 A B'
 
-#TODO: spread the 4 !restore
 g_tail = '''
 !restore q7
 !restore qA

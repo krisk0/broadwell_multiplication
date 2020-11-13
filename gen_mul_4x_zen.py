@@ -1,3 +1,8 @@
+'''
+GMP subroutine mul_basecase specialized for size divisable by 4. Time on
+ AMD Ryzen 7 3800X: same as mul_basecase
+'''
+
 g_code='''
 |rdi  rsi  rdx  rcx      r8  r15      r14     rbp
 |rp   up   un   u_index  w0  v_index  neg_un  vp
