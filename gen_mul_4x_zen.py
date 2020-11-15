@@ -65,7 +65,6 @@ g_code='''
     mov %rax, 32(rp)
     add $8, vp                   | vp points to next limb
     dec v_index
-    jz  .Lend                    | exit outer loop
 
     mov (vp), dd                 | rdx = next v limb
     add $8, vp
@@ -250,21 +249,18 @@ g_code='''
     jne .Loloop3
 
 .Lfinal_wind_down:
-    add %r9, (rp)
-    adc %r11, 8(rp)
-    adc %r13, 16(rp)
-    adc %rbx, 24(rp)
-    adc $0, %rax
-    mov %rax, 32(rp)
-
-.Lend:
-    !restore %rbx
-    !restore vp
     !restore %r12
-    !restore %r13
+    add %r9, (rp)
     !restore neg_un
+    adc %r11, 8(rp)
     !restore v_index
-
+    adc %r13, 16(rp)
+    !restore %r13
+    adc %rbx, 24(rp)
+    !restore %rbx
+    adc $0, %rax
+    !restore vp
+    mov %rax, 32(rp)
     ret
 '''
 
