@@ -25,7 +25,14 @@ build tests: phony test4.exe test8.exe test16.exe test_mpn_less.exe $
         test_bdiv_dbm1c_4k.exe test_bdiv_dbm1c_4k_inplace.exe test_shr.exe $
         test_mpn_mul2_add.exe test6_zen.exe $
         test_mul_4x_zen_5arg_4.exe test_mul_4x_zen_5arg_8.exe $
-        test_mul_4x_zen_5arg_12.exe test_mul_4x_zen_5arg_16.exe 
+        test_mul_4x_zen_5arg_12.exe test_mul_4x_zen_5arg_16.exe $
+        test_mul_n_zen_4arg_1.exe test_mul_n_zen_4arg_2.exe $
+        test_mul_n_zen_4arg_3.exe test_mul_n_zen_4arg_4.exe $
+        test_mul_n_zen_4arg_5.exe test_mul_n_zen_4arg_6.exe $
+        test_mul_n_zen_4arg_8.exe test_mul_n_zen_4arg_10.exe $
+        test_mul_n_zen_4arg_12.exe test_mul_n_zen_4arg_14.exe $
+        test_mul_n_zen_4arg_16.exe test_mul_n_zen_4arg_20.exe $
+        test_mul_n_zen_4arg_24.exe
 
 build exe: phony tests benchmarks
 
@@ -51,19 +58,11 @@ test4.exe: test4.cpp mul4_broadwell.s @int_h $o/mpn_le_4.h $o/mul4_broadwell.h
 
 test8.exe: test8_once.cpp @int_h $o/mul8_store_once.h
 
+test_mul_4x_zen_5arg_%.exe: test_mul_4x_zen_5arg.c mul_4x_zen_5arg.s @int_h $
+    [+flags -DSIZE=%]
 
-test_mul_4x_zen_5arg_4.exe: test_mul_4x_zen_5arg.c mul_4x_zen_5arg.s @int_h $
-    [+flags -DSIZE=4]
-
-test_mul_4x_zen_5arg_8.exe: test_mul_4x_zen_5arg.c mul_4x_zen_5arg.s @int_h $
-    [+flags -DSIZE=8]
-
-test_mul_4x_zen_5arg_12.exe: test_mul_4x_zen_5arg.c mul_4x_zen_5arg.s @int_h $
-    [+flags -DSIZE=12]
-
-test_mul_4x_zen_5arg_16.exe: test_mul_4x_zen_5arg.c mul_4x_zen_5arg.s @int_h $
-    [+flags -DSIZE=16]
-
+test_mul_n_zen_4arg_%.exe: test_mul_n_zen_4arg.c mul_n_zen_4arg.s @int_h $
+    [+flags -DSIZE=%]
 
 test6.exe: $o/test6.cpp @int_h $o/mul6.h
 
@@ -268,7 +267,7 @@ benchm_xx_basecase.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h [+flags -DSUBR=3]
 
 benchm_sub.exe: benchmark_sub.cpp @int_h $o/mpn_sub_1x.h $o/mpn_sub_inplace.h $
-        $o/mpn_sub_4k_inplace.h $o/mpn_sub_4k.h shift_avx2.h $o/shr1_x_avx2.h 
+        $o/mpn_sub_4k_inplace.h $o/mpn_sub_4k.h shift_avx2.h $o/shr1_x_avx2.h
 
 benchm_toom22_broadwell_t.exe: benchmark_toom22_broadwell_t.cpp toom22_interpolate_16.s $
         @int_h toom22_generic.h $o/toom22_generic_aux.h [+flags -DCUSTOM=1]
@@ -283,17 +282,7 @@ benchm_bdiv_dbm1c_4k_inplace.exe: benchm_bdiv_dbm1c_4k_inplace.cpp @int_h $
 
 mul_4x_zen_5arg.s: mul_4x_zen
 
-benchmark_mul_4x_zen_5arg_4.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s @int_h $
-    [+flags -DSIZE=4]
-
-benchmark_mul_4x_zen_5arg_8.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s @int_h $
-    [+flags -DSIZE=8]
-
-benchmark_mul_4x_zen_5arg_12.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s @int_h $
-    [+flags -DSIZE=12]
-
-benchmark_mul_4x_zen_5arg_16.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s @int_h $
-    [+flags -DSIZE=16]
-
-benchmark_mul_4x_zen_5arg_24.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s @int_h $
-    [+flags -DSIZE=24]
+benchmark_mul_4x_zen_5arg_%.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s @int_h $
+    [+flags -DSIZE=%]
+    
+mul_n_zen_4arg.s: mul_n_zen_4arg
