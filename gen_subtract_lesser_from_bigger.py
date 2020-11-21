@@ -7,9 +7,6 @@ g_n = int(sys.argv[1])
 g_tgt = sys.argv[2]
 
 g_code = '''
-#include <cstdint>
-#include <gmp.h>
-
 mp_limb_t
 subtract_lesser_from_bigger_@(mp_ptr tgt, mp_srcptr up, mp_srcptr vp) {
     mp_limb_t less;

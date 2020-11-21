@@ -39,7 +39,7 @@ g_code='''
     ret
 
     add %r8, %r9                        | unreachable code of length 19
-    adc $0, %r10
+    adc $0, %r10                        | TODO: shorten the unreachable code
     mov %rax, (%rdi)
     mov %r9, 8(%rdi)
     mov %r10, 16(%rdi)

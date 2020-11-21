@@ -87,9 +87,14 @@ def expand_ampersand(src):
         return tgt
     m = g_expand_2_pattern.match(src)
     if m:
-        ss = ['$o/' + i for i in m.group(2).split(' ')]
+        ss = [find_source(i) for i in m.group(2).split(' ')]
         return [('build $o/%s: catenate ' % m.group(1)) + ' '.join(ss)]
     return [src]
+
+def find_source(x):
+    if os.path.isfile(x):
+        return x
+    return '$o/' + x
 
 g_ends_with_exe_pattern = re.compile(r'.+\.exe$')
 def directory_before_exe(s):
