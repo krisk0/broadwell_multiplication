@@ -10,6 +10,12 @@ constexpr uint16_t TOOM_2X_BOUND = 12;
 #define LOUD_6_LINES 0
 #define SHOW_SUBROUTINE_NAME 0
 
+#if defined(MUL_BASECASE_4ARG)
+    #define MUL_BASECASE_SYMMETRIC(x, y, z, w) MUL_BASECASE_4ARG(x, y, z, w)
+#else
+    #define MUL_BASECASE_SYMMETRIC(x, y, z, w) __gmpn_mul_basecase(x, y, z, w, z)
+#endif
+
 void dump_number(mp_limb_t* p, unsigned n);
 
 extern "C" {
@@ -481,10 +487,9 @@ toom22_2x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
         dump_number(rp + h, h);
     #endif
     if (h < TOOM_2X_BOUND) {
-        // gmpn_mul_basecase: assembler subroutine from GMP
-        __gmpn_mul_basecase(scratch, rp, h, rp + h, h);
-        __gmpn_mul_basecase(rp, ap, h, bp, h);
-        __gmpn_mul_basecase(rp + n, ap + h, h, bp + h, h);
+        MUL_BASECASE_SYMMETRIC(scratch, rp, h, rp + h);
+        MUL_BASECASE_SYMMETRIC(rp, ap, h, bp);
+        MUL_BASECASE_SYMMETRIC(rp + n, ap + h, h, bp + h);
     } else {
         auto slave_scratch = scratch + n;
         if (h & 1) {
@@ -540,9 +545,9 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         auto sign = subtract_lesser_from_bigger_1x(rp, ap, h);
         sign ^= subtract_lesser_from_bigger_1x(rp + h, bp, h);
         if constexpr (h < TOOM_2X_BOUND) {
-            __gmpn_mul_basecase(scratch, rp, h, rp + h, h);
-            __gmpn_mul_basecase(rp, ap, h, bp, h);
-            __gmpn_mul_basecase(rp + N, ap + h, h, bp + h, h);
+            MUL_BASECASE_SYMMETRIC(scratch, rp, h, rp + h);
+            MUL_BASECASE_SYMMETRIC(rp, ap, h, bp);
+            MUL_BASECASE_SYMMETRIC(rp + N, ap + h, h, bp + h);
         } else {
             auto slave_scratch = scratch + N;
             toom22_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
@@ -940,7 +945,7 @@ toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
             mul6_broadwell(rp, ap, bp);
         } else {
             // call asm subroutine from GMP, bypassing if's in mpn_mul_n()
-            __gmpn_mul_basecase(rp, ap, N, bp, N);
+            MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
         }
    } else {
         if constexpr (N & 1) {
