@@ -2,8 +2,7 @@ o = ./automagic
 
 build benchmarks: phony $
         benchm4_official.exe benchm4_basecase.exe $
-		benchm8_basecase.exe benchm8_official.exe benchm8_custom.exe $
-		benchm16_basecase.exe benchm16_official.exe $
+		benchm{8,12,16,24}_basecase.exe benchm8_custom.exe benchm{8,16,24}_official.exe $
         benchm16_toom22.exe benchm16_toom22_wide.exe $
         benchm32_toom22.exe benchm32_toom22_gmp.exe benchm32_official.exe $
         benchm64_toom22.exe benchm64_toom22_gmp.exe benchm64_official.exe $
