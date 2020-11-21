@@ -31,15 +31,14 @@ INT g_page_unmask;
     #define CALL_SUBR(r, a, b) toom22_xx_broadwell(r, g_scratch, a, b, (uint16_t)g_size)
 #elif SUBR == 1
     #define CALL_SUBR(r, a, b) __gmpn_toom22_mul(r, a, g_size, b, g_size, g_scratch)
+    // gmp-impl.h defines itch size like this
+    #define ITCH_SIZE 2 * (MAX_N + GMP_NUMB_BITS)
 #elif SUBR == 0
     #define CALL_SUBR(r, a, b) mpn_mul_n(r, a, b, g_size)
 #endif
 
-#if SUBR != CUSTOM
-    // gmp-impl.h defines itch size like this
-    #define ITCH_SIZE     2 * (MAX_N + GMP_NUMB_BITS)
-#else
-    #define ITCH_SIZE     toom22_generic_itch(MAX_N)
+#if !defined(ITCH_SIZE)
+    #define ITCH_SIZE toom22_generic_itch(MAX_N)
 #endif
 
 void
