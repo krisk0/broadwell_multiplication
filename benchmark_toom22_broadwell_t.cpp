@@ -22,8 +22,9 @@ INT g_page_unmask;
 template <uint16_t N>
 void
 call_gmp_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
-    if constexpr (N < 28) {
+    if constexpr (N < 26) {
         // for small N call mpn_mul_basecase() directly -- this is what mpn_mul_n() does
+        // for skylake threshold is 26
         __gmpn_mul_basecase(rp, ap, N, bp, N);
     } else {
         // let mpn_mul_n() select subroutine to call and scratch storage
@@ -38,7 +39,7 @@ call_gmp_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
 /*
 for N=12..127, max itch size is 348, reached at 127.
 
-itch size is output by scratch_size.py 
+itch size is output by scratch_size.py
 */
 #define MAX_N 127
 #define ITCH_SIZE 348
@@ -51,7 +52,7 @@ main(int c, char** p) {
     bordeless_alloc_nodefine(INT, g_scratch, ITCH_SIZE * sizeof(INT), g_page_mask,
             g_page_unmask);
     INT volume = atol(p[1]);
-    
+
     benchmark_dynamic::test<MIN_N, MAX_N>(volume);
 
     return 0;
