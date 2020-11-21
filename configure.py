@@ -135,7 +135,7 @@ def escape_1dot(x):
     return x
 
 g_expand_percent_pattern = re.compile('build (.+?):(.+)')
-def expand_percent(src, ff):
+def expand_percent(src, all_t, ready_t):
     '''
     expand percent in s0%s1: s2%s3, consulting list of files ff
     src may have \n inside
@@ -150,19 +150,29 @@ def expand_percent(src, ff):
     r = m.group(2)
     tgt = []
     pa = re.compile(escape_1dot(p[0]) + '(.+)' + escape_1dot(p[1]))
-    for f in ff:
+    for f in all_t:
+        if f in ready_t:
+            continue
         m = pa.match(f)
         if not m:
             continue
         tgt.append('build ' + f + ':' + r.replace('%', m.group(1)))
+        ready_t.add(f)
     return '\n'.join(tgt).replace('ы', '\n')
 
-def expand_line(src, ff):
+def memorize_tgt(m, rule):
+    f = g_expand_percent_pattern.match(rule)
+    if not f:
+        return
+    m.add(f.group(1))
+
+def expand_line(src, all_t, ready_t):
     if src[0] == '#':
         return src + '\n'
-    tgt = exe_rule(src.rstrip())
+    tgt = bash_style_curly_braces_expand(src.rstrip())
+    tgt = exe_rule(tgt)
     tgt = option_in_brackets(tgt)
-    tgt = expand_percent(tgt, ff)
+    tgt = expand_percent(tgt, all_t, ready_t)
     if tgt.find('\n') != -1:
         tgt,rez = tgt.split('\n'),[]
         for i in tgt:
@@ -172,14 +182,15 @@ def expand_line(src, ff):
         tgt = '\n'.join(expand_ampersand(tgt))
     if (not tgt) or (tgt[-1] != '\n'):
         tgt += '\n'
+    memorize_tgt(ready_t, tgt)
     return tgt
 
-def do_it(o, i, tt):
+def do_it(o, i, all_targets):
     for k,v in g_opt.items():
         o.write('%s = %s\n' % (k, v))
     o.write('\n')
 
-    prev = None
+    prev,ready_targets = None,set()
     for j in i:
         if len(j) < 2:
             o.write(j)
@@ -194,10 +205,10 @@ def do_it(o, i, tt):
             continue
         if prev:
             # ignore leading spaces in continuation
-            k = expand_line(prev + j.lstrip(), tt)
+            k = expand_line(prev + j.lstrip(), all_targets, ready_targets)
             prev = None
         else:
-            k = expand_line(j, tt)
+            k = expand_line(j, all_targets, ready_targets)
         o.write(k)
 
     if g_s_to_o:
@@ -242,6 +253,8 @@ def list_of_targets_subr(rez, src):
     m = g_colon_pattern.match(src)
     if not m:
         return
+    src = bash_style_curly_braces_expand(src)
+    m = g_colon_pattern.match(src)
     list_of_targets_subr_1(rez, m.group(2))
     m = m.group(1)
     if m.find(' ') != -1:
@@ -274,6 +287,23 @@ def list_of_targets(i):
             list_of_targets_subr(tgt, j)
     tgt.remove('$o/phony')
     return sorted(list(tgt))
+
+def comma_list_to_str(x, rr, y):
+    return ' '.join([x + r + y for r in rr.split(',')])
+
+g_bash_like_curly_braces = re.compile(r'(.*?)\{(.+)\}(.*)')
+def bash_style_curly_braces_expand_subr(src):
+    while True:
+        m = g_bash_like_curly_braces.match(src)
+        if not m:
+            return src
+        src = comma_list_to_str(m.group(1), m.group(2), m.group(3))
+
+def bash_style_curly_braces_expand(src):
+    if src.find('{') == -1:
+        return src
+    tgt = [bash_style_curly_braces_expand_subr(x) for x in src.split(' ')]
+    return ' '.join(tgt)
 
 g_s_to_o = set()
 with open('build.ninja.in', 'rb') as g_i:

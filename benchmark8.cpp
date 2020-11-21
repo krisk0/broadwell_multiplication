@@ -15,7 +15,7 @@ void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 #define MUL8(x, y, z) __gmpn_mul(x, y, SIZE, z, SIZE)
 #define CUSTOM(x, y, z) mul8_broadwell_store_once_wr(x, y, z)
 #ifndef VOLUME
-    #if SIZE == 4
+    #if SIZE < 8
         #define VOLUME (1000*1000*150)
     #else
         #define VOLUME (1000*1000*100)

@@ -14,25 +14,16 @@ build benchmarks: phony $
         benchm_bdiv_dbm1c_4k.exe benchm_bdiv_dbm1c_4k_inplace.exe $
         benchm6_official.exe benchm6_basecase.exe benchm6_zen.exe $
         benchm6_broadwell.exe $
-        benchmark_mul_4x_zen_5arg_4.exe benchmark_mul_4x_zen_5arg_8.exe $
-        benchmark_mul_4x_zen_5arg_12.exe benchmark_mul_4x_zen_5arg_16.exe $
-        benchmark_mul_4x_zen_5arg_24.exe
+        benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
+        benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe
 
 build tests: phony test4.exe test8.exe test16.exe test_mpn_less.exe $
         test_mpn_sub.exe test_mpn_sub_4k.exe test_mpn_add_4k.exe $
         test_toom22_generic.exe test_toom22_generic_n.exe test6.exe $
         test_mpn_sub_inplace.exe test_toom22_xx.exe test_toom22_broadwell_t.exe $
         test_bdiv_dbm1c_4k.exe test_bdiv_dbm1c_4k_inplace.exe test_shr.exe $
-        test_mpn_mul2_add.exe test6_zen.exe $
-        test_mul_4x_zen_5arg_4.exe test_mul_4x_zen_5arg_8.exe $
-        test_mul_4x_zen_5arg_12.exe test_mul_4x_zen_5arg_16.exe $
-        test_mul_n_zen_4arg_1.exe test_mul_n_zen_4arg_2.exe $
-        test_mul_n_zen_4arg_3.exe test_mul_n_zen_4arg_4.exe $
-        test_mul_n_zen_4arg_5.exe test_mul_n_zen_4arg_6.exe $
-        test_mul_n_zen_4arg_8.exe test_mul_n_zen_4arg_10.exe $
-        test_mul_n_zen_4arg_12.exe test_mul_n_zen_4arg_14.exe $
-        test_mul_n_zen_4arg_16.exe test_mul_n_zen_4arg_20.exe $
-        test_mul_n_zen_4arg_24.exe
+        test_mpn_mul2_add.exe test6_zen.exe test_mul_4x_zen_5arg_{4,8,12,16}.exe $
+        test_mul_n_zen_4arg_{1,2,3,4,5,6,8,10,12,14,16,20,24}.exe
 
 build exe: phony tests benchmarks
 
@@ -181,12 +172,6 @@ shr1_x_avx2.h: shr1_4_avx2.h shr1_7_avx2.h shr1_10_avx2.h shr1_6k_plus1_avx2.h $
         shr1_9k_plus1_avx2.h
 
 
-benchm6_basecase.exe: benchmark6.cpp @int_h benchmark-internal.c $
-        $o/mul6.h $o/mul6_zen.h [+flags -DSUBR=BASECASE]
-
-benchm6_official.exe: benchmark6.cpp @int_h benchmark-internal.c $
-        $o/mul6.h $o/mul6_zen.h [+flags -DSUBR=MUL6]
-
 benchm6_zen.exe: benchmark6.cpp @int_h benchmark-internal.c $
         $o/mul6.h $o/mul6_zen.h [+flags -DSUBR=C_ZEN]
 
@@ -194,28 +179,9 @@ benchm6_broadwell.exe: benchmark6.cpp @int_h benchmark-internal.c $
         $o/mul6.h $o/mul6_zen.h [+flags -DSUBR=C_BROADWELL]
 
 
-benchm8_basecase.exe: benchmark8.cpp @int_h benchmark-internal.c $
-        $o/mul8_store_once.h [+flags -DSUBR=BASECASE]
-
-benchm8_official.exe: benchmark8.cpp @int_h benchmark-internal.c $
-        $o/mul8_store_once.h [+flags -DSUBR=MUL8]
-
 benchm8_custom.exe: benchmark8.cpp @int_h benchmark-internal.c $
         $o/mul8_store_once.h [+flags -DSUBR=CUSTOM]
 
-
-benchm4_basecase.exe: benchmark8.cpp @int_h benchmark-internal.c $
-        $o/mul8_store_once.h [+flags -DSUBR=BASECASE -DSIZE=4]
-
-benchm4_official.exe: benchmark8.cpp @int_h benchmark-internal.c $
-        $o/mul8_store_once.h [+flags -DSUBR=MUL8 -DSIZE=4]
-
-
-benchm16_basecase.exe: benchmark16.cpp toom22_interpolate_16.s @int_h $
-        benchmark-internal.c $o/toom22_mul_16.h [+flags -DSUBR=BASECASE]
-
-benchm16_official.exe: benchmark16.cpp toom22_interpolate_16.s @int_h $
-        benchmark-internal.c $o/toom22_mul_16.h [+flags -DSUBR=MUL16]
 
 benchm16_toom22_wide.exe: benchmark16.cpp toom22_interpolate_16.s @int_h $
         toom22_generic.h benchmark-internal.c $o/toom22_mul_16.h $
@@ -237,9 +203,6 @@ benchm32_toom22_gmp.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
         benchmark-internal.c $o/toom22_generic_aux.h $
         [+flags -DSUBR=TOOM_GMP -DSIZE=32]
 
-benchm32_official.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
-        benchmark-internal.c $o/toom22_generic_aux.h [+flags -DSUBR=MULN -DSIZE=32]
-
 benchm64_toom22.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
         benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h $
         [+flags -DSUBR=TOOM_CUSTOM -DSIZE=64]
@@ -249,10 +212,8 @@ benchm64_toom22_n.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
         [+flags -DSUBR=TOOM_CUSTOM_T -DSIZE=64]
 
 benchm64_toom22_gmp.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
-        benchmark-internal.c $o/toom22_generic_aux.h [+flags -DSUBR=TOOM_GMP -DSIZE=64]
-
-benchm64_official.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
-        benchmark-internal.c $o/toom22_generic_aux.h [+flags -DSUBR=MULN -DSIZE=64]
+        benchmark-internal.c $o/toom22_generic_aux.h $
+        [+flags -DSUBR=TOOM_GMP -DSIZE=64]
 
 benchm_xx_official.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h [+flags -DSUBR=0]
@@ -269,11 +230,21 @@ benchm_xx_basecase.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
 benchm_sub.exe: benchmark_sub.cpp @int_h $o/mpn_sub_1x.h $o/mpn_sub_inplace.h $
         $o/mpn_sub_4k_inplace.h $o/mpn_sub_4k.h shift_avx2.h $o/shr1_x_avx2.h
 
-benchm_toom22_broadwell_t.exe: benchmark_toom22_broadwell_t.cpp toom22_interpolate_16.s $
-        @int_h toom22_generic.h $o/toom22_generic_aux.h [+flags -DCUSTOM=1]
+benchm_toom22_broadwell_t.exe: benchmark_toom22_broadwell_t.cpp $
+        toom22_interpolate_16.s @int_h toom22_generic.h $o/toom22_generic_aux.h $
+        [+flags -DCUSTOM=1]
 
-benchm_toom22_broadwell_t_c.exe: benchmark_toom22_broadwell_t.cpp toom22_interpolate_16.s $
-        @int_h toom22_generic.h $o/toom22_generic_aux.h [+flags -DCUSTOM=0]
+benchm_toom22_broadwell_t_c.exe: benchmark_toom22_broadwell_t.cpp $
+        toom22_interpolate_16.s @int_h toom22_generic.h $o/toom22_generic_aux.h $
+        [+flags -DCUSTOM=0]
+
+
+benchm%_basecase.exe: benchmark8.cpp @int_h benchmark-internal.c $
+        $o/mul8_store_once.h [+flags -DSUBR=BASECASE -DSIZE=%]
+
+benchm%_official.exe: benchmark8.cpp @int_h benchmark-internal.c $
+        $o/mul8_store_once.h [+flags -DSUBR=MUL8 -DSIZE=%]
+
 
 benchm_bdiv_dbm1c_4k.exe: benchm_bdiv_dbm1c_4k.cpp @int_h $o/bdiv_dbm1c_4k.h
 
@@ -283,6 +254,9 @@ benchm_bdiv_dbm1c_4k_inplace.exe: benchm_bdiv_dbm1c_4k_inplace.cpp @int_h $
 mul_4x_zen_5arg.s: mul_4x_zen
 
 benchmark_mul_4x_zen_5arg_%.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s @int_h $
+    [+flags -DSIZE=%]
+
+benchmark_mul_n_zen_4arg_%.exe: benchmark_mul_n_zen_4arg.cpp mul_n_zen_4arg.s @int_h $
     [+flags -DSIZE=%]
     
 mul_n_zen_4arg.s: mul_n_zen_4arg
