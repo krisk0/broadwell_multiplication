@@ -898,6 +898,16 @@ interpolate(mp_ptr rp, mp_ptr scratch, uint8_t v1_sign) {
 
 } // end namespace toom22_1x
 
+template <uint16_t N>
+constexpr uint64_t
+toom22_itch_t() {
+    if constexpr (N < TOOM_2X_BOUND) {
+        return 0;
+    }
+    constexpr auto h = (N + 1) / 2;
+    return toom22_itch_t<h>() + 2 * h;
+}
+
 // N: odd, >= TOOM_2X_BOUND
 template <uint16_t N>
 void
@@ -927,7 +937,6 @@ toom22_1x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         printf("a*b = ");
         dump_number(rp, 2 * N);
     #endif
-
 }
 
 // N: integer, not very big
