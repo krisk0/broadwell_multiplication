@@ -6,8 +6,8 @@ build benchmarks: phony $
         benchm16_toom22_wide.exe $
         benchm{32,55,64}_toom22_gmp.exe benchm{32,64}_official.exe $
         benchm{32,64}_toom22_n.exe $
-        benchm{24,25,28,32,55,64,96,111}_toom22_t.exe $
-        benchm{24,25,28,32,55,64,96,111}_toom22_w.exe $
+        benchm{12,16,24,25,28,32,55,64,96,111}_toom22_t.exe $
+        benchm{16,24,25,28,32,55,64,96,111}_toom22_w.exe $
         benchm{28,32,55,64}_toom22_gmp.exe $ # MUL_TOOM33_THRESHOLD = 73 for skylake
 		benchm{96,111}_toom.exe $
         benchm_xx_official.exe $
@@ -257,5 +257,5 @@ benchmark_mul_4x_zen_5arg_%.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s
 
 benchmark_mul_n_zen_4arg_%.exe: benchmark_mul_n_zen_4arg.cpp mul_n_zen_4arg.s @int_h $
     [+flags -DSIZE=%]
-    
+
 mul_n_zen_4arg.s: mul_n_zen_4arg

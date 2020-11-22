@@ -221,7 +221,7 @@ subtract_in_place_then_add_3arg(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n_arg) {
     #if HOMEGROWN_SUB
         /*
         ab_p now points to b.
-    
+
         Need to add modulo 2, so use ^ not +
         */
         auto add_result = n;
@@ -373,16 +373,20 @@ void
 toom22_12_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     static_assert(N / 12 * 12 == N);
     if constexpr (N == 12) {
+        /*
+        replacing toom22_12e_broadwell with __gmpn_mul_basecase() here slows it
+         down on skylake
+        */
         toom22_12e_broadwell(rp, scratch, ap, bp);
     } else {
         constexpr auto h = N / 2;
-        constexpr uint16_t l = (h >> 2) - 1;         // count of loops inside mpn_sub_4k()
+        constexpr uint16_t l = (h >> 2) - 1;  // count of loops inside mpn_sub_4k()
         auto sign = subtract_lesser_from_bigger_n(rp, ap, h, l);          // a0-a1
         sign ^= subtract_lesser_from_bigger_n(rp + h, bp, h, l);          // b0-b1
         auto slave_scratch = scratch + N;
         toom22_12_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);     // at -1
         toom22_12_broadwell_t<h>(rp, slave_scratch, ap, bp);              // at 0
-        toom22_12_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);  // at infinity
+        toom22_12_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);  // at inf
         toom22_interpolate_4k(rp, scratch, sign, N);
     }
 }
@@ -531,7 +535,7 @@ void
 toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     /*
     static_assert(N / 2 * 2 == 0) fails for N=12, compiler bug
-    
+
     however binary code for N=12 looks correct -- just one call of toom22_12e_broadwell()
     */
     static_assert(N >= TOOM_2X_BOUND);
@@ -793,8 +797,8 @@ temp when calculating v2 at scratch + 2*h (of size s(h-1))
 namespace toom22_1x {
 
 /*
-q = h - 1 
- 
+q = h - 1
+
 memory layout: u+0 u+1 ... u+h-1 w+0 w+1 ... w+q-1
                 |
                 |
@@ -827,7 +831,7 @@ subtract_lesser_from_bigger(mp_ptr tgt, mp_srcptr a_p) {
     }
     /*
     u senior limb is zero, result will be 1 limb shorter than expected
-    
+
     memory layout: u+0 u+1 ... u+q-1 0 w+0 w+1 ... w+q-1
 
     if u >= w, subtract w from u and return 0
@@ -837,7 +841,7 @@ subtract_lesser_from_bigger(mp_ptr tgt, mp_srcptr a_p) {
     auto w_head = a_p + h;                      // head of w
     auto w_tail = a_p + (q + h);                // one past tail of w
     uint8_t less;
-    
+
     mpn_less_3arg_hole(less, w_head, w_tail);
     if (less) {
         mpn_sub_t<q>(tgt, w_head, a_p);
