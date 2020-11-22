@@ -172,8 +172,6 @@ def memorize_tgt(m, rule):
     m.add(f.group(1))
 
 def expand_line(src, all_t, ready_t):
-    if src[0] == '#':
-        return src + '\n'
     tgt = bash_style_curly_braces_expand(src.rstrip())
     tgt = exe_rule(tgt)
     tgt = option_in_brackets(tgt)
@@ -190,6 +188,12 @@ def expand_line(src, all_t, ready_t):
     memorize_tgt(ready_t, tgt)
     return tgt
 
+def cutoff_comment(s):
+    p = s.find('#')
+    if p == -1:
+        return s.rstrip()
+    return s[:p].rstrip()
+
 def do_it(o, i, all_targets):
     for k,v in g_opt.items():
         o.write('%s = %s\n' % (k, v))
@@ -197,11 +201,12 @@ def do_it(o, i, all_targets):
 
     prev,ready_targets = None,set()
     for j in i:
+        j = cutoff_comment(j)
         if len(j) < 2:
-            o.write(j)
+            o.write(j + '\n')
             continue
-        if j[-2] == '$':
-            now = j[:-2]
+        if j[-1] == '$':
+            now = j[:-1]
             if prev is None:
                 prev = now
             else:
@@ -274,10 +279,11 @@ def list_of_targets(i):
     tgt,prev = set(),None
     # TODO: get rid of repeated code by using custom iterator
     for j in i:
+        j = cutoff_comment(j)
         if len(j) < 2:
             continue
-        if j[-2] == '$':
-            now = j[:-2]
+        if j[-1] == '$':
+            now = j[:-1]
             if prev is None:
                 prev = now
             else:
