@@ -360,9 +360,9 @@ toom22_12_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
         toom22_12e_broadwell(rp, slave_scratch, ap, bp);
         toom22_12e_broadwell(rp + n, slave_scratch, ap + h, bp + h);
     } else {
-        toom22_12_broadwell(scratch, slave_scratch, rp, rp + h, h);       // at -1
-        toom22_12_broadwell(rp, slave_scratch, ap, bp, h);                // at 0
-        toom22_12_broadwell(rp + n, slave_scratch, ap + h, bp + h, h);    // at infinity
+        toom22_12_broadwell(scratch, slave_scratch, rp, rp + h, h);    // at -1
+        toom22_12_broadwell(rp, slave_scratch, ap, bp, h);             // at 0
+        toom22_12_broadwell(rp + n, slave_scratch, ap + h, bp + h, h); // at infinity
     }
     toom22_interpolate_4k(rp, scratch, sign, n);
 }
@@ -587,34 +587,42 @@ call_addmul(mp_ptr rp, mp_srcptr up, mp_limb_t v0, uint16_t n, mp_ptr tail) {
 // n: odd, >= TOOM_2X_BOUND
 void
 toom22_1x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint16_t n) {
-    #if SHOW_SUBROUTINE_NAME
-        printf("toom22_1x_broadwell(%u)\n", n);
-    #endif
     n -= 1;
+    #if MEASURE_TIME_IN_1X_BROADWELL
+        uint64_t t;
+        if (n == g_0 - 1) {
+            t = __rdtsc();
+        }
+    #endif
     if (n & 7) {
         toom22_2x_broadwell(rp, scratch, ap, bp, n);
     } else {
         toom22_8x_broadwell(rp, scratch, ap, bp, n);
     }
-    #if 0
-        printf("after main dish\n");
-        dump_number(rp, 2 * n);
+    #if MEASURE_TIME_IN_1X_BROADWELL
+        if (n == g_0 - 1) {
+            g_1 += __rdtsc() - t;
+        }
     #endif
     rp += n;
     auto tail = rp + n;
     mul_1by1(tail, ap[n], bp[n]);
-    #if 0
-        printf("2 upper\n");
-        dump_number(tail, 2);
-    #endif
     // will call mpn_addmul_1 -- assembler subroutine from GMP
-    call_addmul(rp, ap, bp[n], n, tail);
-    #if 0
-        dump_number(rp, n + 2);
+    #if MEASURE_TIME_IN_1X_BROADWELL
+        if (n == g_0 - 1) {
+            t = __rdtsc();
+        }
     #endif
+    /*
+    benchmarking shows that two calls to __mpn_addmul_1(,,25,) cost 167 ticks,
+     thus __mpn_addmul_1() spends 3.34 tacts per limb on Skylake
+    */
+    call_addmul(rp, ap, bp[n], n, tail);
     call_addmul(rp, bp, ap[n], n, tail);
-    #if 0
-        dump_number(rp, n + 2);
+    #if MEASURE_TIME_IN_1X_BROADWELL
+        if (n == g_0 - 1) {
+            g_2 += __rdtsc() - t;
+        }
     #endif
 }
 

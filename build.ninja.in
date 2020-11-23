@@ -18,7 +18,8 @@ build benchmarks: phony $
         benchm6_official.exe benchm6_basecase.exe benchm6_zen.exe $
         benchm6_broadwell.exe $
         benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
-        benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe
+        benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
+        benchm25_toom22_1x_loud.exe
 
 build tests: phony test4.exe test8.exe test16.exe test_mpn_less.exe $
         test_mpn_sub.exe test_mpn_sub_4k.exe test_mpn_add_4k.exe $
@@ -211,11 +212,15 @@ benchm%_toom22_w.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
         [+flags -DSUBR=TOOM_WRAP -DSIZE=% -DSCRATCH_TYPE=2]
 
 benchm%_toom22_gmp.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
-        benchmark-internal.c $o/toom22_generic_aux.h $
+        benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h $
         [+flags -DSUBR=TOOM_GMP -DSIZE=% -DSCRATCH_TYPE=1]
 
+benchm%_toom22_1x_loud.exe: benchmark-toom22_1x_loud.cpp toom22_interpolate_16.s $
+		@int_h benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h $
+		[+flags -DSIZE=%]
+
 benchm_xx_official.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
-        toom22_generic.h $o/toom22_generic_aux.h [+flags -DSUBR=0]
+        benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h [+flags -DSUBR=0]
 
 benchm_xx_shortcut.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h [+flags -DSUBR=1]
