@@ -5,7 +5,7 @@
 #include "bordeless-alloc.h"
 #include "automagic/toom22_generic_aux.h"
 
-constexpr uint16_t TOOM_2X_BOUND = 12;
+constexpr uint16_t TOOM_2X_BOUND = 28;
 
 #define LOUD_6_LINES 0
 #define SHOW_SUBROUTINE_NAME 0
