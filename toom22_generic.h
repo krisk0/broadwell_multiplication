@@ -864,11 +864,11 @@ subtract_lesser_from_bigger(mp_ptr tgt, mp_srcptr a_p) {
 template <uint16_t h, uint16_t q>
 uint8_t
 v1(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
-    // place one subtraction result at scratch + 2*h
-    auto sign = subtract_lesser_from_bigger<h, q>(scratch + 2*h, ap);
+    // place one subtraction result at rp + h
+    auto sign = subtract_lesser_from_bigger<h, q>(rp + h, ap);
     // place another subtraction result at rp
     sign ^= subtract_lesser_from_bigger<h, q>(rp, bp);
-    toom22_broadwell_t<h>(scratch, scratch + 3*h, scratch + 2*h, rp);
+    toom22_broadwell_t<h>(scratch, scratch + 2*h, rp + h, rp);
     return sign;
 }
 
