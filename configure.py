@@ -224,7 +224,8 @@ def do_it(o, i, all_targets):
     if g_s_to_o:
         o.write('\n')
         for i in g_s_to_o:
-            o.write('build $o/@.o: compile_c_code $o/@.s\n\n'.replace('@', i))
+            j = find_source(i + '.s')
+            o.write('build $o/%s.o: compile_c_code %s\n\n' % (i,j))
 
 g_space_smth_pattern = re.compile(' .*')
 def escape_dot(i):
