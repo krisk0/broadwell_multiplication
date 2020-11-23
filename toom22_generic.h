@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <immintrin.h>
 
 #include "bordeless-alloc.h"
@@ -914,6 +915,60 @@ toom22_itch_t() {
     }
     constexpr auto h = (N + 1) / 2;
     return toom22_itch_t<h>() + 2 * h;
+}
+
+namespace itch {
+template<typename T>
+T
+log2(T n) {
+    return (n <= 1) ? 0 : 1 + log2(n / 2);
+}
+
+template<typename T>
+uint64_t
+two_power(T n) {
+    return (n == 1) ? 2 : 2 * two_power(n - 1);
+}
+
+bool
+is_power_of_2(uint64_t n) {
+    return n == two_power(log2(n));
+}
+
+uint16_t
+sum_progression(uint16_t alpha, uint16_t betta) {
+    auto l = log2(betta / alpha) + 1;
+    return alpha * (two_power(l) - 1);
+}
+
+} // namespace itch
+
+/*
+Cannot make tight constexpr bound on scratch size due to stupidity of GCC (or C++ standard).
+Error message: ... called in a constant expression before its definition is complete
+
+Here comes the ?tight? bound
+*/
+uint64_t
+toom22_itch(uint16_t N) {
+    if (N < 12) {
+        return 0;
+    }
+    // special care for proper multiple of 12, and degree of two
+    if ((N / 12 * 12 == N) && (itch::is_power_of_2(N / 12))) {
+        return itch::sum_progression(12, N);
+    }
+    if (itch::is_power_of_2(N) && (N >= 16)) {
+        return itch::sum_progression(16, N);
+    }
+    if (N < TOOM_2X_BOUND) {
+        return 0;
+    }
+    if (!(N & 1)) {
+        return N + toom22_itch(N / 2);
+    }
+    auto h = N / 2;
+    return 2 * h + std::max(toom22_itch(h), toom22_itch(h - 1));
 }
 
 // N: odd, >= TOOM_2X_BOUND
