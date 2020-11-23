@@ -533,11 +533,6 @@ scratch size: s(2*h) = 2*h + s(h)
 template <uint16_t N>
 void
 toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
-    /*
-    static_assert(N / 2 * 2 == 0) fails for N=12, compiler bug
-
-    however binary code for N=12 looks correct -- just one call of toom22_12e_broadwell()
-    */
     if constexpr (N == 12) {
         toom22_12e_broadwell(rp, scratch, ap, bp);
     } else if constexpr (!(N & 7)) {
@@ -547,16 +542,11 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         constexpr auto h = N / 2;
         auto sign = subtract_lesser_from_bigger_1x(rp, ap, h);
         sign ^= subtract_lesser_from_bigger_1x(rp + h, bp, h);
-        if constexpr (h < TOOM_2X_BOUND) {
-            MUL_BASECASE_SYMMETRIC(scratch, rp, h, rp + h);
-            MUL_BASECASE_SYMMETRIC(rp, ap, h, bp);
-            MUL_BASECASE_SYMMETRIC(rp + N, ap + h, h, bp + h);
-        } else {
-            auto slave_scratch = scratch + N;
-            toom22_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
-            toom22_broadwell_t<h>(rp, slave_scratch, ap, bp);
-            toom22_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);
-        }
+        auto slave_scratch = scratch + N;
+        // for small h mul_basecase() will be called, don't need extra if here
+        toom22_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
+        toom22_broadwell_t<h>(rp, slave_scratch, ap, bp);
+        toom22_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);
         if constexpr (N & 3) {
             toom22_interpolate(rp, scratch, sign, N);
         } else {
