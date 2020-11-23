@@ -20,7 +20,7 @@ void dump_number(mp_limb_t* p, unsigned n);
 
 extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
-mp_limb_t __mpn_addmul_1(mp_ptr, mp_srcptr, mp_size_t, mp_limb_t);
+mp_limb_t __gmpn_addmul_1_adox(mp_ptr, mp_srcptr, mp_size_t, mp_limb_t);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -580,7 +580,7 @@ mul_1by1(mp_ptr tgt, mp_limb_t a, mp_limb_t b) {
 
 void
 call_addmul(mp_ptr rp, mp_srcptr up, mp_limb_t v0, uint16_t n, mp_ptr tail) {
-    auto senior = __mpn_addmul_1(rp, up, n, v0);
+    auto senior = __gmpn_addmul_1_adox(rp, up, n, v0);
     mpn_add_1_2arg(tail, senior);
 }
 
@@ -615,7 +615,7 @@ toom22_1x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
     #endif
     /*
     benchmarking shows that two calls to __mpn_addmul_1(,,25,) cost 167 ticks,
-     thus __mpn_addmul_1() spends 3.34 tacts per limb on Skylake
+     which means that __mpn_addmul_1() spends 3.34 tacts per limb on Skylake
     */
     call_addmul(rp, ap, bp[n], n, tail);
     call_addmul(rp, bp, ap[n], n, tail);

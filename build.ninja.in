@@ -2,14 +2,14 @@ o = ./automagic
 
 build benchmarks: phony $
         benchm4_official.exe benchm4_basecase.exe $
-		benchm{8,12,16,24,25}_basecase.exe benchm8_custom.exe benchm{8,16,24}_official.exe $
+        benchm{8,12,16,24,25}_basecase.exe benchm8_custom.exe benchm{8,16,24}_official.exe $
         benchm16_toom22_wide.exe $
         benchm{32,55,64}_toom22_gmp.exe benchm{32,64}_official.exe $
         benchm{32,64}_toom22_n.exe $
         benchm{12,16,24,25,28,32,55,64,96,111}_toom22_t.exe $
         benchm{16,24,25,28,32,55,64,96,111}_toom22_w.exe $
         benchm{28,32,55,64}_toom22_gmp.exe $ # MUL_TOOM33_THRESHOLD = 73 for skylake
-		benchm{96,111}_toom.exe $
+        benchm{96,111}_toom.exe $
         benchm_xx_official.exe $
         benchm_xx_shortcut.exe benchm_xx_custom.exe benchm_xx_basecase.exe $
         benchm_sub.exe $
@@ -72,13 +72,14 @@ build $o/test6_zen.cpp: create_c_code mutate.py
 
 test16.exe: test16.cpp toom22_interpolate_16.s @int_h $o/toom22_mul_16.h
 
-test_toom22_generic.exe: test_toom22_generic.cpp toom22_interpolate_16.s @int_h $
-        toom22_generic.h $o/toom22_generic_aux.h
+test_toom22_generic.exe: test_toom22_generic.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h toom22_generic.h $o/toom22_generic_aux.h
 
-test_toom22_xx.exe: test_toom22_xx.cpp toom22_interpolate_16.s @int_h $
-        toom22_generic.h $o/toom22_generic_aux.h
+test_toom22_xx.exe: test_toom22_xx.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h toom22_generic.h $o/toom22_generic_aux.h
 
-test_toom22_generic_n.exe: test_toom22_generic.cpp toom22_interpolate_16.s @int_h $
+test_toom22_generic_n.exe: test_toom22_generic.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h [+flags -DTEMPLATE=1]
 
 test_mpn_less.exe: test_mpn_less.cpp @int_h $o/mpn_le_8.h $o/mpn_less_3arg.h
@@ -94,7 +95,8 @@ test_mpn_sub_inplace.exe: test_mpn_sub_inplace.cpp @int_h $o/mpn_sub_inplace.h
 test_mpn_add_2_4arg.exe: test_mpn_add_2_4arg.cpp toom22_interpolate_16.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h
 
-test_toom22_broadwell_t.exe: $o/test_toom22_broadwell_t.cpp toom22_interpolate_16.s @int_h $
+test_toom22_broadwell_t.exe: $o/test_toom22_broadwell_t.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h
 
 test_bdiv_dbm1c_4k.exe: test_bdiv_dbm1c_4k.cpp @int_h $o/bdiv_dbm1c_4k.h
@@ -168,7 +170,7 @@ toom22_mul_16.h: cstdint_gmp.h mpn_le_8.h mpn_sub_8.h subtract_lesser_from_bigge
         mul8_store_once.h toom22_interpolate_16.h toom22_mul_16_raw.h
 
 toom22_generic_aux.h: cstdint_gmp.h mpn_less_3arg.h mpn_less_3arg_hole.h mpn_sub_4k.h mpn_add_4k_inplace.h $
-		mpn_sub_4k_inplace.h mpn_sub_6.h mpn_le_6.h subtract_lesser_from_bigger_6.h $
+        mpn_sub_4k_inplace.h mpn_sub_6.h mpn_le_6.h subtract_lesser_from_bigger_6.h $
         mpn_sub_n_small.h mpn_sub_inplace.h mpn_add_inplace.h mul6.h toom22_mul_16.h $
         mpn_sub_1x.h
 
@@ -187,58 +189,70 @@ benchm8_custom.exe: benchmark8.cpp @int_h benchmark-internal.c $
         $o/mul8_store_once.h [+flags -DSUBR=CUSTOM]
 
 
-benchm16_toom22_wide.exe: benchmark16.cpp toom22_interpolate_16.s @int_h $
+benchm16_toom22_wide.exe: benchmark16.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h $
         toom22_generic.h benchmark-internal.c $o/toom22_mul_16.h $
         [+flags -DSUBR=TOOM -DTIME_INTERPOLATE=1]
 
-benchm%_toom22_d.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
+benchm%_toom22_d.exe: benchmark-toom22.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h $
         benchmark-internal.c $o/toom22_generic_aux.h $
         toom22_generic.h [+flags -DSUBR=TOOM_DEG2 -DSIZE=% -DSCRATCH_TYPE=2]
 
-benchm%_toom.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
+benchm%_toom.exe: benchmark-toom22.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h $
         benchmark-internal.c $o/toom22_generic_aux.h $
         toom22_generic.h [+flags -DSUBR=MULN -DSIZE=% -DSCRATCH_TYPE=0]
 
-benchm%_toom22_n.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
+benchm%_toom22_n.exe: benchmark-toom22.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h $
         benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h $
         [+flags -DSUBR=TOOM_DEG2_T -DSIZE=% -DSCRATCH_TYPE=2]
 
-benchm%_toom22_t.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
+benchm%_toom22_t.exe: benchmark-toom22.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h $
         benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h $
         [+flags -DSUBR=TOOM_T -DSIZE=% -DSCRATCH_TYPE=2]
 
-benchm%_toom22_w.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
+benchm%_toom22_w.exe: benchmark-toom22.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h $
         benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h $
         [+flags -DSUBR=TOOM_WRAP -DSIZE=% -DSCRATCH_TYPE=2]
 
-benchm%_toom22_gmp.exe: benchmark-toom22.cpp toom22_interpolate_16.s @int_h $
+benchm%_toom22_gmp.exe: benchmark-toom22.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h $
         benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h $
         [+flags -DSUBR=TOOM_GMP -DSIZE=% -DSCRATCH_TYPE=1]
 
 benchm%_toom22_1x_loud.exe: benchmark-toom22_1x_loud.cpp toom22_interpolate_16.s $
-		@int_h benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h $
-		[+flags -DSIZE=%]
+        addmul_1_adox.s $
+        @int_h benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h $
+        [+flags -DSIZE=%]
 
-benchm_xx_official.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
+benchm_xx_official.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s $
+        addmul_1_adox.s @int_h $
         benchmark-internal.c $o/toom22_generic_aux.h toom22_generic.h [+flags -DSUBR=0]
 
-benchm_xx_shortcut.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
+benchm_xx_shortcut.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s $
+		addmul_1_adox.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h [+flags -DSUBR=1]
 
-benchm_xx_custom.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
+benchm_xx_custom.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s $
+		addmul_1_adox.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h [+flags -DSUBR=2]
 
-benchm_xx_basecase.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s @int_h $
+benchm_xx_basecase.exe: benchmark_toom22_xx.cpp toom22_interpolate_16.s $
+		addmul_1_adox.s @int_h $
         toom22_generic.h $o/toom22_generic_aux.h [+flags -DSUBR=3]
 
 benchm_sub.exe: benchmark_sub.cpp @int_h $o/mpn_sub_1x.h $o/mpn_sub_inplace.h $
         $o/mpn_sub_4k_inplace.h $o/mpn_sub_4k.h shift_avx2.h $o/shr1_x_avx2.h
 
-benchm_toom22_broadwell_t.exe: benchmark_toom22_broadwell_t.cpp $
+benchm_toom22_broadwell_t.exe: benchmark_toom22_broadwell_t.cpp addmul_1_adox.s $
         toom22_interpolate_16.s @int_h toom22_generic.h $o/toom22_generic_aux.h $
         [+flags -DCUSTOM=1]
 
-benchm_toom22_broadwell_t_c.exe: benchmark_toom22_broadwell_t.cpp $
+benchm_toom22_broadwell_t_c.exe: benchmark_toom22_broadwell_t.cpp addmul_1_adox.s $
         toom22_interpolate_16.s @int_h toom22_generic.h $o/toom22_generic_aux.h $
         [+flags -DCUSTOM=0]
 
