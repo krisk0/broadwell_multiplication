@@ -65,13 +65,13 @@ movq +19(rp), w3                       | w3 := b3
 !save wB
 movq w2, wA                            | wA := b2
 movq w3, wB                            | wB := b3
-vmovq w6, VZ                           | VZ := 0
+movq w6, VZ                           | VZ := 0
 addq +8(rp), w0                        | w0 := b0 + a8
 adcq +9(rp), w1                        | w1' := b1 + a9
 !save w7
 movq +20(rp), w4                       | w4 := b4
 movq +21(rp), w5                       | w5 := b5
-vmovq w1, 128_V0                       | V0 := b1 + a9
+movq w1, 128_V0                       | V0 := b1 + a9
 adcq +10(rp), w2                       | w2' := b2 + aA
 adcq +11(rp), w3                       | w3' := b3 + aB
 movq +22(rp), w6                       | w6 := b6
@@ -99,10 +99,10 @@ adcq +22(rp), w8                       | w8 := b6 + bE
 adcq +23(rp), w9                       | w9 := b7 + bF
 movq wC, +20(rp)                       | update b4
 movq w1, +21(rp)                       | update b5
-vmovq VZ, wC
+movq VZ, wC
 movq w8, +22(rp)                       | update b6
 movq w9, +23(rp)                       | update b7
-vmovq 128_V0, w1                       | w1 := b1 + a9
+movq 128_V0, w1                       | w1 := b1 + a9
 adcq $0, wC                            | wC := carry
 | bF .. b0 added to b7 .. b0 aF a8, result in w0 .. w7 +16(rp) .. +23(rp) wC
 | call it s
@@ -199,7 +199,7 @@ sub $1, %dl                            | rdx = 0, CF=OF=0
 adcx (gp), w0                          | w0 = b0 + g0
 movq +18(rp), w2                       | w2 = b2
 movq +19(rp), w3                       | w3 = b3
-vmovq w6, VZ
+movq w6, VZ
 !save wA
 | f := b + g + a
 adox (rp), w0                          | w0 = f0
@@ -220,7 +220,7 @@ adox +3(rp), w3                        | w3 = f3
 adcx +4(gp), w4                        | w4 = b4 + g4
 movq +26(rp), wA                       | wA = bA
 movq +27(rp), wB                       | wB = bB
-vmovq w1, 128_V0                       | V0 = f1
+movq w1, 128_V0                       | V0 = f1
 | vacant 64-bit registers: w1 wC
 adox +4(rp), w4                        | w4 = f4
 adcx +5(gp), w5                        | w5 = b5 + g5
@@ -235,7 +235,7 @@ movq w5, +5(gp)                        | g5 = f5
 movq w6, +6(gp)                        | g6 = f6
 adox +7(rp), w7                        | w7 = f7
 adcx +8(gp), w8                        | w8 = b8 + g8
-vmovq 128_V1, w5                       | w5 = bE
+movq 128_V1, w5                       | w5 = bE
 adcx +9(gp), w9                        | w9 = b9 + g9
 adox +8(rp), w8                        | w8 = f8
 adcx +10(gp), wA                       | wA = bA + gA
@@ -251,7 +251,7 @@ movq wA, +10(gp)                       | gA = fA
 adox +11(rp), wB                       | wB = fB
 adcx +13(gp), w1                       | w1 = bD + gD
 adox +12(rp), wC                       | wC = fC
-vmovq VZ, w7                           | w7 = 0
+movq VZ, w7                           | w7 = 0
 adcx +14(gp), w5                       | w5 = bE + gE
 adox +13(rp), w1                       | w1 = fD
 movq w7, w8                            | w8 = 0
@@ -264,7 +264,7 @@ adcx w8, w7                            | w7 = carry, in range 0 .. 1
 adox +15(rp), w6                       | w6 = fF
 movq w1, +13(gp)                       | gD = fD
 movq w5, +14(gp)                       | gE = fE
-vmovq 128_V0, w1
+movq 128_V0, w1
 adox w8, w7                            | w7 = carry, in range 0 .. 2
 | f calculated, stored in w7 w6 +14(gp) .. +5(gp) w4 w3 w2 V0 w0, carry cleared
 addq +8(rp), w0                        | w0 = a8 + f0
@@ -362,8 +362,8 @@ def do_16_s(o):
             break
         i = m.group(1)
         # !save wY means put wY into an xmm register
-        code = code.replace('!restore w' + i, 'vmovq s@, w@'.replace('@', i))
-        code = code.replace('!save w' + i, 'vmovq w@, s@'.replace('@', i))
+        code = code.replace('!restore w' + i, 'movq s@, w@'.replace('@', i))
+        code = code.replace('!save w' + i, 'movq w@, s@'.replace('@', i))
     for k,v in register_map.items():
         code = re.sub(r'\b%s\b' % k, v, code)
     P.write_asm_inside(o, code)
