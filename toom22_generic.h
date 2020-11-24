@@ -918,27 +918,15 @@ toom22_itch_t() {
 }
 
 namespace itch {
-template<typename T>
-T
-log2(T n) {
-    return (n <= 1) ? 0 : 1 + log2(n / 2);
-}
-
-template<typename T>
-uint64_t
-two_power(T n) {
-    return (n == 1) ? 2 : 2 * two_power(n - 1);
-}
-
 bool
 is_power_of_2(uint64_t n) {
-    return n == two_power(log2(n));
+    return n == 1 << __tzcnt_u16(n);
 }
 
 uint16_t
 sum_progression(uint16_t alpha, uint16_t betta) {
-    auto l = log2(betta / alpha) + 1;
-    return alpha * (two_power(l) - 1);
+    auto l = __tzcnt_u16(betta / alpha) + 1;
+    return alpha * ((1 << l) - 1);
 }
 
 } // namespace itch
