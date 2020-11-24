@@ -192,7 +192,11 @@ def cutoff_comment(s):
     p = s.find('#')
     if p == -1:
         return s.rstrip()
-    return s[:p].rstrip()
+    s = s[:p].rstrip()
+    r = s.lstrip()
+    if r:
+        return s
+    return r
 
 def do_it(o, i, all_targets):
     for k,v in g_opt.items():
@@ -200,8 +204,11 @@ def do_it(o, i, all_targets):
     o.write('\n')
 
     prev,ready_targets = None,set()
-    for j in i:
-        j = cutoff_comment(j)
+    for l in i:
+        j = cutoff_comment(l)
+        # if line becomes empty after removing comment, drop it
+        if (not j) and (l.find('#') != -1):
+            continue
         if len(j) < 2:
             o.write(j + '\n')
             continue
