@@ -187,8 +187,8 @@ shr1_x_avx2.h: shr1_4_avx2.h shr1_7_avx2.h shr1_10_avx2.h shr1_6k_plus1_avx2.h $
         shr1_9k_plus1_avx2.h
 
 
-benchm6_zen.exe: benchmark6.cpp @int_h benchmark-internal.c $
-        $o/mul6.h mul6_zen.s [+flags -DSUBR=C_ZEN]
+benchm6_zen.exe: benchmark6.cpp mul6_zen.s @int_h benchmark-internal.c $
+        $o/mul6.h [+flags -DSUBR=C_ZEN]
 
 benchm6_broadwell.exe: benchmark6.cpp @int_h benchmark-internal.c $
         $o/mul6.h [+flags -DSUBR=C_BROADWELL]
