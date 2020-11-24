@@ -126,10 +126,5 @@ def do_it(tgt):
 
     P.write_cpp_code(tgt, code, data)
 
-try:
-    os.makedirs(os.path.dirname(g_tgt))
-except:
-    pass
-
 with open(g_tgt, 'wb') as g_o:
     do_it(g_o)

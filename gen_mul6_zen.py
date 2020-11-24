@@ -202,10 +202,5 @@ def do_it(o):
     meat += tail.split('\n')
     cook_asm(o, '\n'.join(meat), xmm_save)
 
-try:
-    os.makedirs(os.path.dirname(sys.argv[1]))
-except:
-    pass
-
 with open(sys.argv[1], 'wb') as g_out:
     do_it(g_out)

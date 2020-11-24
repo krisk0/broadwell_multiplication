@@ -47,12 +47,5 @@ def do_it(tgt):
 
     P.write_cpp_code(tgt, code.rstrip(), data)
 
-g_tgt = sys.argv[1]
-
-try:
-    os.makedirs(os.path.dirname(g_tgt))
-except:
-    pass
-
-with open(g_tgt, 'wb') as g_o:
+with open(sys.argv[1], 'wb') as g_o:
     do_it(g_o)

@@ -471,10 +471,6 @@ def save_registers(xx):
 
 if __name__ == '__main__':
     g_out = sys.argv[1]
-    try:
-        os.makedirs(os.path.dirname(g_out))
-    except:
-        pass
     
     # create one of two files: .h or .s
     if g_out[-1] == 'h':

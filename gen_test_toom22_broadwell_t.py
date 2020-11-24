@@ -79,13 +79,6 @@ import os, sys
 g_min_n = 12
 g_max_n = int(os.getenv('max_n', 51))
 
-g_tgt = sys.argv[1]
-
-try:
-    os.makedirs(os.path.dirname(g_tgt))
-except:
-    pass
-
 def do_it(o):
     global g_max_n
     o.write(g_head.lstrip().replace('@me', os.path.basename(sys.argv[0])).\
@@ -96,5 +89,5 @@ def do_it(o):
     test_calls = ['    _%s::test();' % i for i in range(g_min_n, g_max_n)]
     o.write(g_main % '\n'.join(test_calls))
 
-with open(g_tgt, 'wb') as g_o:
+with open(sys.argv[1], 'wb') as g_o:
     do_it(g_o)

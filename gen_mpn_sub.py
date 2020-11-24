@@ -196,11 +196,6 @@ def do_it(tgt):
 if __name__ == '__main__':
     g_n = int(sys.argv[1])
     g_tgt = sys.argv[2]
-    
-    try:
-        os.makedirs(os.path.dirname(g_tgt))
-    except:
-        pass
-    
+
     with open(g_tgt, 'wb') as g_o:
         do_it(g_o)

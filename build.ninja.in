@@ -39,10 +39,10 @@ rule create_exe
             -o $out
 
 rule create_c_code
-    command = $python `echo $in|sed 's: .*::'` `echo $extra` $out
+    command = mkdir -p $o ; $python `echo $in|sed 's: .*::'` `echo $extra` $out
 
 rule unroll_c_code
-    command = $python $in `echo $extra` $out
+    command = mkdir -p $o ; $python $in `echo $extra` $out
 
 rule compile_c_code
     command = $c_compiler $flags -c $in -o $out
