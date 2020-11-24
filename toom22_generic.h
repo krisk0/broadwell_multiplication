@@ -906,18 +906,8 @@ interpolate(mp_ptr rp, mp_ptr scratch, uint8_t v1_sign) {
 } // end namespace toom22_1x
 
 
-// overestimate of scratch size for subroutines toom22_*
-template <uint16_t N>
-constexpr uint64_t
-toom22_itch_t() {
-    if constexpr (N < 12) {
-        return 0;
-    }
-    constexpr auto h = (N + 1) / 2;
-    return toom22_itch_t<h>() + 2 * h;
-}
-
 namespace itch {
+
 bool
 is_power_of_2(uint64_t n) {
     return n == 1 << __tzcnt_u16(n);
@@ -929,16 +919,119 @@ sum_progression(uint16_t alpha, uint16_t betta) {
     return alpha * ((1 << l) - 1);
 }
 
-} // namespace itch
+template <uint16_t N>
+constexpr uint64_t
+toom22_broadwell_inexact_t() {
+    if constexpr (N < 12) {
+        return 0;
+    }
+    constexpr auto h = (N + 1) / 2;
+    return toom22_broadwell_inexact_t<h>() + 2 * h;
+}
+
+template<uint16_t n>
+constexpr uint16_t
+log2() {
+    return (n <= 1) ? 0 : 1 + log2<n/2>();
+}
+
+template<uint16_t n>
+constexpr uint16_t
+two_power() {
+    return (n == 1) ? 2 : 2 * two_power<n - 1>();
+}
+
+template<>
+constexpr uint16_t
+two_power<0>() {
+    return 1;
+}
+
+template<uint16_t n>
+constexpr bool
+is_power_of_2_t() {
+    constexpr auto l = log2<n>();
+    return n == two_power<l>();
+}
+
+template<uint16_t alpha, uint16_t betta>
+constexpr uint64_t
+sum_progression_t() {
+    constexpr auto l = log2<betta / alpha>() + 1;
+    return alpha * (two_power<l>() - 1);
+}
+
+template<uint16_t, uint16_t> struct toom22_broadwell_t;
+
+template<uint16_t N>
+struct toom22_broadwell_t<N, 0> {
+    static constexpr uint64_t v() {
+        // return zero, unless degree of two or good multiple of 12
+        if constexpr ((N / 12 * 12 == N) && (is_power_of_2_t<N / 12>())) {
+            return sum_progression_t<12, N>();
+        }
+        if constexpr (is_power_of_2_t<N>() && (N >= 16)) {
+            return sum_progression_t<16, N>();
+        }
+        return 0;
+    }
+};
 
 /*
-Cannot make tight constexpr bound on scratch size due to stupidity of GCC (or C++ standard).
-Error message: ... called in a constant expression before its definition is complete
-
-Here comes the ?tight? bound
+Due to stupidity of GCC compiler (or C++ standart), have to avoid recursion,
+ will use macro instead
 */
+#define toom22_broadwell_t_macro(N, K)                   \
+    constexpr uint16_t h = (N + 1) / 2;                   \
+    if constexpr ((N & 1) == 0) {                          \
+        return 2 * h + toom22_broadwell_t<h, K - 1>::v();   \
+    }                                                        \
+    constexpr auto r0 = toom22_broadwell_t<h, K - 1>::v();    \
+    constexpr auto r1 = toom22_broadwell_t<h - 1, K - 1>::v(); \
+    return r0 > r1 ? 2 * h + r0 : 2 * h + r1;
+
+template<uint16_t N>
+struct toom22_broadwell_t<N, 1> {
+    static constexpr uint64_t v() { toom22_broadwell_t_macro(N, 1) };
+};
+
+template<uint16_t N>
+struct toom22_broadwell_t<N, 2> {
+    static constexpr uint64_t v() { toom22_broadwell_t_macro(N, 2) };
+};
+
+template<uint16_t N>
+struct toom22_broadwell_t<N, 3> {
+    static constexpr uint64_t v() { toom22_broadwell_t_macro(N, 3) };
+};
+
+#undef toom22_broadwell_t_macro
+
+} // namespace itch
+
+// Good bound on itch size for N < 8 * TOOM_2X_BOUND, inexact bound for larger N
+template<uint16_t N>
+constexpr uint64_t
+toom22_itch_broadwell_t() {
+    static_assert(TOOM_2X_BOUND >= 12);
+    if constexpr (N < 1 * TOOM_2X_BOUND) {
+        return itch::toom22_broadwell_t<N, 0>::v();
+    }
+    if constexpr (N < 2 * TOOM_2X_BOUND) {
+        return itch::toom22_broadwell_t<N, 1>::v();
+    }
+    if constexpr (N < 4 * TOOM_2X_BOUND) {
+        return itch::toom22_broadwell_t<N, 2>::v();
+    }
+    if constexpr (N < 8 * TOOM_2X_BOUND) {
+        return itch::toom22_broadwell_t<N, 3>::v();
+    }
+    return itch::toom22_broadwell_inexact_t<N>();
+}
+
+// Good bound on itch size, non-constexpr form
 uint64_t
-toom22_itch(uint16_t N) {
+toom22_itch_broadwell(uint16_t N) {
     if (N < 12) {
         return 0;
     }
@@ -953,10 +1046,10 @@ toom22_itch(uint16_t N) {
         return 0;
     }
     if (!(N & 1)) {
-        return N + toom22_itch(N / 2);
+        return N + toom22_itch_broadwell(N / 2);
     }
     auto h = N / 2;
-    return 2 * h + std::max(toom22_itch(h), toom22_itch(h - 1));
+    return 2 * h + std::max(toom22_itch_broadwell(h), toom22_itch_broadwell(h - 1));
 }
 
 // N: odd, >= TOOM_2X_BOUND
@@ -999,6 +1092,13 @@ toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #endif
     if constexpr (N < TOOM_2X_BOUND) {
         // use a fast subroutine if possible
+        if constexpr ((N / 12 * 12 == N) && (itch::is_power_of_2_t<N / 12>())) {
+            // toom22_2x_broadwell_t is smart enough
+            return toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
+        }
+        if constexpr (itch::is_power_of_2_t<N>() && (N >= 16)) {
+            return toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
+        }
         if constexpr (N == 8) {
             mul8_broadwell_store_once(rp, ap, bp);
         } else if constexpr (N == 6) {
