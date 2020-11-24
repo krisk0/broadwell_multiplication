@@ -27,7 +27,8 @@ build tests: phony test4.exe test8.exe test16.exe test_mpn_less.exe $
         test_mpn_sub_inplace.exe test_toom22_xx.exe test_toom22_broadwell_t.exe $
         test_bdiv_dbm1c_4k.exe test_bdiv_dbm1c_4k_inplace.exe test_shr.exe $
         test_mpn_mul2_add.exe test6_zen.exe test_mul_4x_zen_5arg_{4,8,12,16}.exe $
-        test_mul_n_zen_4arg_{1,2,3,4,5,6,8,10,12,14,16,20,24}.exe
+        test_mul_n_zen_4arg_{1,2,3,4,5,6,8,10,12,14,16,20,24}.exe $
+        test_itch_broadwell.exe
 
 build exe: phony tests benchmarks
 
@@ -107,6 +108,11 @@ test_bdiv_dbm1c_4k_inplace.exe: test_bdiv_dbm1c_4k_inplace.cpp @int_h $
 test_shr.exe: test_shr.cpp @int_h shift_avx2.h $o/shr1_x_avx2.h
 
 test_mpn_mul2_add.exe: test_mpn_mul2_add.cpp @int_h $o/mpn_mul2_add_4k.h
+
+test_itch_broadwell.exe: test_itch_broadwell.cpp toom22_interpolate_16.s $
+		addmul_1_adox.s @int_h $o/test_itch_broadwell.h toom22_generic.h
+
+test_itch_broadwell.h: test_itch_broadwell
 
 mul4_broadwell.s: mul4
 mul4_broadwell.h: mul4

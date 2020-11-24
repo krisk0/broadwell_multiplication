@@ -14,8 +14,8 @@ w7 -< rcx -< vp
 rbp rbx r12 r13 r14 r15
 wB  wA  w9  w8  w6  w5    -- saved
 
-rax r8  r9  r10 r11
-w0  w1  w2  w3  w4
+rax r8  r9  r10 r11 rsi    rdi rdx
+w0  w1  w2  w3  w4  w7,up  vp  dd
 """
 
 g_mul0='''
@@ -201,6 +201,11 @@ def do_it(o):
     tail = tail.replace('!restore', '|restore')
     meat += tail.split('\n')
     cook_asm(o, '\n'.join(meat), xmm_save)
+
+try:
+    os.makedirs(os.path.dirname(sys.argv[1]))
+except:
+    pass
 
 with open(sys.argv[1], 'wb') as g_out:
     do_it(g_out)

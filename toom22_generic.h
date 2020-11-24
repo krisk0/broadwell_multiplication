@@ -966,14 +966,15 @@ template<uint16_t, uint16_t> struct toom22_broadwell_t;
 template<uint16_t N>
 struct toom22_broadwell_t<N, 0> {
     static constexpr uint64_t v() {
-        // return zero, unless degree of two or good multiple of 12
+        // return zero, unless degree of two or good multiple of 12,
         if constexpr ((N / 12 * 12 == N) && (is_power_of_2_t<N / 12>())) {
             return sum_progression_t<12, N>();
         }
         if constexpr (is_power_of_2_t<N>() && (N >= 16)) {
             return sum_progression_t<16, N>();
         }
-        return 0;
+        // ... or exactly TOOM_2X_BOUND
+        return N < TOOM_2X_BOUND ? 0 : (N + 1) / 2 * 2;
     }
 };
 
@@ -1048,7 +1049,7 @@ toom22_itch_broadwell(uint16_t N) {
     if (!(N & 1)) {
         return N + toom22_itch_broadwell(N / 2);
     }
-    auto h = N / 2;
+    auto h = (N + 1)/ 2;
     return 2 * h + std::max(toom22_itch_broadwell(h), toom22_itch_broadwell(h - 1));
 }
 
@@ -1091,7 +1092,7 @@ toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         printf("toom22_broadwell_t<%u>\n", N);
     #endif
     if constexpr (N < TOOM_2X_BOUND) {
-        // use a fast subroutine if possible
+        // for some N, call Toom-22 subroutine even though N is small
         if constexpr ((N / 12 * 12 == N) && (itch::is_power_of_2_t<N / 12>())) {
             // toom22_2x_broadwell_t is smart enough
             return toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
@@ -1099,6 +1100,7 @@ toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         if constexpr (itch::is_power_of_2_t<N>() && (N >= 16)) {
             return toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
         }
+        // for N=6 of 8, use hand-optimized subroutine
         if constexpr (N == 8) {
             mul8_broadwell_store_once(rp, ap, bp);
         } else if constexpr (N == 6) {
@@ -1107,7 +1109,7 @@ toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
             // call asm subroutine from GMP, bypassing if's in mpn_mul_n()
             MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
         }
-   } else {
+    } else {
         if constexpr (N & 1) {
             toom22_1x_broadwell_t<N>(rp, scratch, ap, bp);
         } else {
