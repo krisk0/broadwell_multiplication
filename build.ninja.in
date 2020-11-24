@@ -2,13 +2,15 @@ o = ./automagic
 
 build benchmarks: phony $
         benchm4_official.exe benchm4_basecase.exe $
-        benchm{8,12,16,24,25}_basecase.exe benchm8_custom.exe benchm{8,16,24}_official.exe $
+        benchm{8,12,16,24,25}_basecase.exe benchm8_custom.exe $
+        benchm{8,16,24}_official.exe $
         benchm16_toom22_wide.exe $
         benchm{32,55,64}_toom22_gmp.exe benchm{32,64}_official.exe $
         benchm{32,64}_toom22_n.exe $
         benchm{12,16,24,25,28,32,48,55,64,72,96,111}_toom22_t.exe $
         benchm{16,24,25,28,32,55,64,96,111}_toom22_w.exe $
-        benchm{28,32,48,55,64,72}_toom22_gmp.exe $ # MUL_TOOM33_THRESHOLD = 73 for skylake
+        # MUL_TOOM33_THRESHOLD = 73 for skylake
+        benchm{28,32,48,55,64,72}_toom22_gmp.exe $
         benchm{96,111}_toom.exe $
         benchm_xx_official.exe $
         benchm_xx_shortcut.exe benchm_xx_custom.exe benchm_xx_basecase.exe $
@@ -62,14 +64,15 @@ test_mul_n_zen_4arg_%.exe: test_mul_n_zen_4arg.c mul_n_zen_4arg.s @int_h $
 
 test6.exe: $o/test6.cpp @int_h $o/mul6.h
 
-test6_zen.exe: $o/test6_zen.cpp @int_h $o/mul6_zen.h
+test6_zen.exe: $o/test6_zen.cpp mul6_zen.s @int_h
 
 # ups, dependency on test8_once.cpp missing
 build $o/test6.cpp: create_c_code mutate.py
     extra = 8_to_6
 
 build $o/test6_zen.cpp: create_c_code mutate.py
-    extra = 8_to_6 mul6.h-mul6_zen.h broadwell-zen
+    #extra = 8_to_6 mul6.h-mul6_zen.h broadwell-zen
+    extra = 8to6 broadwell-zen
 
 test16.exe: test16.cpp toom22_interpolate_16.s @int_h $o/toom22_mul_16.h
 
@@ -123,7 +126,7 @@ toom22_mul_@_raw.h: toom22 [8 16]
 
 mul6.h: mul6
 
-mul6_zen.h: mul6_zen
+mul6_zen.s: mul6_zen
 
 mul8_store_once.h: mul8_store1
 
@@ -185,10 +188,10 @@ shr1_x_avx2.h: shr1_4_avx2.h shr1_7_avx2.h shr1_10_avx2.h shr1_6k_plus1_avx2.h $
 
 
 benchm6_zen.exe: benchmark6.cpp @int_h benchmark-internal.c $
-        $o/mul6.h $o/mul6_zen.h [+flags -DSUBR=C_ZEN]
+        $o/mul6.h mul6_zen.s [+flags -DSUBR=C_ZEN]
 
 benchm6_broadwell.exe: benchmark6.cpp @int_h benchmark-internal.c $
-        $o/mul6.h $o/mul6_zen.h [+flags -DSUBR=C_BROADWELL]
+        $o/mul6.h [+flags -DSUBR=C_BROADWELL]
 
 
 benchm8_custom.exe: benchmark8.cpp @int_h benchmark-internal.c $

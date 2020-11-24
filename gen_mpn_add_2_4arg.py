@@ -97,8 +97,9 @@ def do_it(o):
         n = r[1]
         k -= 1
         reg_map['s' + n] = 'xmm%s' % k
-        code = code.replace('!restore ' + r, 'vmovq s@, w@'.replace('@', n))
-        code = code.replace('!save ' + r, 'vmovq w@, s@'.replace('@', n))
+        # TODO: test and benchmark mpn_add2_4arg
+        code = code.replace('!restore ' + r, 'movq s@, w@'.replace('@', n))
+        code = code.replace('!save ' + r, 'movq w@, s@'.replace('@', n))
     # fix offsets
     code = P.replace_positive_offsets(code)
     code = P.replace_negative_offsets(code)

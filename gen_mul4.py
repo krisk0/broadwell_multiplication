@@ -469,6 +469,21 @@ def save_registers(xx):
             result['w' + m] = 's' + m
     return result
 
+g_xmm_save_pattern = re.compile('!save (.+)')
+def save_registers_in_xmm(cc, s0):
+    result = dict()
+    for i in range(len(cc)):
+        c = cc[i]
+        m = g_xmm_save_pattern.match(c)
+        if not m:
+            continue
+        m = m.group(1)
+        t = '%%xmm%s' % s0
+        s0 -= 1
+        cc[i] = 'movq %s, %s' % (m, t)
+        result[m] = t
+    return result
+
 if __name__ == '__main__':
     g_out = sys.argv[1]
     
