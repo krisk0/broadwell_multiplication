@@ -15,22 +15,22 @@ vpextrq $0x1,bJ_128,w1                               | w1 := b1                !
 addq 64(rp), w0                                      | ' w0                    ! p0156 p23
 vperm2i128 $0x81,bJ,bJ,bJ                            | bJ := b3 b2             ! p5
 adcq 8(rp), w1                                       | ' w1 w0                 ! p06 p23
-vmovq bJ_128, w2                                     | w2 := b2                ! p0
+movq bJ_128, w2                                      | w2 := b2                ! p0
 push w6                                              |                         ! p237 p4
 vpextrq $0x1,bJ_128,w3                               | w3 := b3                ! p0 p5
 adcq 16(rp), w2                                      | ' w2 w1 w0              ! p06 p23
 adcq 24(rp), w3                                      | ' w3 w2 w1 w0           ! p06 p23
 vperm2i128 $0x81,bS,bS,bJ                            | bJ := b7 b6             ! p5
-vmovq bS_128, w4                                     | w4 := b4                ! p0
+movq bS_128, w4                                      | w4 := b4                ! p0
 push w7                                              |                         ! p237 p4
 vpextrq $0x1,bS_128,w5                               | w5 := b5                ! p0 p5
 adcq 32(rp), w4                                      | ' w4 w3 w2 w1 w0        ! p06
 vpxor bS_128, bS_128, bS_128                         | bS := 0                 ! p015
-vmovq bJ_128, w6                                     | w6 := b6                ! p0
+movq bJ_128, w6                                      | w6 := b6                ! p0
 adcq 40(rp), w5                                      | ' w5 w4 w3 w2 w1 w0     ! p06 p23
 vpextrq $0x1,bJ_128,w7                               | w7 := b7                ! p0 p5
 adcq 48(rp), w6                                      | ' w6 w5 w4 w3 w2 w1 w0  ! p06 p23
-vmovq bS_128, w8                                     | w8 := 0                 ! p0
+movq bS_128, w8                                      | w8 := 0                 ! p0
 adcq 56(rp), w7                                      |  ' w7 w6 w5 w4 w3 w2 w1 w0! p06 p23
 adcq $0, w8                                          | w8 w7 w6 w5 w4 w3 w2 w1 w0 ! p06
 
@@ -53,7 +53,7 @@ movq w1, 40(rp)
 movq w2, 48(rp)
 movq w3, 56(rp)                            | w8 w7 w6 w5 w4'
 
-vmovq bS_128, w0                           |                  w0 := 0
+movq bS_128, w0                            |                  w0 := 0
 adcq 64(rp), w4
 adcq 72(rp), w5
 adcq 80(rp), w6

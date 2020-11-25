@@ -5,7 +5,7 @@ w7 -< rcx -< vp
 r12, r13, r14, r15
  w8   w6   w5   w4
 w5 w6 w8 saved
-!save ... -- store in xmm. (vmovq)
+!save ... -- store in xmm. (movq)
 """
 
 g_mul1='''

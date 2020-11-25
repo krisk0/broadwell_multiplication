@@ -8,7 +8,7 @@ rbx, rbp, r12, r13, r14, r15
 w5 w6 w8 w9 wA saved
 
 @save ... -- store in stack (push)
-!save ... -- store in xmm. (vmovq)
+!save ... -- store in xmm. (movq)
 """
 
 g_mul1='''

@@ -14,7 +14,7 @@ all 4 registers used as input parameters modified
 
 g_code = '''
 xorq w5, w5                       | zero carries and w5
-vmovq w5, vv                      | vv = 0
+movq w5, vv                       | vv = 0
 @save w2
 movq (tt), w0
 movq +1(tt), w1                   | w1 = t1
@@ -59,7 +59,7 @@ loop loop
 !restore w4
 adox w5, w1                       | w1 = r5
 adcx +2(aa), w2                   | w2 = t6 + a6
-vmovq vv, w5                      | w5 = 0
+movq vv, w5                       | w5 = 0
 adox w6, w2                       | w2 = r6
 adcx +3(aa), w3                   | w3 = t7 + a7
 movq w5, w6                       | w6 = 0
