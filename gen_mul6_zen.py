@@ -10,7 +10,7 @@ this subroutine spends 60 ticks on AMD Ryzen 7 3800X compared to 74 for
 """
       rdi -< rp
       rsi -< up
-w7 -< rcx -< vp
+      rdx -< (vp)
 
 rbp rbx r12 r13 r14 r15
 wB  wA  w9  w8  w6  w5    -- saved
@@ -85,16 +85,6 @@ movq w9, 88(rp)
 !restore wB
 !restore w9
 retq
-'''
-
-# mul6_zen() wants registers not expressions, so wrap it up
-g_wr_code = '''
-#define mul6_zen_wr(r, u, v)
-    {
-        auto mul6_zen_wr_r = r;
-        auto mul6_zen_wr_u = u;
-        auto mul6_zen_wr_v = v;
-        mul6_zen(mul6_zen_wr_r, mul6_zen_wr_u, mul6_zen_wr_v);
 '''
 
 import os, re, sys

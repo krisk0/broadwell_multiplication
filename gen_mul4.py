@@ -484,6 +484,12 @@ def save_registers_in_xmm(cc, s0):
         result[m] = t
     return result
 
+def composition(a, b):
+    r = a[:]
+    for i in range(len(b)):
+        r[i] = b[a[i]]
+    return r
+
 if __name__ == '__main__':
     g_out = sys.argv[1]
     

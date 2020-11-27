@@ -4,18 +4,18 @@
 
 extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr, mp_size_t, mp_srcptr, mp_size_t);
-void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
+void mul6_zen(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
-#define GOOD(r, u, v) __gmpn_mul_basecase(r, u, 8, v, 8)
-#define SIZE 8
+#define GOOD(r, u, v) __gmpn_mul_basecase(r, u, 6, v, 6)
+#define SIZE 6
 #define RAND_SEED 20190610
 
 #if ZEN
-    #define BAAD(r, u, v) mul8_zen(r, u, v)
+    #define BAAD(r, u, v) mul6_zen(r, u, v)
 #else
-    #include "automagic/mul8_store_once.h"
-    #define BAAD(r, u, v) mul8_broadwell_store_once_wr(r, u, v)
+    #include "automagic/mul6.h"
+    #define BAAD(r, u, v) mul6_broadwell_wr(r, u, v)
 #endif
 
 #include "test-internal.h"

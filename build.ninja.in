@@ -23,7 +23,7 @@ build benchmarks: phony $
         benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
         benchm25_toom22_1x_loud.exe
 
-build tests: phony test4.exe test8.exe test16.exe test_mpn_less.exe $
+build tests: phony test4.exe test8_{broadwell,zen}.exe test16.exe test_mpn_less.exe $
         test_mpn_sub.exe test_mpn_sub_4k.exe test_mpn_add_4k.exe $
         test_toom22_generic.exe test_toom22_generic_n.exe test6.exe $
         test_mpn_sub_inplace.exe test_toom22_xx.exe test_toom22_broadwell_t.exe $
@@ -54,7 +54,9 @@ rule catenate
 
 test4.exe: test4.cpp mul4_broadwell.s @int_h $o/mpn_le_4.h $o/mul4_broadwell.h
 
-test8.exe: test8_once.cpp @int_h $o/mul8_store_once.h
+test8_broadwell.exe: test8.cpp @int_h $o/mul8_store_once.h
+
+test8_zen.exe: test8.cpp mul8_zen.s @int_h [+flags -DZEN=1]
 
 test_mul_4x_zen_5arg_%.exe: test_mul_4x_zen_5arg.c mul_4x_zen_5arg.s @int_h $
     [+flags -DSIZE=%]
@@ -62,17 +64,9 @@ test_mul_4x_zen_5arg_%.exe: test_mul_4x_zen_5arg.c mul_4x_zen_5arg.s @int_h $
 test_mul_n_zen_4arg_%.exe: test_mul_n_zen_4arg.c mul_n_zen_4arg.s @int_h $
     [+flags -DSIZE=%]
 
-test6.exe: $o/test6.cpp @int_h $o/mul6.h
+test6.exe: test6.cpp @int_h $o/mul6.h
 
-test6_zen.exe: $o/test6_zen.cpp mul6_zen.s @int_h
-
-# ups, dependency on test8_once.cpp missing
-build $o/test6.cpp: create_c_code mutate.py
-    extra = 8_to_6
-
-build $o/test6_zen.cpp: create_c_code mutate.py
-    #extra = 8_to_6 mul6.h-mul6_zen.h broadwell-zen
-    extra = 8to6 broadwell-zen
+test6_zen.exe: test6.cpp mul6_zen.s @int_h [+flags -DZEN=1]
 
 test16.exe: test16.cpp toom22_interpolate_16.s @int_h $o/toom22_mul_16.h
 
@@ -127,6 +121,8 @@ toom22_mul_@_raw.h: toom22 [8 16]
 mul6.h: mul6
 
 mul6_zen.s: mul6_zen
+
+mul8_zen.s: mul8_zen
 
 mul8_store_once.h: mul8_store1
 
