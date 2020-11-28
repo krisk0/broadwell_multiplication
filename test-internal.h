@@ -70,13 +70,27 @@ test_uv(INT* u, INT* v) {
     }
 }
 
+uint64_t
+single_byte(uint64_t x) {
+    uint8_t a[8];
+    a[0] = x;
+    for(int i = 1; i < 8; i++) {
+        a[i] = 1 + a[i - 1];
+    }
+    memcpy(&x, a+0, sizeof(x));
+    return x;
+}
+
 void
 do_test() {
     for(unsigned a = 0; a < BITS_PER_LIMB * SIZE; a++) {
         deg2(g_u + 0, SIZE, a);
         for(unsigned b = 0; b < BITS_PER_LIMB * SIZE; b++) {
             deg2(g_v + 0, SIZE, b);
-            random_number<INT>(g_baad + 0, SIZE * 2);
+            //random_number<INT>(g_baad + 0, SIZE * 2);
+            for(unsigned x = 0; x < SIZE * 2; x++) {
+                g_baad[x] = single_byte(x+1);
+            }
             GOOD(g_good + 0, g_u + 0, g_v + 0);
             BAAD(g_baad + 0, g_u + 0, g_v + 0);
             if (memcmp(g_good + 0, g_baad + 0, SIZE * 2 * sizeof(INT))) {

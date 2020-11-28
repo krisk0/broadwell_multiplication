@@ -19,7 +19,6 @@ vmovdqu 8(w0), v14               | ready v[1..4]
 mulx (up), w1, w2                | w2 w1
 mulx 8(up), w3, w4               | w4 w2+w3 w1
 !save w6
-vpxor vZ, vZ, vZ                 | will need zero later
 mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
 mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
 !save w9
@@ -46,7 +45,7 @@ adcq w3, w2                      | w5' w2 w1 w9 w0 w6+wA w7+w8: w4: --
 mulx 16(up), w3, wB              | w5' w2 w1 w9 w0+wB w3+w6+wA w7+w8: w4: --
 adcq $0, w5                      | w5 w2 w1 w9 w0+wB w3+w6+wA w7+w8: w4: --
 addq w4, 8(rp)                   | w5 w2 w1 w9 w0+wB w3+w6+wA w7+w8': -- --
-movq vZ, w4                      | w4 = 0
+movq $0, w4                      | w4 = 0
 adcq w8, 16(rp)                  | w5 w2 w1 w9 w0+wB w3+w6+wA' w7: -- --
 adcq wA, w6                      | w5 w2 w1 w9 w0+wB' w3+w6 w7: -- --
 mulx 24(up), w8, wA              | w5 w2 w1 w9+wA w0+w8+wB' w3+w6 w7: -- --
@@ -69,7 +68,7 @@ adox wA, w2                      | w5+w9" w2+w7 w1+w8' w4+w6 w0 w3 .. {2}
 mulx 56(up), wA, wB              | wB w5+w9+wA" w2+w7 w1+w8' w4+w6 w0 w3 .. {2}
 vpextrq $0x1, v14, dd            | ready v[2]
 adcx w8, w1                      | wB w5+w9+wA" w2+w7' w1 w4+w6 w0 w3 .. {2}
-movq vZ, w8
+movq $0, w8
 adcx w7, w2                      | wB w5+w9+wA'" w2 w1 w4+w6 w0 w3 .. {2}
 adox w9, w5                      | wB" w5+wA' w2 w1 w4+w6 w0 w3 .. {2}
 
@@ -103,7 +102,7 @@ adcx w7, w2                      | w9+wB w5+w6+wA' w2+w0" w1 w4+w8 .. .. {3}
 mulx 56(up), w3, w7              | w7 w9+wB+w3 w5+w6+wA' w2+w0" w1 w4+w8 .. .. {3}
 movq v14, dd                     | ready v[3]
 adox w2, w0                      | w7 w9+wB+w3 w5+w6+wA'" w0 w1 w4+w8 .. .. {3}
-movq vZ, w2                      | w2=0
+movq $0, w2                      | w2=0
 adcx w6, w5                      | w7 w9+wB+w3' w5+wA" w0 w1 w4+w8 .. .. {3}
 adcx wB, w9                      | w7' w9+w3 w5+wA" w0 w1 w4+w8 .. .. {3}
 '''
@@ -126,44 +125,44 @@ adox s9, s3                   | s7" s3 s5 s0 s1 s4+s8 sB: s6: {i} s2=0
 mulx 8(up), s9, sA            | s7" s3 s5 s0 s1 s4+s8+sA sB+s9: s6: {i} s2=0
 adox s2, s7                   | s7 s3 s5 s0 s1 s4+s8+sA sB+s9: s6: {i} s2=0
 adcx s8, s4                   | s7 s3 s5 s0 s1' s4+sA sB+s9: s6: {i} s2=0
-mulx 16(up), s2, s8           | s7 s3 s5 s0 s1+s8' s4+sA+s2 sB+s9: s6: {i} 
-movq s7, t0                   | t0 s3 s5 s0 s1+s8' s4+sA+s2 sB+s9: s6: {i} 
-movq i(rp), s7                | t0 s3 s5 s0 s1+s8' s4+sA+s2 sB+s9: s6+s7 {i} 
-adox s7, s6                   | t0 s3 s5 s0 s1+s8' s4+sA+s2 sB+s9": s6 {i} 
-movq i+1(rp), s7              | t0 s3 s5 s0 s1+s8' s4+sA+s2 sB+s7+s9" s6 {i} 
-adox sB, s7                   | t0 s3 s5 s0 s1+s8' s4+sA+s2" s7+s9 s6 {i} 
-movq s6, i(rp)                | t0 s3 s5 s0 s1+s8' s4+sA+s2" s7+s9 .. {i} 
-movq vZ, sB                   | t0 s3 s5 s0 s1+s8' s4+sA+s2" s7+s9 .. {i} sB=0
-movq s3, t1                   | t0 t1 s5 s0 s1+s8' s4+sA+s2" s7+s9 .. {i} sB=0
-mulx 24(up), s3, s6           | t0 t1 s5 s0+s6 s1+s8+s3' s4+sA+s2" s7+s9 .. {i} sB=0
-adox sA, s4                   | t0 t1 s5 s0+s6 s1+s8+s3'" s4+s2 s7+s9 .. {i} sB=0
-adcx s8, s1                   | t0 t1 s5 s0+s6' s1+s3" s4+s2 s7+s9 .. {i} sB=0
-mulx 32(up), s8, sA           | t0 t1 s5+sA s0+s6+s8' s1+s3" s4+s2 s7+s9 .. {i} sB=0
-adcx sB, sB                   | t0 t1 s5+sA s0+s6+s8+sB s1+s3" s4+s2 s7+s9 .. {i} sB=0
-adcx s9, s7                   | t0 t1 s5+sA s0+s6+s8+sB s1+s3" s4+s2' s7 .. {i}
-movq s7, i+1(rp)              | t0 t1 s5+sA s0+s6+s8+sB s1+s3" s4+s2' .. .. {i}
-mulx 40(up), s7, s9           | t0 t1+s9 s5+sA+s7 s0+s6+s8+sB s1+s3" s4+s2' .. .. {i}
-adcx s4, s2                   | t0 t1+s9 s5+sA+s7 s0+s6+s8+sB s1+s3"' s2 .. .. {i}
-movq s2, i+2(rp)              | t0 t1+s9 s5+sA+s7 s0+s6+s8+sB s1+s3"' [3] {i}
-movq vZ, s2                   | t0 t1+s9 s5+sA+s7 s0+s6+s8+sB s1+s3"' [3] {i} s2=0
-adox s3, s1                   | t0 t1+s9 s5+sA+s7 s0+s6+s8+sB" s1' [3] {i} s2=0
-adox s6, s0                   | t0 t1+s9 s5+sA+s7" s0+s8+sB s1' [3] {i} s2=0
-mulx 48(up), s3, s6           | t0+s6 t1+s9+s3 s5+sA+s7" s0+s8+sB s1' [3] {i} s2=0
-adcx s2, s1                   | t0+s6 t1+s9+s3 s5+sA+s7" s0+s8+sB' s1 [3] {i} s2=0
-mulx 56(up), s2, s4           | s4 t0+s6+s2 t1+s9+s3 s5+sA+s7" s0+s8+sB' s1 [3] {i} 
-movq s1, i+2(rp)              | s4 t0+s6+s2 t1+s9+s3 s5+sA+s7" s0+s8+sB' [4] {i}
-movq vZ, s1
-adcx s8, s0                   | s4 t0+s6+s2 t1+s9+s3 s5+sA+s7"' s0+sB [4] {i} s1=0
-movq t1, s8                   | s4 t0+s6+s2 s9+s3+s8 s5+sA+s7"' s0+sB [4] {i} s1=0
-adox sA, s5                   | s4 t0+s6+s2 s9+s3+s8" s5+s7' s0+sB [4] {i} s1=0
+mulx 16(up), s2, s8           | s7 s3 s5 s0 s1+s8' s4+sA+s2 sB+s9: s6: {i}
+movq s7, t0                   | t0 s3 s5 s0 s1+s8' s4+sA+s2 sB+s9: s6: {i}
+movq i(rp), s7                | t0 s3 s5 s0 s1+s8' s4+sA+s2 sB+s9: s6+s7 {i}
+adox s7, s6                   | t0 s3 s5 s0 s1+s8' s4+sA+s2 sB+s9": s6 {i}
+movq i+1(rp), s7              | t0 s3 s5 s0 s1+s8' s4+sA+s2 sB+s7+s9" s6 {i}
+adox sB, s7                   | t0 s3 s5 s0 s1+s8' s4+sA+s2" s7+s9 s6 {i}
+movq s6, i(rp)                | t0 s3 s5 s0 s1+s8' s4+sA+s2" s7+s9 {i+1}
+movq $0, sB                   | t0 s3 s5 s0 s1+s8' s4+sA+s2" s7+s9 {i+1} sB=0
+movq s3, t1                   | t0 t1 s5 s0 s1+s8' s4+sA+s2" s7+s9 {i+1} sB=0
+mulx 24(up), s3, s6           | t0 t1 s5 s0+s6 s1+s8+s3' s4+sA+s2" s7+s9 {i+1} sB=0
+adox sA, s4                   | t0 t1 s5 s0+s6 s1+s8+s3'" s4+s2 s7+s9 {i+1} sB=0
+adcx s8, s1                   | t0 t1 s5 s0+s6' s1+s3" s4+s2 s7+s9 {i+1} sB=0
+mulx 32(up), s8, sA           | t0 t1 s5+sA s0+s6+s8' s1+s3" s4+s2 s7+s9 {i+1} sB=0
+adcx sB, sB                   | t0 t1 s5+sA s0+s6+s8+sB s1+s3" s4+s2 s7+s9 {i+1} sB=0
+adcx s9, s7                   | t0 t1 s5+sA s0+s6+s8+sB s1+s3" s4+s2' s7 {i+1}
+movq s7, i+1(rp)              | t0 t1 s5+sA s0+s6+s8+sB s1+s3" s4+s2' .. {i+1}
+mulx 40(up), s7, s9           | t0 t1+s9 s5+sA+s7 s0+s6+s8+sB s1+s3" s4+s2' .. {i+1}
+adcx s4, s2                   | t0 t1+s9 s5+sA+s7 s0+s6+s8+sB s1+s3"' s2 .. {i+1}
+movq s2, i+2(rp)              | t0 t1+s9 s5+sA+s7 s0+s6+s8+sB s1+s3"' [2] {i+1}
+movq $0, s2                   | t0 t1+s9 s5+sA+s7 s0+s6+s8+sB s1+s3"' [2] {i+1} s2=0
+adox s3, s1                   | t0 t1+s9 s5+sA+s7 s0+s6+s8+sB" s1' [2] {i+1} s2=0
+adox s6, s0                   | t0 t1+s9 s5+sA+s7" s0+s8+sB s1' [2] {i+1} s2=0
+mulx 48(up), s3, s6           | t0+s6 t1+s9+s3 s5+sA+s7" s0+s8+sB s1' [2] {i+1} s2=0
+adcx s2, s1                   | t0+s6 t1+s9+s3 s5+sA+s7" s0+s8+sB' s1 [2] {i+1} s2=0
+mulx 56(up), s2, s4           | s4 t0+s6+s2 t1+s9+s3 s5+sA+s7" s0+s8+sB' s1 [2] {i+1}
+movq s1, i+3(rp)              | s4 t0+s6+s2 t1+s9+s3 s5+sA+s7" s0+s8+sB' [3] {i+1}
+movq $0, s1
+adcx s8, s0                   | s4 t0+s6+s2 t1+s9+s3 s5+sA+s7"' s0+sB [3] {i+1} s1=0
+movq t1, s8                   | s4 t0+s6+s2 s9+s3+s8 s5+sA+s7"' s0+sB [3] {i+1} s1=0
+adox sA, s5                   | s4 t0+s6+s2 s9+s3+s8" s5+s7' s0+sB [3] {i+1} s1=0
 extract v[i+1]
-movq t0, sA                   | s4 s6+s2+sA s9+s3+s8" s5+s7' s0+sB [4] {i} s1=0
-adcx s7, s5                   | s4 s6+s2+sA s9+s3+s8"' s5 s0+sB [4] {i} s1=0
-adox s9, s3                   | s4 s6+s2+sA" s3+s8' s5 s0+sB [4] {i} s1=0
-adox s6, s2                   | s4" s2+sA s3+s8' s5 s0+sB [4] {i} s1=0
-adcx s8, s3                   | s4" s2+sA' s3 s5 s0+sB [4] {i} s1=0
-adox s1, s4                   | s4 s2+sA' s3 s5 s0+sB [4] {i} s1=0
-adcx sA, s2                   | s4' s2 s3 s5 s0+sB [4] {i} s1=0
+movq t0, sA                   | s4 s6+s2+sA s9+s3+s8" s5+s7' s0+sB [3] {i+1} s1=0
+adcx s7, s5                   | s4 s6+s2+sA s9+s3+s8"' s5 s0+sB [3] {i+1} s1=0
+adox s9, s3                   | s4 s6+s2+sA" s3+s8' s5 s0+sB [3] {i+1} s1=0
+adox s6, s2                   | s4" s2+sA s3+s8' s5 s0+sB [3] {i+1} s1=0
+adcx s8, s3                   | s4" s2+sA' s3 s5 s0+sB [3] {i+1} s1=0
+adox s1, s4                   | s4 s2+sA' s3 s5 s0+sB [3] {i+1} s1=0
+adcx sA, s2                   | s4' s2 s3 s5 s0+sB [3] {i+1} s1=0
 '''
 
 """
@@ -172,54 +171,232 @@ s2=0
 dd=v[i]
 multiplied by v[0], .. v[i-1]
 v[i+1] can be extracted with single instruction
-data lies like that: s4' s2 s3 s5 s0+sB .. .. .. {i-1} s1=0
+data lies like that: s4' s2 s3 s5 s0+sB .. .. .. {i} s1=0
 """
 
-g_tail = '''
-movq $0, 40(rp)
-movq $0, 48(rp)
-movq $0, 56(rp)
-movq $0, 64(rp)
-movq $0, 72(rp)
-movq $0, 80(rp)
-movq $0, 88(rp)
-movq $0, 96(rp)
-movq $0, 104(rp)
-movq $0, 112(rp)
-movq $0, 120(rp)
-!restore wB
-!restore wA
-!restore w9
-!restore w8
-!restore w6
-!restore w5
+g_muladd_4 = '''
+mulx (up), s6, s7     | s4' s2 s3 s5 s0+sB .. s7: s6: {i} s1=0
+adox sB, s0           | s4' s2 s3 s5" s0 .. s7: s6: {i} s1=0
+adcx s1, s4           | s4 s2 s3 s5" s0 .. s7: s6: {i} s1=0
+mulx 8(up), s8, sB    | s4 s2 s3 s5" s0 sB: s7+s8: s6: {i} s1=0
+movq s4, t0           | t0 s2 s3 s5" s0 sB: s7+s8: s6: {i} s1=0
+movq i(rp), s4        | t0 s2 s3 s5" s0 sB: s7+s8: s4+s6 {i} s1=0
+adcx s6, s4           | t0 s2 s3 s5" s0 sB: s7+s8': s4 {i} s1=0
+adox s1, s1           | t0 s2 s3 s5+s1 s0 sB: s7+s8': s4 {i}
+mulx 16(up), s6, s9   | t0 s2 s3 s5+s1 s0+s9 sB+s6: s7+s8': s4 {i}
+movq i+1(rp), sA      | t0 s2 s3 s5+s1 s0+s9 sB+s6: s7+sA+s8' s4 {i}
+adcx sA, s7           | t0 s2 s3 s5+s1 s0+s9 sB+s6': s7+s8 s4 {i}
+movq s4, i(rp)        | t0 s2 s3 s5+s1 s0+s9 sB+s6': s7+s8 {i+1}
+mulx 24(up), s4, sA   | t0 s2 s3 s5+s1+sA s0+s9+s4 sB+s6': s7+s8 {i+1}
+adox s8, s7           | t0 s2 s3 s5+s1+sA s0+s9+s4 sB+s6'": s7 {i+1}
+movq s7, i+1(rp)      | t0 s2 s3 s5+s1+sA s0+s9+s4 sB+s6'": .. {i+1}
+movq i+2(rp), s7      | t0 s2 s3 s5+s1+sA s0+s9+s4 s7+sB+s6'" .. {i+1}
+adcx sB, s7           | t0 s2 s3 s5+s1+sA s0+s9+s4' s7+s6" .. {i+1}
+mulx 32(up), s8, sB   | t0 s2 s3+sB s5+s1+sA+s8 s0+s9+s4' s7+s6" .. {i+1}
+adox s7, s6           | t0 s2 s3+sB s5+s1+sA+s8 s0+s9+s4'" s6 .. {i+1}
+adcx s9, s0           | t0 s2 s3+sB s5+s1+sA+s8' s0+s4" s6 .. {i+1}
+mulx 40(up), s7, s9   | t0 s2+s9 s3+sB+s7 s5+s1+sA+s8' s0+s4" s6 .. {i+1}
+adox s4, s0           | t0 s2+s9 s3+sB+s7 s5+s1+sA+s8'" s0 s6 .. {i+1}
+adcx s5, s1           | t0 s2+s9 s3+sB+s7' s1+sA+s8" s0 s6 .. {i+1}
+mulx 48(up), s4, s5   | t0+s5 s2+s9+s4 s3+sB+s7' s1+sA+s8" s0 s6 .. {i+1}
+movq s6, i+2(rp)      | t0+s5 s2+s9+s4 s3+sB+s7' s1+sA+s8" s0 [2] {i+1}
+movq t0, s6           | s5+s6 s2+s9+s4 s3+sB+s7' s1+sA+s8" s0 [2] {i+1}
+adox sA, s1           | s5+s6 s2+s9+s4 s3+sB+s7'" s1+s8 s0 [2] {i+1}
+adcx sB, s3           | s5+s6 s2+s9+s4' s3+s7" s1+s8 s0 [2] {i+1}
+mulx 56(up), sA, sB   | sB s5+s6+sA s2+s9+s4' s3+s7" s1+s8 s0 [2] {i+1}
+extract v[i+1]
+movq s0, i+3(rp)      | sB s5+s6+sA s2+s9+s4' s3+s7" s1+s8 [3] {i+1}
+movq $0, s0           | sB s5+s6+sA s2+s9+s4' s3+s7" s1+s8 [3] {i+1} s0=0
+adox s7, s3           | sB s5+s6+sA s2+s9+s4'" s3 s1+s8 [3] {i+1} s0=0
+adcx s9, s2           | sB s5+s6+sA' s2+s4" s3 s1+s8 [3] {i+1} s0=0
+shift v47
+adox s4, s2           | sB s5+s6+sA'" s2 s3 s1+s8 [3] {i+1} s0=0
+adcx s6, s5           | sB' s5+sA" s2 s3 s1+s8 [3] {i+1} s0=0
+adox sA, s5           | sB'" s5 s2 s3 s1+s8 [3] {i+1} s0=0
+adcx s0, sB           | sB" s5 s2 s3 s1+s8 [3] {i+1} s0=0
 '''
 
-g_tail_no = '''
-                      | s3 = sB = 0
-                      | s5 sA+s4 s8+s9' s6 s0" -- -- -- {8}
-!restore s7
-!restore sB
-adox s3, s0
-adcx s9, s8           | s5 sA+s4' s8 s6" s0 -- -- -- {8}
+"""
+i >= 5
+dd=v[i]
+multiplied by v[0], .. v[i-1]
+v[i+1] can be extracted with single instruction
+    old data:        s4' s2 s3 s5 s0+sB [3] {i} s1=0
+data lies like that: sB" s5 s2 s3 s1+s8 [3] {i} s0=0
+"""
+
+# TODO: s5 should be replaced
+g_tail = '''
+                      | sB' s5 s2 s3 s1+s8 [3] {i+1} s0=0 i=7
+movq s0, dd           
+adcx sB, s0           | s0 s5 s2 s3 s1+s8 [3] {i+1} dd=0
+adox s8, s1           | s0 s5 s2 s3" s1 [3] {i+1} dd=0
+movq s1, i+4(rp)      | s0 s5 s2 s3" [4] {i+1} dd=0
+adox dd, s3           | s0 s5 s2" s3 [4] {i+1} dd=0
+movq s3, i+5(rp)      | s0 s5 s2" [5] {i+1} dd=0
+adox dd, s2           | s0 s5" s2 [5] {i+1} dd=0
+movq s2, i+6(rp)      | s0 s5" [6] {i+1} dd=0
+adox dd, s5           | s0" s5 [6] {i+1} dd=0
+movq s5, i+7(rp)      | s0" [7] {i+1} dd=0
+adox s0, dd           | dd [7] {i+1} dd=0
+movq dd, i+8(rp)
+'''
+
+#         0 1 2 3 4 5 6 7 8 9 A B
+g_perm = '1 0 5 2 B 3 6 7 4 9 A 8'
+
+g_muladd_5_br = '''
+                      | s8" s0 s6' s3 s1 .. s9: s5+s7 {i} s2=0
+mulx 8(up), s4, sA    | s8" s0 s6' s3 s1 sA: s9+s4: s5+s7 {i} s2=0
+adox s2, s8           | s8 s0 s6+s2 s3 s1 sA: s9+s4: s5+s7 {i}
+adcx s2, s2
+movq s8, t0
+movq s0, t1           | t0 t1 s6+s2 s3 s1 sA: s9+s4: s5+s7 {i}
+mulx 16(up), s0, s8   | t0 t1 s6+s2 s3 s1+s8 sA+s0: s9+s4: s5+s7 {i}
+adcx s5, s7           | t0 t1 s6+s2 s3 s1+s8 sA+s0: s9+s4': s7 {i}
+movq s7, i(rp)        | t0 t1 s6+s2 s3 s1+s8 sA+s0: s9+s4': {i+1}
+movq i+1(rp), s7      | t0 t1 s6+s2 s3 s1+s8 sA+s0: s7+s9+s4' {i+1}
+adox s9, s7           | t0 t1 s6+s2 s3 s1+s8 sA+s0": s7+s4' {i+1}
+mulx 24(up), s5, s9   | t0 t1 s6+s2 s3+s9 s1+s8+s5 sA+s0": s7+s4' {i+1}
+adcx s7,s4            | t0 t1 s6+s2 s3+s9 s1+s8+s5 sA+s0'": s4 {i+1}
+movq s4, i+1(rp)      | t0 t1 s6+s2 s3+s9 s1+s8+s5 sA+s0'": .. {i+1}
+movq i+2(rp), s4      | t0 t1 s6+s2 s3+s9 s1+s8+s5 s4+sA+s0'" .. {i+1}
+adox sA, s4           | t0 t1 s6+s2 s3+s9 s1+s8+s5" s4+s0' .. {i+1}
+mulx 32(up), s7, sA   | t0 t1 s6+s2+sA s3+s9+s7 s1+s8+s5" s4+s0' .. {i+1}
+adcx s4, s0           | t0 t1 s6+s2+sA s3+s9+s7 s1+s8+s5"' s0 .. {i+1}
+movq t1, s0           | t0 s0 s6+s2+sA s3+s9+s7 s1+s8+s5"' s0 .. {i+1}
+adox s8, s1           | t0 s0 s6+s2+sA s3+s9+s7" s1+s5' s0 .. {i+1}
+movq s0, i+2(rp)      | t0 s0 s6+s2+sA s3+s9+s7" s1+s5' .. .. {i+1}
+mulx 40(up), s4, s8   | t0 s0+s8 s6+s2+sA+s4 s3+s9+s7" s1+s5' .. .. {i+1}
+adcx s5, s1           | t0 s0+s8 s6+s2+sA+s4 s3+s9+s7"' s1 .. .. {i+1}
+movq s1, i+3(rp)      | t0 s0+s8 s6+s2+sA+s4 s3+s9+s7"' .. .. .. {i+1}
+movq t0, s1           | s1 s0+s8 s6+s2+sA+s4 s3+s9+s7"' .. .. .. {i+1}
+adox s9, s3           | s1 s0+s8 s6+s2+sA+s4" s3+s7' .. .. .. {i+1}
+mulx 48(up), s5, s9   | s1+s9 s0+s8+s5 s6+s2+sA+s4" s3+s7' .. .. .. {i+1}
+adcx s7, s3           | s1+s9 s0+s8+s5 s6+s2+sA+s4"' s3 .. .. .. {i+1}
+adox s6, s2           | s1+s9 s0+s8+s5" s2+sA+s4' s3 .. .. .. {i+1}
+mulx 56(up), s6, s7   | s7 s1+s9+s6 s0+s8+s5" s2+sA+s4' s3 .. .. .. {i+1}
+extract v[i+1]
+adcx sA, s2           | s7 s1+s9+s6 s0+s8+s5"' s2+s4 s3 .. .. .. {i+1}
+movq $0, sA
+adox s8, s0           | s7 s1+s9+s6" s0+s5' s2+s4 s3 .. .. .. {i+1}
+movq sA, s8
+shift v47
+adcx sA, sA           | s7 s1+s9+s6" s0+s5+sA s2+s4 s3 .. .. .. {i+1} s8=0
+adox s9, s1           | s7" s1+s6 s0+s5+sA s2+s4 s3 .. .. .. {i+1} s8=0
+adcx s4, s2           | s7" s1+s6 s0+s5+sA' s2 s3 .. .. .. {i+1} s8=0
+adox s8, s7           | s7 s1+s6 s0+s5+sA' s2 s3 .. .. .. {i+1} s8=0
+adcx s5, s0           | s7 s1+s6' s0+sA s2 s3 .. .. .. {i+1} s8=0
+mulx (up), s4, s5     | s7 s1+s6' s0+sA s2 s3 .. s5: s4: {i+1} s8=0
+adox sA, s0           | s7 s1+s6'" s0 s2 s3 .. s5: s4: {i+1} s8=0
+adcx s6, s1           | s7' s1" s0 s2 s3 .. s5: s4: {i+1} s8=0
+'''
+
+"""
+i >= 6
+dd=v[i]
+multiplied by v[0], .. v[i-1]
+multiplied u[0] by v[i]
+v[i+1] can be extracted with single instruction
+data lies like that: s7' s1" s0 s2 s3 .. s5: s4: {i} s8=0
+"""
+
+g_muladd_6_br = '''
+mulx 8(up), s6, s9    | s7' s1" s0 s2 s3 s9: s5+s6: s4: {i} s8=0
+adox s8, s1           | s7'" s1 s0 s2 s3 s9: s5+s6: s4: {i} s8=0
+adcx s8, s7           | s7 s1 s0 s2 s3 s9: s5+s6: s4: {i} s8=0
+movq i(rp), sA        | s7 s1 s0 s2 s3 s9: s5+s6: s4+sA {i} s8=0
+movq s7, t0           | t0 s1 s0 s2 s3 s9: s5+s6: s4+sA {i} s8=0
+mulx 16(up), s7, sB   | t0 s1 s0 s2 s3+sB s9+s7: s5+s6: s4+sA {i} s8=0
+adox sA, s4           | t0 s1 s0 s2 s3+sB s9+s7: s5+s6:" s4 {i} s8=0
+movq s4, i(rp)        | t0 s1 s0 s2 s3+sB s9+s7: s5+s6:" {i+1} s8=0
+movq i+1(rp), sA      | t0 s1 s0 s2 s3+sB s9+s7: sA+s5+s6" {i+1} s8=0
+adcx sA, s5           | t0 s1 s0 s2 s3+sB s9+s7': s5+s6" {i+1} s8=0
+mulx 24(up), s4, sA   | t0 s1 s0 s2+sA s3+sB+s4 s9+s7': s5+s6" {i+1} s8=0
+adox s6, s5           | t0 s1 s0 s2+sA s3+sB+s4 s9+s7'": s5 {i+1} s8=0
+movq s5, i+1(rp)      | t0 s1 s0 s2+sA s3+sB+s4 s9+s7'": .. {i+1} s8=0
+movq i+2(rp), s5      | t0 s1 s0 s2+sA s3+sB+s4 s5+s9+s7'" .. {i+1} s8=0
+adcx s9, s5           | t0 s1 sg_perm0 s2+sA s3+sB+s4' s5+s7" .. {i+1} s8=0
+mulx 32(up), s6, s9   | t0 s1 s0+s9 s2+sA+s6 s3+sB+s4' s5+s7" .. {i+1} s8=0
+adox s7, s5           | t0 s1 s0+s9 s2+sA+s6 s3+sB+s4'" s5 .. {i+1} s8=0
+movq s5, i+2(rp)      | t0 s1 s0+s9 s2+sA+s6 s3+sB+s4'" [2] {i+1} s8=0
+adcx sB, s3           | t0 s1 s0+s9 s2+sA+s6' s3+s4" [2] {i+1} s8=0
+mulx 40(up), s5, s7   | t0 s1+s7 s0+s9+s5 s2+sA+s6' s3+s4" [2] {i+1} s8=0
+adox s4, s3           | t0 s1+s7 s0+s9+s5 s2+sA+s6'" s3 [2] {i+1} s8=0
+adcx sA, s2           | t0 s1+s7 s0+s9+s5' s2+s6" s3 [2] {i+1} s8=0
+movq s3, i+3(rp)      | t0 s1+s7 s0+s9+s5' s2+s6" [3] {i+1} s8=0
+movq t0, s3           | s3 s1+s7 s0+s9+s5' s2+s6" [3] {i+1} s8=0
+mulx 48(up), s4, sA   | s3+sA s1+s7+s4 s0+s9+s5' s2+s6" [3] {i+1} s8=0
+adox s6, s2           | s3+sA s1+s7+s4 s0+s9+s5'" s2 [3] {i+1} s8=0
+adcx s9, s0           | s3+sA s1+s7+s4' s0+s5" s2 [3] {i+1} s8=0
+mulx 56(up), s6, s9   | s9 s3+sA+s6 s1+s7+s4' s0+s5" s2 [3] {i+1} s8=0
+extract v[i+1]
+adox s5, s0           | s9 s3+sA+s6 s1+s7+s4'" s0 s2 [3] {i+1} s8=0
+adcx s7, s1           | s9 s3+sA+s6' s1+s4" s0 s2 [3] {i+1} s8=0
+adox s4, s1           | s9 s3+sA+s6'" s1 s0 s2 [3] {i+1} s8=0
+adcx sA, s3           | s9' s3+s6" s1 s0 s2 [3] {i+1} s8=0
+adox s6, s3           | s9'" s3 s1 s0 s2 [3] {i+1} s8=0
+'''
+
+"""
+i == 7
+dd=v[i]
+multiplied by v[0], .. v[i-1]
+data lies like that: s9'" s3 s1 s0 s2 .. .. .. {i} s8=0
+"""
+
+g_muladd_7_br = '''
+mulx (up), s4, s5     | s9'" s3 s1 s0 s2 .. s5: s4: {i} s8=0
+adcx s8, s9           | s9" s3 s1 s0 s2 .. s5: s4: {i} s8=0
+movq i(rp), sA        | s9" s3 s1 s0 s2 .. s5: s4+sA {i} s8=0
+adcx sA, s4           | s9" s3 s1 s0 s2 .. s5:' s4 {i} s8=0
+adox s8, s9           | s9 s3 s1 s0 s2 .. s5:' s4 {i} s8=0
+mulx 8(up), s8, sA    | s9 s3 s1 s0 s2 sA: s5+s8:' s4 {i}
+movq s9, t0           | t0 s3 s1 s0 s2 sA: s5+s8:' s4 {i}
+movq i+1(rp), sB      | t0 s3 s1 s0 s2 sA: sB+s5+s8' s4 {i}
+adcx sB, s5           | t0 s3 s1 s0 s2 sA:' s5+s8 s4 {i}
+mulx 16(up), s6, s7   | t0 s3 s1 s0 s2+s7 sA+s6:' s5+s8 s4 {i}
+movq s3, t1           | t0 t1 s1 s0 s2+s7 sA+s6:' s5+s8 s4 {i}
+movq s4, i(rp)        | t0 t1 s1 s0 s2+s7 sA+s6:' s5+s8 {i+1}
+mulx 24(up), s4, sB   | t0 t1 s1 s0+sB s2+s7+s4 sA+s6:' s5+s8 {i+1}
+mulx 32(up), s3, s9   | t0 t1 s1+s9 s0+sB+s3 s2+s7+s4 sA+s6:' s5+s8 {i+1}
+adox s8, s5           | t0 t1 s1+s9 s0+sB+s3 s2+s7+s4 sA+s6:'" s5 {i+1}
+movq s5, i+1(rp)      | t0 t1 s1+s9 s0+sB+s3 s2+s7+s4 sA+s6:'" {i+2}
+movq i+2(rp), s8      | t0 t1 s1+s9 s0+sB+s3 s2+s7+s4 s8+sA+s6'" {i+2}
+adcx sA, s8           | t0 t1 s1+s9 s0+sB+s3 s2+s7+s4' s8+s6" {i+2}
+mulx 40(up), s5, sA   | t0 t1+sA s1+s9+s5 s0+sB+s3 s2+s7+s4' s8+s6" {i+2}
+adox s8, s6           | t0 t1+sA s1+s9+s5 s0+sB+s3 s2+s7+s4'" s6 {i+2}
+movq s6, i+2(rp)      | t0 t1+sA s1+s9+s5 s0+sB+s3 s2+s7+s4'" {i+3}
+mulx 48(up), s6, s8   | t0+s8 t1+sA+s6 s1+s9+s5 s0+sB+s3 s2+s7+s4'" {i+3}
+adcx s7, s2           | t0+s8 t1+sA+s6 s1+s9+s5 s0+sB+s3' s2+s4" {i+3}
+adcx sB, s0           | t0+s8 t1+sA+s6 s1+s9+s5' s0+s3 s2+s4" {i+3}
+mulx 56(up), s7, sB   | sB t0+s8+s7 t1+sA+s6 s1+s9+s5' s0+s3 s2+s4" {i+3}
+adox s4, s2           | sB t0+s8+s7 t1+sA+s6 s1+s9+s5' s0+s3" s2 {i+3}
+movq t1, s4           | sB t0+s8+s7 sA+s6+s4 s1+s9+s5' s0+s3" s2 {i+3}
+movq s2, i+3(rp)      | sB t0+s8+s7 sA+s6+s4 s1+s9+s5' s0+s3" {i+4}
+movq t0, s2           | sB s2+s8+s7 sA+s6+s4 s1+s9+s5' s0+s3" {i+4}
+adcx s9, s1           | sB s2+s8+s7 sA+s6+s4' s1+s5 s0+s3" {i+4}
 !restore s9
-movq s0, i+4(rp)      | s5 sA+s4' s8 s6" -- -- -- -- {8}
-!restore s0
-movq s5, s1           | s1 sA+s4' s8 s6" -- -- -- -- {8}
-!restore s5
-adox s3, s6
-adcx sA, s4           | s1' s4 s8" s6 -- -- -- -- {8}
+adox s3, s0           | sB s3+s8+s7 sA+s6+s4' s1+s5" s0 {i+4}
+movq $0, s3
+movq s0, i+4(rp)      | sB s2+s8+s7 sA+s6+s4' s1+s5" {i+5}
+movq sB, s0           | s0 s2+s8+s7 sA+s6+s4' s1+s5" {i+5}
+!restore sB
+adcx sA, s6           | s0 s2+s8+s7' s6+s4 s1+s5" {i+5}
 !restore sA
-movq s6, i+5(rp)      | s1' s4 s8" -- -- -- -- -- {8}
-adox s3, s8
-!restore s6
-adox s3, s4           | s1'" s4 s8 -- -- -- -- -- {8}
-movq s8, i+6(rp)      | s1'" s4 -- -- -- -- -- -- {8}
+adox s5, s1           | s0 s2+s8+s7' s6+s4" s1 {i+5}
+!restore s5
+adcx s8, s2           | s0' s2+s7 s6+s4" s1 {i+5}
 !restore s8
-adcx s3, s1           | s1" s4 -- -- -- -- -- -- {8}
-movq s4, i+7(rp)      | s1" -- -- -- -- -- -- -- {8}
-adox s3, s1
-movq s1, i+8(rp)
+adox s6, s4           | s0' s2+s7" s4 s1 {i+5}
+!restore s6
+adcx s3, s0           | s0 s2+s7" s4 s1 {i+5}
+adox s7, s2           | s0" s2 s4 s1 {i+5}
+movq s1, i+5(rp)      | s0" s2 s4 {i+6}
+movq s4, i+6(rp)      | s0" s2 {i+7}
+adox s7, s0           | s0 s2 {i+7}
+movq s2, i+7(rp)      | s0 {i+8}
+movq s0, i+8(rp)
 '''
 
 import os, re, sys
@@ -236,7 +413,7 @@ def extract_code(i):
     return ''
 
 def mul1_code(i, jj, p):
-    rr = []
+    rr = ['# mul_add %s' % i]
     for j in jj:
         if j == 'extract v[i+1]':
             rr.append(extract_code(i + 1))
@@ -248,10 +425,11 @@ def mul1_code(i, jj, p):
             continue
         rr.append(j)
 
+    # for i=7, append tail code
     if i == 7:
-        rr = rr[:-3] + P.cutoff_comments(g_tail)
+        rr += P.cutoff_comments(g_tail)
 
-    # apply permutation p
+    # apply permutation p, replace i(rp)
     for y in range(len(rr)):
         src = rr[y]
         for x in range(12):
@@ -271,13 +449,15 @@ def mul1_code(i, jj, p):
 def cook_asm(o, code):
     xmm_save = P.save_registers_in_xmm(code, 10)
 
+    P.insert_restore(code, xmm_save)
     code = '\n'.join(code)
     for k,v in xmm_save.items():
         code = code.replace('!restore ' + k, 'movq %s, %s' % (v, k))
-    code = '\n'.join([x for x in code.split('\n') if x.find('!restore') == -1])
+
+    #code = '\n'.join([x for x in code.split('\n') if x.find('!restore') == -1])
 
     m = 'rp,rdi up,rsi w7,rcx wB,rbp wA,rbx w9,r12 w8,r13 w6,r14 w5,r15 '
-    m += 'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 dd,rdx vZ,xmm15 v14,ymm14 v47,ymm13 '
+    m += 'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 dd,rdx v14,ymm14 v47,ymm13 '
     m += 't0,ymm12 t1,ymm11'
     r = {}
     for x in m.split(' '):
@@ -303,20 +483,30 @@ def replace_ymm_by_xmm(s):
 
 def do_it(o):
     meat = P.cutoff_comments(g_mul0)
-    m3 = P.cutoff_comments(g_muladd_3)
-    #muladd = P.cutoff_comments(g_muladd)
 
     p = list(range(12))
-    meat += mul1_code(3, m3, p)
-    meat += P.cutoff_comments(g_tail)
-    '''
-    u = [int(y) for y in g_permutation.split(' ')]
-    for i in range(3, 8):
-        meat += mul1_code(i, muladd, p)
-        p = P.composition(p, u)
-    '''
+    meat += mul1_code(3, P.cutoff_comments(g_muladd_3), p)
+    m4 = P.cutoff_comments(g_muladd_4)
+    meat += mul1_code(4, m4, p)
+    m5 = swap_adox_adcx(m4)
+    #q = P.invert_permutation([int(x, 16) for x in g_perm.split(' ')])
+    q = [int(x, 16) for x in g_perm.split(' ')]
+    p = P.composition(p, q)
+    meat += mul1_code(5, m5, p)
+    p = P.composition(p, q)
+    meat += mul1_code(6, m4, p)
+    p = P.composition(p, q)
+    meat += mul1_code(7, m5, p)
 
     cook_asm(o, meat)
+
+def swap_adox_adcx(dd):
+    rr = []
+    for d in dd:
+        x = d.replace('adox', 'ADCX').replace('adcx', 'adox').\
+                replace('ADCX', 'adcx')
+        rr.append(x)
+    return rr
 
 with open(sys.argv[1], 'wb') as g_out:
     do_it(g_out)

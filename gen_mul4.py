@@ -490,21 +490,47 @@ def composition(a, b):
         r[i] = b[a[i]]
     return r
 
+def invert_permutation(s):
+    r = s[:]
+    for i in range(len(s)):
+        r[s[i]] = i
+    return r
+
+def insert_restore(cc, m):
+    for k,v in m.items():
+        '''
+        k = name of register to restore
+        v = name of xmm register
+        must insert movq v, k if necessary
+        '''
+        insert_restore_3arg(cc, k, v)
+
+def insert_restore_3arg(cc, r, x):
+    p = re.compile(r'\b%s\b' % r)
+    to_insert = 'movq %s, %s' % (x, r)
+    for i in range(len(cc) - 1, -1, -1):
+        j = cc[i]
+        if p.search(j):
+            if j != to_insert:
+                # append or insert at index i+1
+                cc.insert(i + 1, to_insert)
+            return
+
 if __name__ == '__main__':
     g_out = sys.argv[1]
-    
+
     # create one of two files: .h or .s
     if g_out[-1] == 'h':
         with open(g_out, 'wb') as g_file:
             do_it(g_file, g_code)
         sys.exit(0)
-    
+
     """
     GCC inserts extra lines:
      push %rbp
      vzeroupper
     (disrespecting -fomit-frame-pointer).
-    
+
     So we write complete subroutine in assembler
     """
     with open(g_out, 'wb') as g_file:
