@@ -5,9 +5,10 @@
 extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
+void mul8x2_zen(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
-#if !ZEN
+#if (!ZEN) && (!_8x2)
     #include "automagic/mul8_store_once.h"
 #endif
 
@@ -29,6 +30,10 @@ void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 
 #if ZEN==1 && SIZE == 8
     #define SUBR(x, y, z) mul8_zen(x, y, z)
+#endif
+
+#if _8x2
+    #define SUBR(x, y, z) mul8x2_zen(x, y, z)
 #endif
 
 #include "benchmark-internal.c"

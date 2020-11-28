@@ -21,7 +21,8 @@ build benchmarks: phony $
         benchm6_broadwell.exe $
         benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
         benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
-        benchm25_toom22_1x_loud.exe
+        benchm25_toom22_1x_loud.exe $
+        benchmark_8x2.exe
 
 build tests: phony test4.exe test8_{broadwell,zen}.exe test16.exe test_mpn_less.exe $
         test_mpn_sub.exe test_mpn_sub_4k.exe test_mpn_add_4k.exe $
@@ -191,7 +192,11 @@ benchm6_broadwell.exe: benchmark6.cpp @int_h benchmark-internal.c $
 
 benchm8_zen.exe: benchmark8.cpp mul8_zen.s @int_h benchmark-internal.c $
         [+flags -DZEN=1]
-
+        
+benchmark_8x2.exe: benchmark8.cpp mul8x2.s @int_h benchmark-internal.c $
+        [+flags -D_8x2=1]
+        
+mul8x2.s: mul8x2
 
 benchm8_custom.exe: benchmark8.cpp @int_h benchmark-internal.c $
         $o/mul8_store_once.h [+flags -DSUBR=CUSTOM]
