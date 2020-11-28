@@ -4,9 +4,12 @@
 
 extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
+void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
-#include "automagic/mul8_store_once.h"
+#if !ZEN
+    #include "automagic/mul8_store_once.h"
+#endif
 
 #ifndef SIZE
     #define SIZE 8
@@ -23,5 +26,9 @@ void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 #endif
 #define HELLO
 #define GOODBYE
+
+#if ZEN==1 && SIZE == 8
+    #define SUBR(x, y, z) mul8_zen(x, y, z)
+#endif
 
 #include "benchmark-internal.c"

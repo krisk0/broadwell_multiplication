@@ -17,7 +17,7 @@ build benchmarks: phony $
         benchm_sub.exe $
         benchm_toom22_broadwell_t.exe benchm_toom22_broadwell_t_c.exe $
         benchm_bdiv_dbm1c_4k.exe benchm_bdiv_dbm1c_4k_inplace.exe $
-        benchm6_official.exe benchm6_basecase.exe benchm6_zen.exe $
+        benchm6_official.exe benchm6_basecase.exe benchm{6,8}_zen.exe $
         benchm6_broadwell.exe $
         benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
         benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
@@ -188,6 +188,9 @@ benchm6_zen.exe: benchmark6.cpp mul6_zen.s @int_h benchmark-internal.c $
 
 benchm6_broadwell.exe: benchmark6.cpp @int_h benchmark-internal.c $
         $o/mul6.h [+flags -DSUBR=C_BROADWELL]
+
+benchm8_zen.exe: benchmark8.cpp mul8_zen.s @int_h benchmark-internal.c $
+        [+flags -DZEN=1]
 
 
 benchm8_custom.exe: benchmark8.cpp @int_h benchmark-internal.c $
