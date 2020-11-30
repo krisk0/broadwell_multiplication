@@ -17,7 +17,7 @@
 void
 dump_number(INT* p, unsigned n) {
     for(unsigned i = n; i--;) {
-        printf(PRINTF_FORMAT " ", p[i]);
+        printf("%X:" PRINTF_FORMAT " ", i, p[i]);
     }
     printf("\n");
 }
@@ -87,7 +87,6 @@ do_test() {
         deg2(g_u + 0, SIZE, a);
         for(unsigned b = 0; b < BITS_PER_LIMB * SIZE; b++) {
             deg2(g_v + 0, SIZE, b);
-            //random_number<INT>(g_baad + 0, SIZE * 2);
             for(unsigned x = 0; x < SIZE * 2; x++) {
                 g_baad[x] = single_byte(x+1);
             }
