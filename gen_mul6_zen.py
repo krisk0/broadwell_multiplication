@@ -91,7 +91,6 @@ import os, re, sys
 sys.dont_write_bytecode = 1
 
 import gen_mul4 as P
-import gen_mul8_store1 as E
 
 def mul1_code(i, jj):
     rr = []
