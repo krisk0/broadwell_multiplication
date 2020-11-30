@@ -1,7 +1,9 @@
+# mul 8x8. 135 ticks on Skylake, 1209 ticks on Ryzen
+
 """
       rdi -< rp
       rsi -< up
-      rdx -< (vp)
+      rdx -< vp
 
 rbp rbx r12 r13 r14 r15
 wB  wA  w9  w8  w6  w5    -- saved
@@ -10,7 +12,7 @@ rax r8  r9  r10 r11 rcx rsi rdi rdx
 w0  w1  w2  w3  w4  w7  up  rp  dd
 """
 
-g_mul0='''
+g_mul_0and1='''
 vzeroupper
 !save w8
 movq dd, w0
@@ -106,293 +108,6 @@ adox w2, w0                      | w7 w9+wB+w3 w5+w6+wA'" w0 w1 w4+w8 .. .. {3}
 movq $0, w2                      | w2=0
 adcx w6, w5                      | w7 w9+wB+w3' w5+wA" w0 w1 w4+w8 .. .. {3}
 adcx wB, w9                      | w7' w9+w3 w5+wA" w0 w1 w4+w8 .. .. {3}
-'''
-
-g_mul0_only = '''
-| 19 ticks on Ryzen 7 3800X
-vzeroupper
-!save w8
-movq dd, w0
-movq (dd), dd                    | ready v0
-!save w5
-mulx (up), w1, w2                | w2 w1
-mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
-mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
-mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
-!save wA
-mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
-mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
-addq w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
-movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
-mulx 48(up), w1, w3              | w3 w1+wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
-adcq w5, w4                      | w3 w1+wB w9+wA w0+w8 w6+w7' w4 w2 --
-movq w2, 8(rp)                   | w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2}
-mulx 56(up), w2, w5              | w5 w2+w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2}
-movq $0, dd                      | w5 w2+w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2} dd=0
-adcq w7, w6                      | w5 w2+w3 w1+wB w9+wA w0+w8' w6 w4 {2}
-movq w5, w7                      | w7 w2+w3 w1+wB w9+wA w0+w8' w6 w4 {2}
-movq w4, 16(rp)                  | w7 w2+w3 w1+wB w9+wA w0+w8' w6 {3}
-adcq w8, w0                      | w7 w2+w3 w1+wB w9+wA' w0 w6 {3}
-adcq wA, w9                      | w7 w2+w3 w1+wB' w9 w0 w6 {3}
-adcq wB, w1                      | w7 w2+w3' w1 w9 w0 w6 {3}
-adcq w3, w2                      | w7' w2 w1 w9 w0 w6 {3}
-adcq dd, w7                      | w7 w2 w1 w9 w0 w6 {3}
-movq w6, 24(rp)
-movq w0, 32(rp)
-movq w9, 40(rp)
-movq w1, 48(rp)
-movq w2, 56(rp)
-movq w7, 64(rp)
-'''
-
-g_mul0_only_immediate_writes = '''
-| 19 tacts. Immediate writes ok
-vzeroupper
-!save w8
-movq dd, w0
-movq (dd), dd                    | ready v0
-!save w5
-mulx (up), w1, w2                | w2 w1
-mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
-mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
-mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
-!save wA
-mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
-mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
-addq w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
-movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
-movq w2, 8(rp)                   | w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2}
-mulx 48(up), w1, w3              | w3 w1+wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
-adcq w5, w4                      | w3 w1+wB w9+wA w0+w8 w6+w7' w4 w2 --
-movq w4, 16(rp)                  | w7 w2+w3 w1+wB w9+wA w0+w8' w6 {3}
-mulx 56(up), w2, w5              | w5 w2+w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2}
-movq $0, dd                      | w5 w2+w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2} dd=0
-adcq w7, w6                      | w5 w2+w3 w1+wB w9+wA w0+w8' w6 w4 {2}
-movq w6, 24(rp)
-movq w5, w7                      | w7 w2+w3 w1+wB w9+wA w0+w8' w6 w4 {2}
-adcq w8, w0                      | w7 w2+w3 w1+wB w9+wA' w0 w6 {3}
-movq w0, 32(rp)
-adcq wA, w9                      | w7 w2+w3 w1+wB' w9 w0 w6 {3}
-movq w9, 40(rp)
-adcq wB, w1                      | w7 w2+w3' w1 w9 w0 w6 {3}
-movq w1, 48(rp)
-adcq w3, w2                      | w7' w2 w1 w9 w0 w6 {3}
-movq w2, 56(rp)
-adcq dd, w7                      | w7 w2 w1 w9 w0 w6 {3}
-movq w7, 64(rp)
-'''
-
-g_mul0_only_adcx = '''
-| 19 tacts. adcx ok
-vzeroupper
-!save w8
-movq dd, w0
-movq (dd), dd                    | ready v0
-!save w5
-mulx (up), w1, w2                | w2 w1
-mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
-mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
-mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
-xor %eax,%eax
-!save wA
-mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
-mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
-adcx w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
-movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
-mulx 48(up), w1, w3              | w3 w1+wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
-adcx w5, w4                      | w3 w1+wB w9+wA w0+w8 w6+w7' w4 w2 --
-movq w2, 8(rp)                   | w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2}
-mulx 56(up), w2, w5              | w5 w2+w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2}
-movq $0, dd                      | w5 w2+w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2} dd=0
-adcx w7, w6                      | w5 w2+w3 w1+wB w9+wA w0+w8' w6 w4 {2}
-movq w5, w7                      | w7 w2+w3 w1+wB w9+wA w0+w8' w6 w4 {2}
-movq w4, 16(rp)                  | w7 w2+w3 w1+wB w9+wA w0+w8' w6 {3}
-adcx w8, w0                      | w7 w2+w3 w1+wB w9+wA' w0 w6 {3}
-adcx wA, w9                      | w7 w2+w3 w1+wB' w9 w0 w6 {3}
-adcx wB, w1                      | w7 w2+w3' w1 w9 w0 w6 {3}
-adcx w3, w2                      | w7' w2 w1 w9 w0 w6 {3}
-adcx dd, w7                      | w7 w2 w1 w9 w0 w6 {3}
-movq w6, 24(rp)
-movq w0, 32(rp)
-movq w9, 40(rp)
-movq w1, 48(rp)
-movq w2, 56(rp)
-movq w7, 64(rp)
-'''
-
-g_mul01 = '''
-vzeroupper
-!save w8
-movq dd, w0
-movq (dd), dd                    | ready v0
-!save w5
-mulx (up), w1, w2                | w2 w1
-vmovdqu 8(w0), v14
-mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
-mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
-mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
-movq v14, 16(rp)                 | 16(rp)=v[1]
-xor %eax,%eax
-!save wA
-mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
-mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
-adcx w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
-movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
-mulx 48(up), w1, w3              | w3 w1+wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
-adcx w5, w4                      | w3 w1+wB w9+wA w0+w8 w6+w7' w4 w2 --
-movq w2, 8(rp)                   | w3 w1+wB w9+wA w0+w8 w6+w7' w4 .. --
-mulx 56(up), w2, w5              | w5 w2+w3 w1+wB w9+wA w0+w8 w6+w7' w4 .. --
-movq 16(rp), dd         | dd=v[1]
-adcx w7, w6             | w5 w2+w3 w1+wB w9+wA w0+w8' w6 w4 .. --
-movq 8(rp), w7          | w5 w2+w3 w1+wB w9+wA w0+w8' w6 w4 w7 --
-adcx w8, w0             | w5 w2+w3 w1+wB w9+wA' w0 w6 w4 w7 --
-movq w5, t0             | t0 w2+w3 w1+wB w9+wA' w0 w6 w4 w7 --
-mulx (up), w5, w8       | t0 w2+w3 w1+wB w9+wA' w0 w6 w4+w8 w7+w5 --
-adcx wA, w9             | t0 w2+w3 w1+wB' w9 w0 w6 w4+w8 w7+w5 --
-adcx wB, w1             | t0 w2+w3' w1 w9 w0 w6 w4+w8 w7+w5 --
-mulx 8(up), wA, wB      | t0 w2+w3' w1 w9 w0 w6+wB w4+w8+wA w7+w5 --
-adcx w3, w2             | t0' w2 w1 w9 w0 w6+wB w4+w8+wA w7+w5 --
-movq t0, w3             | w3' w2 w1 w9 w0 w6+wB w4+w8+wA w7+w5 --
-adox w7, w5             | w3' w2 w1 w9 w0 w6+wB w4+w8+wA" w5 --
-movq $0, w7             | w3' w2 w1 w9 w0 w6+wB w4+w8+wA" w5 --  w7=0
-movq w5, 8(rp)          | w3' w2 w1 w9 w0 w6+wB w4+w8+wA" {2}  w7=0
-adcx w7, w3             | w3 w2 w1 w9 w0 w6+wB w4+w8+wA" {2}  w7=0
-mulx 16(up), w5, w7     | w3 w2 w1 w9 w0+w7 w6+wB+w5 w4+w8+wA" {2}
-adox w8, w4             | w3 w2 w1 w9 w0+w7 w6+wB+w5" w4+wA {2}
-adox wB, w6             | w3 w2 w1 w9 w0+w7" w6+w5 w4+wA {2}
-mulx 24(up), w8, wB     | w3 w2 w1 w9+wB w0+w7+w8" w6+w5 w4+wA {2}
-adcx wA, w4             | w3 w2 w1 w9+wB w0+w7+w8" w6+w5' w4 {2}
-movq w4, 16(rp)         | w3 w2 w1 w9+wB w0+w7+w8" w6+w5' .. {2}
-mulx 32(up), w4, wA     | w3 w2 w1+wA w9+wB+w4 w0+w7+w8" w6+w5' .. {2}
-adox w7, w0             | w3 w2 w1+wA w9+wB+w4" w0+w8 w6+w5' .. {2}
-adcx w6, w5             | w3 w2 w1+wA w9+wB+w4" w0+w8' w5 .. {2}
-movq w5, 24(rp)         | w3 w2+w7 w1+wA+w6" w9+w4' w0 [2] {2}
-vpextrq $0x1, v14, w5   | w3 w2+w7 w1+wA+w6" w9+w4' w0 [2] {2} w5=v[2]
-mulx 40(up), w6, w7     | w3 w2+w7 w1+wA+w6 w9+wB+w4" w0+w8' [2] {2}
-                        | wB might be not ready: 1 tick left
-                        | w8 ready: 2 mulx and one adcx. Todo: try adox wB instead
-adcx w8, w0             | w3 w2+w7 w1+wA+w6 w9+wB+w4"' w0 [2] {2}
-adox wB, w9             | w3 w2+w7 w1+wA+w6" w9+w4' w0 [2] {2}
-mulx 48(up), w8, wB     | w3+wB w2+w7+w8 w1+wA+w6" w9+w4' w0 [2] {2} w5=v[2]
-adcx w9, w4             | w3+wB w2+w7+w8 w1+wA+w6"' w9 w0 [2] {2} w5=v[2]
-adox wA, w1             | w3+wB w2+w7+w8" w1+w6' w9 w0 [2] {2} w5=v[2]
-mulx 56(up), w9, wA     | wA w3+wB+w9 w2+w7+w8" w1+w6' w9 w0 [2] {2} w5=v[2]
-movq w5, dd             | dd=v[2]
-adcx w6, w1             | wA w3+wB+w9 w2+w7+w8"' w1 w9 w0 [2] {2}
-mulx (up), w5, w6       | wA w3+wB+w9 w2+w7+w8"' w1 w9 w0 w6: w5: {2}
-adox w7, w2             | wA w3+wB+w9" w2+w8' w1 w9 w0 w6: w5: {2}
-movq $0, w7             | wA w3+wB+w9" w2+w8' w1 w9 w0 w6: w5: {2} w7=0
-adcx wB, w3             | wA" w3+w9 w2+w8' w1 w9 w0 w6: w5: {2} w7=0
-adox w7, wA             | wA w3+w9 w2+w8' w1 w9 w0 w6: w5: {2} w7=0
-'''
-
-g_mul01_tail = '''
-                    | wA w3+w9 w2+w8' w1 w9 w0 w6: w5: {2} w7=0, w6,w5 are from v[2]
-adcx w8, w2         | wA w3+w9' w2 w1 w9 w0 w6: w5: {2} w7=0
-movq w0, 32(rp)     | wA w3+w9' w2 w1 w9 -- w6: w5: {2} w7=0
-adcx w9, w3         | wA' w3 w2 w1 w9 -- w6: w5: {2} w7=0
-movq w9, 40(rp)     | wA' w3 w2 w1 -- -- w6: w5: {2} w7=0
-movq w1, 48(rp)     | wA' w3 w2 -- -- -- w6: w5: {2} w7=0
-adcx wA, w7         | w7 w3 w2 -- -- -- w6: w5: {2} w7=0
-movq w2, 56(rp)
-movq w3, 64(rp)
-movq w7, 72(rp)
-'''
-
-g_mul0_only_adox_imm_writes = '''
-vzeroupper
-!save w8
-movq dd, w0
-movq (dd), dd                    | ready v0
-!save w5
-mulx (up), w1, w2                | w2 w1
-mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
-mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
-mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
-xor %eax, %eax
-!save wA
-mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
-mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
-adox w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
-movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
-movq w2, 8(rp)                   | w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2}
-mulx 48(up), w1, w3              | w3 w1+wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
-adox w5, w4                      | w3 w1+wB w9+wA w0+w8 w6+w7' w4 w2 --
-movq w4, 16(rp)                  | w7 w2+w3 w1+wB w9+wA w0+w8' w6 {3}
-mulx 56(up), w2, w5              | w5 w2+w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2}
-movq $0, dd                      | w5 w2+w3 w1+wB w9+wA w0+w8 w6+w7' w4 {2} dd=0
-adox w7, w6                      | w5 w2+w3 w1+wB w9+wA w0+w8' w6 w4 {2}
-movq w6, 24(rp)
-movq w5, w7                      | w7 w2+w3 w1+wB w9+wA w0+w8' w6 w4 {2}
-adox w8, w0                      | w7 w2+w3 w1+wB w9+wA' w0 w6 {3}
-movq w0, 32(rp)
-adox wA, w9                      | w7 w2+w3 w1+wB' w9 w0 w6 {3}
-movq w9, 40(rp)
-adox wB, w1                      | w7 w2+w3' w1 w9 w0 w6 {3}
-movq w1, 48(rp)
-adox w3, w2                      | w7' w2 w1 w9 w0 w6 {3}
-movq w2, 56(rp)
-adox dd, w7                      | w7 w2 w1 w9 w0 w6 {3}
-movq w7, 64(rp)
-'''
-
-g_tail_after_mul0_delayed_writes = '''
-movq $0, w2              | w7' w9+w3 w5+wA" w0 w1 w4+w8 {5} w2=0
-adox wA, w5              | w7' w9+w3" w5 w0 w1 w4+w8 {5} w2=0
-adcx w2, w7              | w7 w9+w3 w5+wA" w0 w1 w4+w8 {5} w2=0
-adox wA, w5              | w7 w9+w3" w5 w0 w1 w4+w8 {5} w2=0
-adcx w8, w4              | w7 w9+w3" w5 w0 w1' w4 {5} w2=0
-adox w9, w3              | w7" w3 w5 w0 w1' w4 {5} w2=0
-adcx w2, w1              | w7" w3 w5 w0' w1 w4 {5} w2=0
-adox w2, w7              | w7 w3 w5 w0' w1 w4 {5} w2=0
-adcx w2, w0              | w7 w3 w5' w0 w1 w4 {5} w2=0
-adcx w2, w5              | w7 w3' w5 w0 w1 w4 {5} w2=0
-adcx w2, w3              | w7' w3 w5 w0 w1 w4 {5} w2=0
-movq w5, dd
-adcx w7, w2              | w7 w3 dd w0 w1 w4 {5} w2=0
-movq w4, 40(rp)
-movq w1, 48(rp)
-movq w0, 56(rp)
-movq dd, 64(rp)
-movq w3, 72(rp)
-movq w7, 80(rp)
-'''
-
-g_tail_after_mul0_immediate_writes = '''
-movq $0, w2              | w7' w9+w3 w5+wA" w0 w1 w4+w8 {5} w2=0
-adox wA, w5              | w7' w9+w3" w5 w0 w1 w4+w8 {5} w2=0
-adcx w2, w7              | w7 w9+w3 w5+wA" w0 w1 w4+w8 {5} w2=0
-adox wA, w5              | w7 w9+w3" w5 w0 w1 w4+w8 {5} w2=0
-adcx w8, w4              | w7 w9+w3" w5 w0 w1' w4 {5} w2=0
-movq w4, 40(rp)
-adox w9, w3              | w7" w3 w5 w0 w1' w4 {5} w2=0
-adcx w2, w1              | w7" w3 w5 w0' w1 w4 {5} w2=0
-movq w1, 48(rp)
-adox w2, w7              | w7 w3 w5 w0' w1 w4 {5} w2=0
-adcx w2, w0              | w7 w3 w5' w0 w1 w4 {5} w2=0
-movq w0, 56(rp)
-adcx w2, w5              | w7 w3' w5 w0 w1 w4 {5} w2=0
-adcx w2, w3              | w7' w3 w5 w0 w1 w4 {5} w2=0
-movq w3, 72(rp)
-movq w5, dd
-movq dd, 64(rp)
-adcx w7, w2              | w7 w3 dd w0 w1 w4 {5} w2=0
-movq w7, 80(rp)
 '''
 
 '''
@@ -614,32 +329,20 @@ def replace_ymm_by_xmm(s):
     return s
 
 def do_it(o):
-    #meat = P.cutoff_comments(g_mul0)
-    #meat = P.cutoff_comments(g_mul0_only)
-    #meat = P.cutoff_comments(g_mul0_only_immediate_writes)
-    #meat = P.cutoff_comments(g_mul0_only_adcx)
-    #meat = P.cutoff_comments(g_mul0_only_adox_imm_writes)
+    meat = P.cutoff_comments(g_mul_0and1)
 
-    if 0:
-        p = list(range(12))
-        meat += mul1_code(3, P.cutoff_comments(g_muladd_3), p)
-        m4 = P.cutoff_comments(g_muladd_4)
-        meat += mul1_code(4, m4, p)
-        m5 = swap_adox_adcx(m4)
-        q = [int(x, 16) for x in g_perm.split(' ')]
-        p = P.composition(p, q)
-        meat += mul1_code(5, m5, p)
-        p = P.composition(p, q)
-        meat += mul1_code(6, m4, p)
-        p = P.composition(p, q)
-        meat += mul1_code(7, m5, p)
-    else:
-        # benchmark only mul0 and tail
-        #meat += P.cutoff_comments(g_tail_after_mul0_delayed_writes)
-        #meat += P.cutoff_comments(g_tail_after_mul0_immediate_writes)
-        pass
-
-    meat = P.cutoff_comments(g_mul01) + P.cutoff_comments(g_mul01_tail)
+    p = list(range(12))
+    meat += mul1_code(3, P.cutoff_comments(g_muladd_3), p)
+    m4 = P.cutoff_comments(g_muladd_4)
+    meat += mul1_code(4, m4, p)
+    m5 = swap_adox_adcx(m4)
+    q = [int(x, 16) for x in g_perm.split(' ')]
+    p = P.composition(p, q)
+    meat += mul1_code(5, m5, p)
+    p = P.composition(p, q)
+    meat += mul1_code(6, m4, p)
+    p = P.composition(p, q)
+    meat += mul1_code(7, m5, p)
 
     cook_asm(o, meat)
 
