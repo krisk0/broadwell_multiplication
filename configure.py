@@ -8,7 +8,7 @@ if (len(sys.argv) == 2) and (sys.argv[1] == 'clean'):
 
 g_opt = {
     'flags': '-O3 -march=broadwell -fomit-frame-pointer -ftemplate-depth=99999 ' + \
-        '-fno-stack-protector -static -fmax-errors=3 -std=gnu++17',
+        '-fno-stack-protector -static -fmax-errors=3 -std=gnu++17 -Wa,-O2',
     'c_compiler': 'gcc',
     'cpp_compiler': 'g++',
     'gmp_location': '-lgmp',

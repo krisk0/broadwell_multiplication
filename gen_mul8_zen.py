@@ -1,5 +1,8 @@
 '''
 8x8 multiplication targeting Ryzen. 106 ticks on Ryzen, 123 ticks on Skylake
+
+Binary code is 1679 bytes long without gas -O2 optimization, 1668 bytes long with
+ -O2, not counting trailing nops
 '''
 
 """
