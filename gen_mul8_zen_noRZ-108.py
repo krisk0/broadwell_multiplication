@@ -1,8 +1,5 @@
 '''
-8x8 multiplication targeting Ryzen. 106 ticks on Ryzen, 123 ticks on Skylake
-
-Binary code is 1679 bytes long without gas -O2 optimization, 1668 bytes long with
- -O2, not counting trailing nops
+8x8 multiplication targeting Ryzen. 108 ticks 
 '''
 
 """
@@ -72,7 +69,7 @@ mulx 48(up), w7, w9            | w5+w9 w2+wB+w7 w1+wA+w6" w8+w4' w0 [2] {2} w3=v
 adox wA, w1                    | w5+w9 w2+wB+w7" w1+w6 w8+w4' w0 [2] {2} w3=v[2]
 mulx 56(up), wA, dd            | dd w5+w9+wA w2+wB+w7" w1+w6 w8+w4' w0 [2] {2} w3=v[2]
 xchg dd, w3                    | w3 w5+w9+wA w2+wB+w7" w1+w6 w8+w4' w0 [2] {2}
-adcx w8, w4                    | w3 w5+w9+wA w2+wB+w7" w1+w6' w8 w0 [2] {2}
+adcx w4, w8                    | w3 w5+w9+wA w2+wB+w7" w1+w6' w8 w0 [2] {2}
 adox wB, w2
 '''
 
