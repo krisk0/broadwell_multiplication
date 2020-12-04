@@ -23,7 +23,7 @@ movq dd, w0
 movq w0, vp
 movq (dd), dd                    | ready v0
 !save w5
-movq 8(w0), t0                   | t0 = v[1..2]
+movdqu 8(w0), t0                 | t0 = v[1..2]
 mulx (up), w1, w2                | w2 w1
 mulx 8(up), w3, w4               | w4 w2+w3 w1
 !save w6
@@ -110,7 +110,7 @@ adcx s5, s0          | s3 sA s2+sB s1+s7+s6" s8+s4' s0 .. {i+1} s9=vp
 movq s0, i+2(rp)     | s3 sA s2+sB s1+s7+s6" s8+s4' [2] {i+1} s9=vp
 mulx 40(up), s0, s5  | s3 sA+s5 s2+sB+s0 s1+s7+s6" s8+s4' [2] {i+1} s9=vp
 adox s7, s1          | s3 sA+s5 s2+sB+s0" s1+s6 s8+s4' [2] {i+1} s9=vp
-movq i+1(s9), t0     | t0=v[i+1..i+2], latency 4
+movdqu i+1(s9), t0   | t0=v[i+1..i+2], latency 4
 mulx 48(up), s7, s9  | s3+s9 sA+s5+s7 s2+sB+s0" s1+s6 s8+s4' [2] {i+1}
 adcx s8, s4          | s3+s9 sA+s5+s7 s2+sB+s0" s1+s6' s4 [2] {i+1}
 movq s4, i+3(rp)     | s3+s9 sA+s5+s7 s2+sB+s0" s1+s6' [3] {i+1}
@@ -184,10 +184,10 @@ mulx 8(up), s8, s9   | sB' s1 s3 s2 s0 s9: s7+s8: s6: {i} s4=0  s5=vp
 adcx s4, sB          | sB s1 s3 s2 s0 s9: s7+s8: s6: {i} s4=0  s5=vp
 mulx 16(up), s4, sA  | sB s1 s3 s2 s0+sA s9+s4: s7+s8: s6: {i} s5=vp
 | 300 tacts slow-down vmovdqu i(s5), t0l   | t0l=v[i..i+3], latency 4
-movq i+1(s5), t0     | t0=v[i+1..i+2]
+movdqu i+1(s5), t0   | t0=v[i+1..i+2]
 adox i(rp), s6       | sB s1 s3 s2 s0+sA s9+s4: s7+s8:" s6 {i} s5=vp
 movq s6, i(rp)       | sB s1 s3 s2 s0+sA s9+s4: s7+s8:" {i+1} s5=vp
-movq i+2(s5), t2     | t2=v[i+2..i+3]
+vmovdqu i+2(s5), t2  | t2=v[i+2..i+3]
 mulx 24(up), s5, s6  | sB s1 s3 s2+s6 s0+sA+s5 s9+s4: s7+s8:" {i+1}
 adox s8, s7          | sB s1 s3 s2+s6 s0+sA+s5 s9+s4:" s7: {i+1}
 movq sB, t1          | t1 s1 s3 s2+s6 s0+sA+s5 s9+s4:" s7: {i+1}
