@@ -516,6 +516,13 @@ def insert_restore_3arg(cc, r, x):
                 cc.insert(i + 1, to_insert)
             return
 
+def guess_subroutine_name(target_file_name):
+    n = os.path.basename(target_file_name)
+    p = n.find('.')
+    if p != -1:
+        n = n[:p]
+    return n
+
 if __name__ == '__main__':
     g_out = sys.argv[1]
 
