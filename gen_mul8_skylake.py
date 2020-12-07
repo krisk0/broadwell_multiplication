@@ -1,5 +1,5 @@
 '''
-8x8 multiplication targeting Ryzen. 106 ticks on Ryzen, 115 on Skylake
+8x8 multiplication targeting skylake. 120 ticks on Skylake, 114 ticks on Ryzen
 '''
 
 """
@@ -84,63 +84,85 @@ g_muladd_2 = '''
                          | s3 s5+s9+sA" s2+s7 s1+s6' s8 s0 [2] {i}
 mulx (up), s4, sB        | s3 s5+s9+sA" s2+s7 s1+s6' s8 s0 sB: s4: {i}
 adcx s6, s1              | s3 s5+s9+sA" s2+s7' s1 s8 s0 sB: s4: {i}
-adox s9, s5              | s3" s5+sA s2+s7' s1 s8 s0 sB: s4: {i}
-mulx 8(up), s6, s9       | s3" s5+sA s2+s7' s1 s8 s0+s9 sB+s6: s4: {i}
-adcx s7,s2               | s3" s5+sA' s2 s1 s8 s0+s9 sB+s6: s4: {i}
-movq $0, s7
-adox s7, s3              | s3 s5+sA' s2 s1 s8 s0+s9 sB+s6: s4: {i} s7=0
-adcx sA, s5              | s3' s5 s2 s1 s8 s0+s9 sB+s6: s4: {i} s7=0
-movq s5, t0              | s3' t0 s2 s1 s8 s0+s9 sB+s6: s4: {i} s7=0
-mulx 16(up), s5, sA      | s3' t0 s2 s1 s8+sA s0+s9+s5 sB+s6: s4: {i} s7=0
-adox i(rp), s4           | s3' t0 s2 s1 s8+sA s0+s9+s5 sB+s6:" s4 {i} s7=0
-movq s4, i(rp)           | s3' t0 s2 s1 s8+sA s0+s9+s5 sB+s6:" {i+1} s7=0
-adcx s7, s3              | s3 t0 s2 s1 s8+sA s0+s9+s5 sB+s6:" {i+1} s7=0
-mulx 24(up), s4, s7      | s3 t0 s2 s1+s7 s8+sA+s4 s0+s9+s5 sB+s6:" {i+1}
-adox sB, s6              | s3 t0 s2 s1+s7 s8+sA+s4 s0+s9+s5" s6: {i+1}
-adox s9, s0              | s3 t0 s2 s1+s7 s8+sA+s4" s0+s5 s6: {i+1}
-adcx i+1(rp), s6     | s3 t0 s2 s1+s7 s8+sA+s4" s0+s5' s6 {i+1}
-movq s6, i+1(rp)     | s3 t0 s2 s1+s7 s8+sA+s4" s0+s5' .. {i+1}
-mulx 32(up), s6, sB  | s3 t0 s2+sB s1+s7+s6 s8+sA+s4" s0+s5' .. {i+1}
-adox sA, s8          | s3 t0 s2+sB s1+s7+s6" s8+s4 s0+s5' .. {i+1}
-movq t0, sA          | s3 sA s2+sB s1+s7+s6" s8+s4 s0+s5' .. {i+1}
-adcx s5, s0          | s3 sA s2+sB s1+s7+s6" s8+s4' s0 .. {i+1}
-movq s0, i+2(rp)     | s3 sA s2+sB s1+s7+s6" s8+s4' [2] {i+1}
-s9:=v[i+1]
-mulx 40(up), s0, s5  | s3 sA+s5 s2+sB+s0 s1+s7+s6" s8+s4' [2] {i+1} s9=v[i+1]
-adox s7, s1          | s3 sA+s5 s2+sB+s0" s1+s6 s8+s4' [2] {i+1} s9=v[i+1]
-adcx s8, s4          | s3 sA+s5 s2+sB+s0" s1+s6' s4 [2] {i+1} s9=v[i+1]
-mulx 48(up), s7, s8  | s3+s8 sA+s5+s7 s2+sB+s0" s1+s6' s4 [2] {i+1} s9=v[i+1]
-adox sB, s2          | s3+s8 sA+s5+s7" s2+s0 s1+s6' s4 [2] {i+1} s9=v[i+1]
-mulx 56(up), sB, dd  | dd s3+s8+sB sA+s5+s7" s2+s0 s1+s6' s4 [2] {i+1} s9=v[i+1]
-xchg s9, dd          | s9 s3+s8+sB sA+s5+s7" s2+s0 s1+s6' s4 [2] {i+1}
-adcx s6, s1          | s9 s3+s8+sB sA+s5+s7" s2+s0' s1 s4 [2] {i+1}
-adox sA, s5          | s9 s3+s8+sB" s5+s7 s2+s0' s1 s4 [2] {i+1}
+movq i(rp), s6           | s3 s5+s9+sA" s2+s7' s1 s8 s0 sB: s4+s6 {i}
+adox s9, s5              | s3" s5+sA s2+s7' s1 s8 s0 sB: s4+s6 {i}
+adcx s7, s2              | s3" s5+sA' s2 s1 s8 s0 sB: s4+s6 {i}
+mulx 8(up), s7, s9       | s3" s5+sA' s2 s1 s8 s0+s9 sB+s7: s4+s6 {i}
+movq s2, t0              | s3" s5+sA' t0 s1 s8 s0+s9 sB+s7: s4+s6 {i}
+movq $0, s2              | s3" s5+sA' t0 s1 s8 s0+s9 sB+s7: s4+s6 {i} s2=0
+adox s2, s3              | s3 s5+sA' t0 s1 s8 s0+s9 sB+s7: s4+s6 {i} s2=0
+adcx sA, s5              | s3' s5 t0 s1 s8 s0+s9 sB+s7: s4+s6 {i} s2=0
+adox s6, s4              | s3' s5 t0 s1 s8 s0+s9 sB+s7:" s4 {i} s2=0
+mulx 16(up), s6, sA      | s3' s5 t0 s1 s8+sA s0+s9+s6 sB+s7:" s4 {i} s2=0
+adcx s2, s3              | s3 s5 t0 s1 s8+sA s0+s9+s6 sB+s7:" s4 {i} s2=0
+movq s4, i(rp)           | s3 s5 t0 s1 s8+sA s0+s9+s6 sB+s7:" {i+1} s2=0
+movq i+1(rp), s4         | s3 s5 t0 s1 s8+sA s0+s9+s6 sB+s7+s4" {i+1} s2=0
+adox sB, s7              | s3 s5 t0 s1 s8+sA s0+s9+s6" s7+s4 {i+1} s2=0
+movq s5, t4              | s3 t4 t0 s1 s8+sA s0+s9+s6" s7+s4 {i+1} s2=0
+mulx 24(up), s5, sB      | s3 t4 t0 s1+sB s8+sA+s5 s0+s9+s6" s7+s4 {i+1} s2=0
+adcx s7, s4              | s3 t4 t0 s1+sB s8+sA+s5 s0+s9+s6"' s4 {i+1} s2=0
+movq t0, s7              | s3 t4 s7 s1+sB s8+sA+s5 s0+s9+s6"' s4 {i+1} s2=0
+adox s9, s0              | s3 t4 s7 s1+sB s8+sA+s5" s0+s6' s4 {i+1} s2=0
+mulx 32(up), s2, s9      | s3 t4 s7+s9 s1+sB+s2 s8+sA+s5" s0+s6' s4 {i+1}
+movq s4, i+1(rp)         | s3 t4 s7+s9 s1+sB+s2 s8+sA+s5" s0+s6' .. {i+1}
+movq t4, s4              | s3 s4 s7+s9 s1+sB+s2 s8+sA+s5" s0+s6' .. {i+1}
+adcx s6, s0              | s3 s4 s7+s9 s1+sB+s2 s8+sA+s5"' s0 .. {i+1}
+adox sA, s8              | s3 s4 s7+s9 s1+sB+s2" s8+s5' s0 .. {i+1}
+mulx 40(up), s6, sA      | s3 s4+sA s7+s9+s6 s1+sB+s2" s8+s5' s0 .. {i+1}
+movq s0, i+2(rp)         | s3 s4+sA s7+s9+s6 s1+sB+s2" s8+s5' [2] {i+1}
+s0:=v[i+1]               | s3 s4+sA s7+s9+s6 s1+sB+s2" s8+s5' [2] {i+1} s0=v[i+1]
+adcx s8, s5              | s3 s4+sA s7+s9+s6 s1+sB+s2"' s5 [2] {i+1} s0=v[i+1]
+adox sB, s1              | s3 s4+sA s7+s9+s6" s1+s2' s5 [2] {i+1} s0=v[i+1]
+mulx 48(up), s8, sB      | s3+sB s4+sA+s8 s7+s9+s6" s1+s2' s5 [2] {i+1} s0=v[i+1]
+adcx s2, s1              | s3+sB s4+sA+s8 s7+s9+s6"' s1 s5 [2] {i+1} s0=v[i+1]
+mulx 56(up), s2, dd      | dd s3+sB+s2 s4+sA+s8 s7+s9+s6"' s1 s5 [2] {i+1} s0=v[i+1]
+adox s9, s7              | dd s3+sB+s2 s4+sA+s8" s7+s6' s1 s5 [2] {i+1} s0=v[i+1]
+adox sA, s4              | dd s3+sB+s2" s4+s8 s7+s6' s1 s5 [2] {i+1} s0=v[i+1]
+xchg dd, s0              | s0 s3+sB+s2" s4+s8 s7+s6' s1 s5 [2] {i+1} 
 '''
 
 '''
 i >= 3
 multiplied by v[0], .. v[i-1]
                 old: s3 s5+s9+sA" s2+s7 s1+s6' s8 s0
-data lies like that: s9 s3+s8+sB" s5+s7 s2+s0' s1 s4 [2] {i} dd=v[i]
+data lies like that: s0 s3+sB+s2" s4+s8 s7+s6' s1 s5 [2] {i} dd=v[i]
 '''
 #         0 1 2 3 4 5 6 7 8 9 A B
-g_perm = '4 2 5 9 6 3 0 7 1 8 B A'
+g_perm = '5 7 4 0 A 3 6 8 1 B 2 9'
+
+g_tail_short = '''
+                     | s0 s3+sB+s2" s4+s8 s7+s6' s1 s5 {i+3}
+movq s5, i+3(rp)     | s0 s3+sB+s2" s4+s8 s7+s6' s1 {i+4}
+movq $0, s5          | s0 s3+sB+s2" s4+s8 s7+s6' s1 {i+4} s5=0
+adcx s7, s6          | s0 s3+sB+s2" s4+s8' s6 s1 {i+4} s5=0
+adox sB, s3          | s0" s3+s2 s4+s8' s6 s1 {i+4} s5=0
+movq s1, i+4(rp)     | s0" s3+s2 s4+s8' s6 {i+5} s5=0
+adcx s8, s4          | s0" s3+s2' s4 s6 {i+5} s5=0
+movq s6, i+5(rp)     | s0" s3+s2' s4 {i+6} s5=0
+adox s5, s0          | s0 s3+s2' s4 {i+6} s5=0
+adcx s3, s2          | s0' s2 s4 {i+6} s5=0
+movq s4, i+6(rp)     | s0' s2 {i+7} s5=0
+adcx s5, s0          | s0 s2 {i+7} s5=0
+movq s2, i+7(rp)     | s0 {i+7} s5=0
+movq s0, i+8(rp)
+'''
 
 g_tail = '''
-                     | s9 s3+s8+sB" s5+s7 s2+s0' s1 s4 {i+3}
-movq s4, i+3(rp)     | s9 s3+s8+sB" s5+s7 s2+s0' s1 {i+4}
-movq s1, i+4(rp)     | s9 s3+s8+sB" s5+s7 s2+s0' {i+5}
-adcx s2, s0          | s9 s3+s8+sB" s5+s7' s0 {i+5}
-adox s3, s8          | s9" s8+sB s5+s7' s0 {i+5}
-movq $0, s2          | s9" s8+sB s5+s7' s0 {i+5} s2=0
-adcx s7, s5          | s9" s8+sB' s5 s0 {i+5} s2=0
-movq s0, i+5(rp)     | s9" s8+sB' s5 {i+6} s2=0
-movq s5, i+6(rp)     | s9" s8+sB' {i+7} s2=0
-adox s2, s9          | s9 s8+sB' {i+7} s2=0
-adcx sB, s8          | s9' s8 {i+7} s2=0
-movq s8, i+7(rp)     | s9' {i+8} s2=0
-adcq $0, s9          | s9 {i+8} s2=0
-movq s9, i+8(rp)
+                     | s0 s3+sB+s2" s4+s8 s7+s6' s1 s5 {i+3}
+movq s5, i+3(rp)     | s0 s3+sB+s2" s4+s8 s7+s6' s1 {i+4}
+movq $0, s5          | s0 s3+sB+s2" s4+s8 s7+s6' s1 {i+4} s5=0
+adcx s7, s6          | s0 s3+sB+s2" s4+s8' s6 s1 {i+4} s5=0
+adox sB, s3          | s0" s3+s2 s4+s8' s6 s1 {i+4} s5=0
+movq s1, i+4(rp)     | s0" s3+s2 s4+s8' s6 {i+5} s5=0
+adcx s8, s4          | s0" s3+s2' s4 s6 {i+5} s5=0
+movq s6, i+5(rp)     | s0" s3+s2' s4 {i+6} s5=0
+adox s5, s0          | s0 s3+s2' s4 {i+6} s5=0
+movq s3, s7          | s0 s7+s2' s4 {i+6} s5=0
+adcx s2, s7          | s0' s7 s4 {i+6} s5=0
+movq s4, i+6(rp)     | s0' s7 {i+7} s5=0
+adcx s5, s0          | s0 s7 {i+7} s5=0
+movq s7, i+7(rp)     | s0 {i+7} s5=0
+movq s0, i+8(rp)
 '''
 
 import os, re, sys
@@ -189,7 +211,7 @@ def mul1_code(i, jj, p):
 
     return rr
 
-def cook_asm(o, code):
+def cook_asm(name, o, code):
     xmm_save = P.save_registers_in_xmm(code, 9)
 
     P.insert_restore(code, xmm_save)
@@ -211,7 +233,7 @@ def cook_asm(o, code):
 
     comment = P.g_autogenerated_patt % os.path.basename(sys.argv[0])
     o.write(comment.replace('//', '#'))
-    P.write_asm_procedure_header(o, 'mul8_zen')
+    P.write_asm_procedure_header(o, P.guess_subroutine_name(name))
     P.write_asm_inside(o, code + '\nretq')
 
 g_ymm_to_xmm_patt = re.compile(r'movq .*%ymm.*')
@@ -229,7 +251,7 @@ def mul0_code(cc):
         cc[i] = replace_rz(cc[i])
     return cc
 
-def do_it(o):
+def do_it(name, o):
     meat = mul0_code(P.cutoff_comments(g_mul_01))
     p = list(range(12))
     meat += mul1_code(2, P.cutoff_comments(g_muladd_2), p)
@@ -238,7 +260,7 @@ def do_it(o):
         p = P.composition(p, q)
         meat += mul1_code(i, P.cutoff_comments(g_muladd_2), p)
 
-    cook_asm(o, meat)
+    cook_asm(name, o, meat)
 
 def swap_adox_adcx(dd):
     rr = []
@@ -249,4 +271,4 @@ def swap_adox_adcx(dd):
     return rr
 
 with open(sys.argv[1], 'wb') as g_out:
-    do_it(g_out)
+    do_it(sys.argv[1], g_out)

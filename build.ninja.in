@@ -22,7 +22,7 @@ build benchmarks: phony $
         benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
         benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
         benchm25_toom22_1x_loud.exe $
-        benchmark_8x2.exe
+        benchmark_8x2.exe benchm8_skylake.exe
 
 build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
         test_mpn_sub.exe test_mpn_sub_4k.exe test_mpn_add_4k.exe $
@@ -31,7 +31,7 @@ build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
         test_bdiv_dbm1c_4k.exe test_bdiv_dbm1c_4k_inplace.exe test_shr.exe $
         test_mpn_mul2_add.exe test6_zen.exe test_mul_4x_zen_5arg_{4,8,12,16}.exe $
         test_mul_n_zen_4arg_{1,2,3,4,5,6,8,10,12,14,16,20,24}.exe $
-        test_itch_broadwell.exe test8_broadwell_125.exe
+        test_itch_broadwell.exe test8_{broadwell_125,skylake}.exe
 
 build exe: phony tests benchmarks
 
@@ -56,6 +56,8 @@ rule catenate
 test4.exe: test4.cpp mul4_broadwell.s @int_h $o/mpn_le_4.h $o/mul4_broadwell.h
 
 test8_broadwell_125.exe: test8.cpp mul8_broadwell_125.s @int_h
+
+test8_skylake.exe: test8.cpp mul8_skylake.s @int_h [+flags -DSKYLAKE=1]
 
 test8_zen.exe: test8.cpp mul8_zen.s @int_h [+flags -DZEN=1]
 
@@ -124,6 +126,8 @@ mul6.h: mul6
 mul6_zen.s: mul6_zen
 
 mul8_zen.s: mul8_zen
+
+mul8_skylake.s: mul8_skylake
 
 mul8_broadwell_125.s: mul8_broadwell_125
 
@@ -194,10 +198,13 @@ benchm6_broadwell.exe: benchmark6.cpp @int_h benchmark-internal.c $
 
 benchm8_zen.exe: benchmark8.cpp mul8_zen.s @int_h benchmark-internal.c $
         [+flags -DZEN=1]
-        
+
+benchm8_skylake.exe: benchmark8.cpp mul8_skylake.s @int_h benchmark-internal.c $
+        [+flags -DSKYLAKE=1]
+
 benchmark_8x2.exe: benchmark8.cpp mul8x2.s @int_h benchmark-internal.c $
         [+flags -D_8x2=1]
-        
+
 mul8x2.s: mul8x2
 
 
