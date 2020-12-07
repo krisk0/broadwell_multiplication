@@ -69,8 +69,8 @@ adcx w7, w0                    | w5 w2+wB w1+wA+w6" w8+w4' w0 [2] {2} w3=v[2]
 mulx 48(up), w7, w9            | w5+w9 w2+wB+w7 w1+wA+w6" w8+w4' w0 [2] {2} w3=v[2]
 adox wA, w1                    | w5+w9 w2+wB+w7" w1+w6 w8+w4' w0 [2] {2} w3=v[2]
 mulx 56(up), wA, dd            | dd w5+w9+wA w2+wB+w7" w1+w6 w8+w4' w0 [2] {2} w3=v[2]
-xchg dd, w3                    | w3 w5+w9+wA w2+wB+w7" w1+w6 w8+w4' w0 [2] {2}
-adcx w4, w8                    | w3 w5+w9+wA w2+wB+w7" w1+w6' w8 w0 [2] {2}
+xchg dd, w3
+adcx w4, w8
 adox wB, w2                    | w3 w5+w9+wA" w2+w7 w1+w6' w8 w0 [2] {2}
 '''
 
@@ -90,6 +90,9 @@ adcx s7,s2               | s3" s5+sA' s2 s1 s8 s0+s9 sB+s6: s4: {i}
 movq $0, s7
 adox s7, s3              | s3 s5+sA' s2 s1 s8 s0+s9 sB+s6: s4: {i} s7=0
 adcx sA, s5              | s3' s5 s2 s1 s8 s0+s9 sB+s6: s4: {i} s7=0
+
+| TODO: try different path here
+
 movq s5, t0              | s3' t0 s2 s1 s8 s0+s9 sB+s6: s4: {i} s7=0
 mulx 16(up), s5, sA      | s3' t0 s2 s1 s8+sA s0+s9+s5 sB+s6: s4: {i} s7=0
 adox i(rp), s4           | s3' t0 s2 s1 s8+sA s0+s9+s5 sB+s6:" s4 {i} s7=0

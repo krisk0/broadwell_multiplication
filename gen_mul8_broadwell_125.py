@@ -1,5 +1,5 @@
 '''
-8x8 multiplication targeting Broadwell. 125 ticks on Skylake, 1205 ticks on Ryzen
+8x8 multiplication targeting Broadwell. 124 ticks on Skylake, 1205 ticks on Ryzen
 
 TODO: improve Slylake throughput by using ymm
 '''
