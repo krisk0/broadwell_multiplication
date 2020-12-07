@@ -17,7 +17,6 @@ w0  w1  w2  w3  w4  w7  up  rp  dd
 """
 
 g_mul_01='''
-vzeroupper                       | removing vzeroupper slows code down by 4 ticks
 vmovdqu 8(dd), v14               | v14=v[1..4]
 !save w9
 vmovdqu 32(dd), v47              | v47=v[4..7]
