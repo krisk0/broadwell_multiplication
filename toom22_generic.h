@@ -7,7 +7,7 @@
 #include "automagic/toom22_generic_aux.h"
 
 // TODO: maybe 26 as set in broadwell/skylake gmp-mparam.h? or 19 for zen?
-constexpr uint16_t TOOM_2X_BOUND = 28; 
+constexpr uint16_t TOOM_2X_BOUND = 28;
 
 #define LOUD_6_LINES 0
 #define SHOW_SUBROUTINE_NAME 0
@@ -1070,7 +1070,8 @@ toom22_1x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #endif
     auto v1_sign = toom22_1x::v1<h, q>(rp, scratch, ap, bp);   // |v1| at scratch + 0
     toom22_broadwell_t<h>(rp, scratch + 2 * h, ap, bp);        // v0 at rp + 0
-    toom22_broadwell_t<q>(rp + 2 * h, scratch + 2 * h, ap + h, bp + h); // v2 at rp + 2*h
+    toom22_broadwell_t<q>(rp + 2 * h, scratch + 2 * h, ap + h, bp + h);
+                                                               // v2 at rp + 2*h
     #if LOUD_6_LINES
         printf("at -1: ");
         dump_number(scratch, 2 * h);
