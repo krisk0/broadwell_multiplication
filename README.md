@@ -51,7 +51,7 @@ For stable result, don't forget to turn off turbo boost and fix CPU frequency wh
 
 1. To generate and compile code, `Python2` interpreter, `ninja` utility, `GCC` C/C++ compiler on X86_64 Linux or compatible OS.
 
-2. To benchmark code, Intel Broadwell or better CPU (capable to `adcx`/`adox`).
+2. To benchmark code, Intel Broadwell or AMD Ryzen or better CPU (capable to `adcx`/`adox`).
 
 # License
 
