@@ -1,5 +1,5 @@
 '''
-8x8 multiplication targeting Ryzen. 106 ticks on Ryzen, 115 on Skylake
+8x8 multiplication targeting Ryzen. 98 ticks on Ryzen, 111 on Skylake
 '''
 
 """
@@ -86,64 +86,59 @@ mulx (up), s4, sB        | s3 s5+s9+sA" s2+s7 s1+s6' s8 s0 sB: s4: {i}
 adcx s6, s1              | s3 s5+s9+sA" s2+s7' s1 s8 s0 sB: s4: {i}
 adox s9, s5              | s3" s5+sA s2+s7' s1 s8 s0 sB: s4: {i}
 mulx 8(up), s6, s9       | s3" s5+sA s2+s7' s1 s8 s0+s9 sB+s6: s4: {i}
-adcx s7,s2               | s3" s5+sA' s2 s1 s8 s0+s9 sB+s6: s4: {i}
+adcx s7, s2              | s3" s5+sA' s2 s1 s8 s0+s9 sB+s6: s4: {i}
 movq $0, s7
 adox s7, s3              | s3 s5+sA' s2 s1 s8 s0+s9 sB+s6: s4: {i} s7=0
 adcx sA, s5              | s3' s5 s2 s1 s8 s0+s9 sB+s6: s4: {i} s7=0
-
-| TODO: try different path here
-
-movq s5, t0              | s3' t0 s2 s1 s8 s0+s9 sB+s6: s4: {i} s7=0
-mulx 16(up), s5, sA      | s3' t0 s2 s1 s8+sA s0+s9+s5 sB+s6: s4: {i} s7=0
-adox i(rp), s4           | s3' t0 s2 s1 s8+sA s0+s9+s5 sB+s6:" s4 {i} s7=0
-movq s4, i(rp)           | s3' t0 s2 s1 s8+sA s0+s9+s5 sB+s6:" {i+1} s7=0
-adcx s7, s3              | s3 t0 s2 s1 s8+sA s0+s9+s5 sB+s6:" {i+1} s7=0
-mulx 24(up), s4, s7      | s3 t0 s2 s1+s7 s8+sA+s4 s0+s9+s5 sB+s6:" {i+1}
-adox sB, s6              | s3 t0 s2 s1+s7 s8+sA+s4 s0+s9+s5" s6: {i+1}
-adox s9, s0              | s3 t0 s2 s1+s7 s8+sA+s4" s0+s5 s6: {i+1}
-adcx i+1(rp), s6     | s3 t0 s2 s1+s7 s8+sA+s4" s0+s5' s6 {i+1}
-movq s6, i+1(rp)     | s3 t0 s2 s1+s7 s8+sA+s4" s0+s5' .. {i+1}
-mulx 32(up), s6, sB  | s3 t0 s2+sB s1+s7+s6 s8+sA+s4" s0+s5' .. {i+1}
-adox sA, s8          | s3 t0 s2+sB s1+s7+s6" s8+s4 s0+s5' .. {i+1}
-movq t0, sA          | s3 sA s2+sB s1+s7+s6" s8+s4 s0+s5' .. {i+1}
-adcx s5, s0          | s3 sA s2+sB s1+s7+s6" s8+s4' s0 .. {i+1}
-movq s0, i+2(rp)     | s3 sA s2+sB s1+s7+s6" s8+s4' [2] {i+1}
-s9:=v[i+1]
-mulx 40(up), s0, s5  | s3 sA+s5 s2+sB+s0 s1+s7+s6" s8+s4' [2] {i+1} s9=v[i+1]
-adox s7, s1          | s3 sA+s5 s2+sB+s0" s1+s6 s8+s4' [2] {i+1} s9=v[i+1]
-adcx s8, s4          | s3 sA+s5 s2+sB+s0" s1+s6' s4 [2] {i+1} s9=v[i+1]
-mulx 48(up), s7, s8  | s3+s8 sA+s5+s7 s2+sB+s0" s1+s6' s4 [2] {i+1} s9=v[i+1]
-adox sB, s2          | s3+s8 sA+s5+s7" s2+s0 s1+s6' s4 [2] {i+1} s9=v[i+1]
-mulx 56(up), sB, dd  | dd s3+s8+sB sA+s5+s7" s2+s0 s1+s6' s4 [2] {i+1} s9=v[i+1]
-xchg s9, dd          | s9 s3+s8+sB sA+s5+s7" s2+s0 s1+s6' s4 [2] {i+1}
-adcx s6, s1          | s9 s3+s8+sB sA+s5+s7" s2+s0' s1 s4 [2] {i+1}
-adox sA, s5          | s9 s3+s8+sB" s5+s7 s2+s0' s1 s4 [2] {i+1}
+adox i(rp), s4           | s3' s5 s2 s1 s8 s0+s9 sB+s6:" s4 {i} s7=0
+movq s4, i(rp)           | s3' s5 s2 s1 s8 s0+s9 sB+s6:" {i+1} s7=0
+mulx 16(up), s4, sA      | s3' s5 s2 s1 s8+sA s0+s9+s4 sB+s6:" {i+1} s7=0
+adcx s7, s3              | s3 s5 s2 s1 s8+sA s0+s9+s4 sB+s6:" {i+1} s7=0
+adox sB, s6              | s3 s5 s2 s1 s8+sA s0+s9+s4" s6: {i+1} s7=0
+mulx 24(up), s7, sB      | s3 s5 s2 s1+sB s8+sA+s7 s0+s9+s4" s6: {i+1}
+adcx i+1(rp), s6         | s3 s5 s2 s1+sB s8+sA+s7 s0+s9+s4"' s6 {i+1}
+movq s6, i+1(rp)         | s3 s5 s2 s1+sB s8+sA+s7 s0+s9+s4"' .. {i+1}
+adox s9, s0              | s3 s5 s2 s1+sB s8+sA+s7" s0+s4' .. {i+1}
+mulx 32(up), s6, s9      | s3 s5 s2+s9 s1+sB+s6 s8+sA+s7" s0+s4' .. {i+1}
+adcx s4, s0              | s3 s5 s2+s9 s1+sB+s6 s8+sA+s7"' s0 .. {i+1}
+adox sA, s8              | s3 s5 s2+s9 s1+sB+s6" s8+s7' s0 .. {i+1}
+mulx 40(up), s4, sA      | s3 s5+sA s2+s9+s4 s1+sB+s6" s8+s7' s0 .. {i+1}
+movq s0, i+2(rp)         | s3 s5+sA s2+s9+s4 s1+sB+s6" s8+s7' [2] {i+1}
+s0:=v[i+1]               | s3 s5+sA s2+s9+s4 s1+sB+s6" s8+s7' [2] {i+1} s0=v[i+1]
+adcx s8, s7              | s3 s5+sA s2+s9+s4 s1+sB+s6"' s7 [2] {i+1} s0=v[i+1]
+adox sB, s1              | s3 s5+sA s2+s9+s4" s1+s6' s7 [2] {i+1} s0=v[i+1]
+mulx 48(up), s8, sB      | s3+sB s5+sA+s8 s2+s9+s4" s1+s6' s7 [2] {i+1} s0=v[i+1]
+adcx s6, s1              | s3+sB s5+sA+s8 s2+s9+s4"' s1 s7 [2] {i+1} s0=v[i+1]
+mulx 56(up), s6, dd      | dd s3+sB+s6 s5+sA+s8 s2+s9+s4"' s1 s7 [2] {i+1} s0=v[i+1]
+adox s9, s2              | dd s3+sB+s6 s5+sA+s8" s2+s4' s1 s7 [2] {i+1} s0=v[i+1]
+adox sA, s5              | dd s3+sB+s6" s5+s8 s2+s4' s1 s7 [2] {i+1} s0=v[i+1]
+xchg dd, s0              | s0 s3+sB+s6" s5+s8 s2+s4' s1 s7 [2] {i+1}
 '''
 
 '''
 i >= 3
 multiplied by v[0], .. v[i-1]
                 old: s3 s5+s9+sA" s2+s7 s1+s6' s8 s0
-data lies like that: s9 s3+s8+sB" s5+s7 s2+s0' s1 s4 [2] {i} dd=v[i]
+data lies like that: s0 s3+sB+s6" s5+s8 s2+s4' s1 s7 [2] {i} dd=v[i]
 '''
 #         0 1 2 3 4 5 6 7 8 9 A B
-g_perm = '4 2 5 9 6 3 0 7 1 8 B A'
+g_perm = '7 2 5 0 9 3 4 8 1 B 6 A'
 
 g_tail = '''
-                     | s9 s3+s8+sB" s5+s7 s2+s0' s1 s4 {i+3}
-movq s4, i+3(rp)     | s9 s3+s8+sB" s5+s7 s2+s0' s1 {i+4}
-movq s1, i+4(rp)     | s9 s3+s8+sB" s5+s7 s2+s0' {i+5}
-adcx s2, s0          | s9 s3+s8+sB" s5+s7' s0 {i+5}
-adox s3, s8          | s9" s8+sB s5+s7' s0 {i+5}
-movq $0, s2          | s9" s8+sB s5+s7' s0 {i+5} s2=0
-adcx s7, s5          | s9" s8+sB' s5 s0 {i+5} s2=0
-movq s0, i+5(rp)     | s9" s8+sB' s5 {i+6} s2=0
-movq s5, i+6(rp)     | s9" s8+sB' {i+7} s2=0
-adox s2, s9          | s9 s8+sB' {i+7} s2=0
-adcx sB, s8          | s9' s8 {i+7} s2=0
-movq s8, i+7(rp)     | s9' {i+8} s2=0
-adcq $0, s9          | s9 {i+8} s2=0
-movq s9, i+8(rp)
+                         | dd s3+sB+s6" s5+s8 s2+s4' s1 s7 {i+3}
+movq s7, i+3(rp)         | dd s3+sB+s6" s5+s8 s2+s4' s1 {i+4}
+adcx s4, s2              | dd s3+sB+s6" s5+s8' s2 s1 {i+4}
+movq s1, i+4(rp)         | dd s3+sB+s6" s5+s8' s2 {i+5}
+adox sB, s3              | dd" s3+s6 s5+s8' s2 {i+5}
+movq $0, s4              | dd" s3+s6 s5+s8' s2 {i+5} s4=0
+movq s2, i+5(rp)         | dd" s3+s6 s5+s8' {i+6}
+adcx s8, s5              | dd" s3+s6' s5 {i+6}
+adox s4, dd              | dd s3+s6' s5 {i+6}
+movq s5, i+6(rp)         | dd s3+s6' {i+7}
+adcx s6, s3              | dd' s3 {i+7}
+movq s3, i+7(rp)
+adcx s4, dd
+movq dd, i+8(rp)
 '''
 
 import os, re, sys
@@ -173,7 +168,7 @@ def mul1_code(i, jj, p):
         rr.append(j)
 
     if i == 7:
-        rr += P.cutoff_comments(g_tail)
+        rr = rr[:-1] + P.cutoff_comments(g_tail)
 
     # apply permutation p, replace i(rp)
     for y in range(len(rr)):
@@ -209,31 +204,13 @@ def cook_asm(o, code):
         r[y[0]] = '%' + y[1]
     code = P.replace_symbolic_vars_name(code, r)
 
-    # replace ymm with xmm in all movq
-    code = '\n'.join([replace_ymm_by_xmm(x) for x in code.split('\n')])
-
     comment = P.g_autogenerated_patt % os.path.basename(sys.argv[0])
     o.write(comment.replace('//', '#'))
     P.write_asm_procedure_header(o, 'mul8_zen')
     P.write_asm_inside(o, code + '\nretq')
 
-g_ymm_to_xmm_patt = re.compile(r'movq .*%ymm.*')
-def replace_ymm_by_xmm(s):
-    if g_ymm_to_xmm_patt.match(s):
-        return s.replace('ymm', 'xmm')
-    return s
-
-def replace_rz(s):
-    return re.sub(r'\brz\b', '-8(%rsp)', s)
-
-g_extract_v_patt = re.compile(r'extract v\[(.)\]')
-def mul0_code(cc):
-    for i in range(len(cc)):
-        cc[i] = replace_rz(cc[i])
-    return cc
-
 def do_it(o):
-    meat = mul0_code(P.cutoff_comments(g_mul_01))
+    meat = P.cutoff_comments(g_mul_01)
     p = list(range(12))
     meat += mul1_code(2, P.cutoff_comments(g_muladd_2), p)
     q = [int(x, 16) for x in g_perm.split(' ')]
@@ -242,14 +219,6 @@ def do_it(o):
         meat += mul1_code(i, P.cutoff_comments(g_muladd_2), p)
 
     cook_asm(o, meat)
-
-def swap_adox_adcx(dd):
-    rr = []
-    for d in dd:
-        x = d.replace('adox', 'ADCX').replace('adcx', 'adox').\
-                replace('ADCX', 'adcx')
-        rr.append(x)
-    return rr
 
 with open(sys.argv[1], 'wb') as g_out:
     do_it(g_out)
