@@ -15,7 +15,7 @@ w0  w1  w2  w3  w4  w7  up  rp  dd
 """
 
 g_mul_01='''
-vzeroupper                       | removing vzeroupper slows code down by 4 ticks
+vzeroupper              | removing vzeroupper slows code down by 22 ticks (on Ryzen)
 movdqu 8(dd), t0                 | t0=v[1..2]
 !save w9
 movdqu 24(dd), t1                | t1=v[3..4]
