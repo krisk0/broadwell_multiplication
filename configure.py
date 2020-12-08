@@ -171,7 +171,36 @@ def memorize_tgt(m, rule):
         return
     m.add(f.group(1))
 
+g_macro_def = re.compile(r'(\S+) = (.*)')
+def ninja_style_macros(mm, src):
+    '''
+    if src is 'name = smth', memorize macro smth
+    else replace $name with smth
+
+    o cannot be macro name
+    '''
+    m = g_macro_def.match(src)
+    if m and m.group(1) != 'o':
+        mm[m.group(1)] = m.group(2)
+        return
+    dd = src.split(' ')
+    for i in range(len(dd)):
+        j = dd[i]
+        if j and (j[0] == '$'):
+            k = j[1:]
+            if not k:
+                continue
+            if k[-1] == '\n':
+                l = k[:-1]
+                if mm.has_key(l):
+                    dd[i] = mm[l] + '\n'
+            elif mm.has_key(k):
+                dd[i] = mm[k]
+    return ' '.join(dd)
+
+g_macros = {}
 def expand_line(src, all_t, ready_t):
+    global g_macros
     tgt = bash_style_curly_braces_expand(src.rstrip())
     tgt = exe_rule(tgt)
     tgt = option_in_brackets(tgt)
@@ -185,8 +214,10 @@ def expand_line(src, all_t, ready_t):
         tgt = '\n'.join(expand_ampersand(tgt))
     if (not tgt) or (tgt[-1] != '\n'):
         tgt += '\n'
-    memorize_tgt(ready_t, tgt)
-    return tgt
+    tgt = ninja_style_macros(g_macros, tgt)
+    if tgt:
+        memorize_tgt(ready_t, tgt)
+        return tgt
 
 def cutoff_comment(s):
     p = s.find('#')
@@ -226,13 +257,25 @@ def do_it(o, i, all_targets):
             prev = None
         else:
             k = expand_line(j, all_targets, ready_targets)
-        o.write(k)
+        if k:
+            o.write(k)
+
+    global g_s_to_o
+    add_o(g_s_to_o, all_targets, ready_targets)
 
     if g_s_to_o:
         o.write('\n')
         for i in g_s_to_o:
             j = find_source(i + '.s')
-            o.write('build $o/%s.o: compile_c_code %s\n\n' % (i,j))
+            o.write('build $o/%s.o: compile_c_code %s\n\n' % (i, j))
+
+g_o_pattern = re.compile(r'\$o/(\S+)\.o')
+def add_o(tgt, wanted, already):
+    for x in wanted:
+        m = g_o_pattern.match(x)
+        if (not m) or (x in already):
+            continue
+        tgt.add(m.group(1))
 
 g_space_smth_pattern = re.compile(' .*')
 def escape_dot(i):
@@ -257,6 +300,12 @@ g_int_h0_plain = g_int_h0.replace('\\', '')
 def contains_any_of(x, y):
     return 1 in [c in x for c in y]
 
+def take_files_from_macro_rp(rez, src):
+    src = src[src.find(' = ') + 3:]
+    for f in src.split(' '):
+        if f[:3] == '$o/':
+            rez.add(f)
+
 def list_of_targets_subr_1(rez, src):
     src = directory_before_exe(src).split(' ')
     for i in src:
@@ -267,12 +316,15 @@ def list_of_targets_subr_1(rez, src):
         rez.add(i)
 
 g_colon_pattern = re.compile('(.+?):(.+)')
+g_ninja_macro = re.compile(r'\S+ = .*\$o')
 def list_of_targets_subr(rez, src):
+    src = bash_style_curly_braces_expand(src)
+    if g_ninja_macro.match(src):
+        take_files_from_macro_rp(rez, src)
+        return
     m = g_colon_pattern.match(src)
     if not m:
         return
-    src = bash_style_curly_braces_expand(src)
-    m = g_colon_pattern.match(src)
     list_of_targets_subr_1(rez, m.group(2))
     m = m.group(1)
     if m.find(' ') != -1:
