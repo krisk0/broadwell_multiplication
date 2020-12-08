@@ -28,7 +28,6 @@ void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
 template<uint16_t> void toom22_8x_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
-template<uint16_t> void mul_basecase_t(mp_ptr, mp_srcptr, mp_srcptr);
 
 /*
 returns -1 if w is not a degree of two, or scratch size for toom22_generic(..., w).

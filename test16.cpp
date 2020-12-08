@@ -6,7 +6,7 @@ extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 }
 
-#include "automagic/toom22_mul_16.h"
+#include "toom22_generic.h"
 
 uint64_t g_scratch[16];
 
