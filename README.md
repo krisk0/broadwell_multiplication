@@ -28,36 +28,24 @@ automagic/benchm8_custom.exe 0
 
 subroutine | tacts 
 :---: | ---:
-mpn_mul_n 8 | 131
-gmpn_mul_basecase 8 | 114
-mul8_broadwell_store_once | 98
-mpn_mul_n 16 | 420
-gmpn_mul_basecase 16 | 419
-toom22_xx_broadwell 16 | 354
-toom22_broadwell_t 16 | 350
-mpn_mul_n 24 | 915
-toom22_broadwell_t 24 | 844
-mpn_mul_n 32 | 1395
-gmpn_toom22_mul 32 | 1404
-toom22_deg2_broadwell 32 | 1217
-mpn_mul_n 48 | 2970
-gmpn_toom22_mul 48 | 2946
-toom22_xx_broadwell 48 | 2798
-toom22_broadwell_t | 2780
-mpn_mul_n 64 | 4512
-gmpn_toom22_mul 64 | 4482
-toom22_deg2_broadwell 64 | 3941
-mpn_mul_n 96 | 8583
-toom22_xx_broadwell 96 | 8865
-mpn_mul_n 127 | 14078
-toom22_broadwell_t 127 | 12350
+mpn_mul_n 8 | 143
+gmpn_mul_basecase 8 | 133
+mul8_zen | 112
+mpn_mul_n 16 | 489
+gmpn_mul_basecase 16 | 478
+toom22_xx_broadwell 16 | 418
+toom22_broadwell_t 16 | 417
+mpn_mul_n 24 | 1086
+toom22_broadwell_t 24 | 999
+mpn_mul_n 32 | 1678
+toom22_deg2_broadwell 32 | 1450
 
 Left column contains subroutine name and size indicator. For instance, 
 `gmpn_mul_basecase 16` indicates that `gmpn_mul_basecase(target, operand_a, 16, operand_b, 16)` was called.
 
 Right column contains count of CPU tacts (ticks), as returned by `__rdtsc()`.
 
-For stable result, don't forget to turn off turbo boost when benchmarking.
+For stable result, don't forget to turn off turbo boost and fix CPU frequency when benchmarking.
 
 # Requirements
 
