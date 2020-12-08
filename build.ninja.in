@@ -178,7 +178,8 @@ test_toom22_broadwell_t.cpp: test_toom22_broadwell_t
 toom22_mul_16.h: cstdint_gmp.h mpn_le_8.h mpn_sub_8.h $
     subtract_lesser_from_bigger_8.h toom22_interpolate_16.h toom22_mul_16_raw.h
 
-toom22_generic_aux.h: cstdint_gmp.h mpn_less_3arg.h mpn_less_3arg_hole.h mpn_sub_4k.h mpn_add_4k_inplace.h $
+toom22_generic_aux.h: cstdint_gmp.h mpn_less_3arg.h mpn_less_3arg_hole.h $
+    mpn_sub_4k.h mpn_add_4k_inplace.h $
     mpn_sub_4k_inplace.h mpn_sub_6.h mpn_le_6.h subtract_lesser_from_bigger_6.h $
     mpn_sub_n_small.h mpn_sub_inplace.h mpn_add_inplace.h mul6.h toom22_mul_16.h $
     mpn_sub_1x.h
@@ -265,10 +266,10 @@ benchm_bdiv_dbm1c_4k_inplace.exe: benchm_bdiv_dbm1c_4k_inplace.cpp @int_h $
 
 mul_4x_zen_5arg.s: mul_4x_zen
 
-benchmark_mul_4x_zen_5arg_%.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s @int_h $
-    [+flags -DSIZE=%]
+benchmark_mul_4x_zen_5arg_%.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s $
+    @int_h [+flags -DSIZE=%]
 
-benchmark_mul_n_zen_4arg_%.exe: benchmark_mul_n_zen_4arg.cpp mul_n_zen_4arg.s @int_h $
-    [+flags -DSIZE=%]
+benchmark_mul_n_zen_4arg_%.exe: benchmark_mul_n_zen_4arg.cpp mul_n_zen_4arg.s $
+    @int_h [+flags -DSIZE=%]
 
 mul_n_zen_4arg.s: mul_n_zen_4arg
