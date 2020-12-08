@@ -115,7 +115,7 @@ do_test() {
 int
 main() {
     srand(RAND_SEED);
-    g_scratch = (INT*)malloc(sizeof(INT) * toom22_generic_itch(MAX_N));
+    g_scratch = (INT*)malloc(sizeof(INT) * toom22_itch_broadwell_t<MAX_N>());
 
     for (g_size = TOOM_2X_BOUND; g_size <= MAX_N; g_size++) {
         #if LOUD

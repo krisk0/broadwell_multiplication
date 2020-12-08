@@ -1,5 +1,5 @@
 '''
-8x8 multiplication targeting Ryzen. 98 ticks on Ryzen, 111 on Skylake
+8x8 multiplication targeting Ryzen. 98 ticks on Ryzen, 112 on Skylake
 '''
 
 """

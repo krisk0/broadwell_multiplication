@@ -6,7 +6,8 @@
 #include "bordeless-alloc.h"
 #include "automagic/toom22_generic_aux.h"
 
-constexpr uint16_t TOOM_2X_BOUND = 28;
+// TODO: maybe 26 as set in broadwell/skylake gmp-mparam.h? or 19 for zen?
+constexpr uint16_t TOOM_2X_BOUND = 28; 
 
 #define LOUD_6_LINES 0
 #define SHOW_SUBROUTINE_NAME 0
@@ -22,10 +23,12 @@ void dump_number(mp_limb_t* p, unsigned n);
 extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 mp_limb_t __gmpn_addmul_1_adox(mp_ptr, mp_srcptr, mp_size_t, mp_limb_t);
+void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
 template<uint16_t> void toom22_8x_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
+template<uint16_t> void mul_basecase_t(mp_ptr, mp_srcptr, mp_srcptr);
 
 /*
 returns -1 if w is not a degree of two, or scratch size for toom22_generic(..., w).
@@ -33,7 +36,7 @@ returns -1 if w is not a degree of two, or scratch size for toom22_generic(..., 
 Scratch size for w=16 * 2**k equals 16 * (2**(k + 1) - 1)
 */
 int
-toom22_generic_itch(mp_size_t w) {
+toom22_deg2_itch(mp_size_t w) {
     int k = 63 - _lzcnt_u64(w);
     mp_size_t m = 1 << k;
     if (m != w) {
@@ -429,7 +432,7 @@ toom22_deg2_broadwell_careful(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr
         mp_size_t n) {
     switch (n) {
     case 8:
-        mul8_broadwell_store_once(rp, ap, bp);
+        mul_basecase_t<8>(rp, ap, bp);
         return;
     case 16:
         toom22_mul16_broadwell(rp, scratch, ap, bp);
@@ -1084,6 +1087,20 @@ toom22_1x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #endif
 }
 
+template <uint16_t N>
+void
+mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
+    // for N=6 of 8, use hand-optimized subroutine
+    if constexpr (N == 8) {
+        mul8_zen(rp, ap, bp);
+    } else if constexpr (N == 6) {
+        mul6_broadwell(rp, ap, bp);
+    } else {
+        // call asm subroutine from GMP, bypassing if's in mpn_mul_n()
+        MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
+    }
+}
+
 // N: integer, not very big
 template <uint16_t N>
 void
@@ -1100,15 +1117,7 @@ toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         if constexpr (itch::is_power_of_2_t<N>() && (N >= 16)) {
             return toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
         }
-        // for N=6 of 8, use hand-optimized subroutine
-        if constexpr (N == 8) {
-            mul8_broadwell_store_once(rp, ap, bp);
-        } else if constexpr (N == 6) {
-            mul6_broadwell(rp, ap, bp);
-        } else {
-            // call asm subroutine from GMP, bypassing if's in mpn_mul_n()
-            MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
-        }
+        mul_basecase_t<N>(rp, ap, bp);
     } else {
         if constexpr (N & 1) {
             toom22_1x_broadwell_t<N>(rp, scratch, ap, bp);

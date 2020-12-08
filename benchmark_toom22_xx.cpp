@@ -38,7 +38,7 @@ INT g_page_unmask;
 #endif
 
 #if !defined(ITCH_SIZE)
-    #define ITCH_SIZE toom22_generic_itch(MAX_N)
+static constexpr auto ITCH_SIZE = toom22_itch_broadwell_t<MAX_N>();
 #endif
 
 void

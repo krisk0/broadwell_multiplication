@@ -10,10 +10,6 @@ void mul8_skylake(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8x2_zen(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
-#if (!ZEN) && (!_8x2) && (!SKYLAKE)
-    #include "automagic/mul8_store_once.h"
-#endif
-
 #ifndef SIZE
     #define SIZE 8
 #endif
