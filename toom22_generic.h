@@ -312,7 +312,6 @@ toom22_interpolate(mp_ptr ab_p, mp_ptr g_p, uint8_t sign, mp_size_t n) {
     mpn_add_n_plus_1(ab_p + (n / 2), t_senior, g_p, n);
 }
 
-#if defined(mul6_broadwell_wr)
 void
 toom22_12e_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #if SHOW_SUBROUTINE_NAME
@@ -327,9 +326,9 @@ toom22_12e_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #endif
     auto sign = subtract_lesser_from_bigger_6(rp, ap, ap + 6);        // a0-a1
     sign ^= subtract_lesser_from_bigger_6(rp + 6, bp, bp + 6);        // b0-b1
-    mul6_broadwell_wr(scratch, rp, rp + 6);                           // at -1
-    mul6_broadwell_wr(rp, ap, bp);                                    // at 0
-    mul6_broadwell_wr(rp + 12, ap + 6, bp + 6);                       // at infinity
+    mul_basecase_t<6>(scratch, rp, rp + 6);                           // at -1
+    mul_basecase_t<6>(rp, ap, bp);                                    // at 0
+    mul_basecase_t<6>(rp + 12, ap + 6, bp + 6);                       // at infinity
     #if LOUD_6_LINES
         printf("at -1: ");
         dump_number(scratch, 12);
@@ -393,7 +392,6 @@ toom22_12_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         toom22_interpolate_4k(rp, scratch, sign, N);
     }
 }
-#endif
 
 // n: degree of two, 32 <= n < 2**16
 void
@@ -461,8 +459,6 @@ toom22_deg2_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         toom22_interpolate_4k(rp, scratch, sign, N);
     }
 }
-
-#if defined(mul6_broadwell_wr)
 
 void toom22_1x_broadwell(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr, uint16_t);
 void toom22_8x_broadwell(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr, mp_size_t);
@@ -730,7 +726,6 @@ toom22_xx_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
     }
     toom22_8x_broadwell_6arg(rp, scratch, ap, bp, n, zeroes);
 }
-#endif
 
 #if 0
 Formulas and algorithm of Toom-Cook-2/2 for odd n
