@@ -1191,3 +1191,13 @@ toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         }
     }
 }
+
+template<uint16_t N>
+void
+force_call_toom22_broadwell(mp_ptr rp, mp_ptr scr, mp_srcptr ap, mp_srcptr bp) {
+    if constexpr(N & 1) {
+        toom22_1x_broadwell_t<N>(rp, scr, ap, bp);
+    } else {
+        toom22_2x_broadwell_t<N>(rp, scr, ap, bp);
+    }
+}
