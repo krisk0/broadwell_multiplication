@@ -104,7 +104,11 @@ toom22_12_itch(mp_size_t n) {
      :                            \
      :"memory", "cc");
 
-// memory layout: a+0 a+1 ... a+n-1 b+0 b+1 ... b+n-1,   loops = (n >> 2) - 1
+/*
+memory layout: a+0 a+1 ... a+n-1 b+0 b+1 ... b+n-1
+n is a multiple of 4
+loops = (n >> 2) - 1
+*/
 uint8_t
 subtract_lesser_from_bigger_n(mp_ptr tgt, mp_srcptr a, uint16_t n, uint16_t loops) {
     uint8_t less;
@@ -1048,6 +1052,20 @@ toom22_itch_broadwell(uint16_t N) {
     }
     auto h = (N + 1)/ 2;
     return 2 * h + std::max(toom22_itch_broadwell(h), toom22_itch_broadwell(h - 1));
+}
+
+// Itch size for forced call of toom22_2x_broadwell_t<N> or toom22_1x_broadwell_t<N>
+template<uint16_t N>
+constexpr uint64_t
+toom22_itch_forced_t() {
+    constexpr auto h = (N + 1) / 2;
+    if constexpr(N & 1) {
+        constexpr auto b0 = toom22_itch_broadwell_t<h>();
+        constexpr auto b1 = toom22_itch_broadwell_t<h - 1>();
+        return 2 * h + (b0 > b1 ? b0 : b1);
+    } else {
+        return N + toom22_itch_broadwell_t<h>();
+    }
 }
 
 // N: odd, >= TOOM_2X_BOUND
