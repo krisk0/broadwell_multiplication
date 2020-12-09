@@ -9,7 +9,7 @@ void __gmpn_toom22_mul(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t, mp
 #define TOOM_DEG2(x, y, z) toom22_deg2_broadwell(x, scratch + 0, y, z, SIZE)
 #define TOOM_WRAP(x, y, z) toom22_xx_broadwell(x, scratch + 0, y, z, SIZE)
 #define TOOM_DEG2_T(x, y, z) toom22_deg2_broadwell_t<SIZE>(x, scratch + 0, y, z)
-#define TOOM_T(x, y, z) toom22_broadwell_t<SIZE>(x, scratch + 0, y, z)
+#define TOOM_T(x, y, z) force_call_toom22_broadwell<SIZE>(x, scratch + 0, y, z)
 #if !defined(VOLUME)
     #if SIZE < 50
         #define VOLUME (1000*1000*20)
