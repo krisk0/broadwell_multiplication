@@ -22,7 +22,7 @@ void __gmpn_toom22_mul(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t, mp
     #error SCRATCH_TYPE not defined
 #endif
 
-constexpr auto g_itch = toom22_itch_broadwell_t<SIZE>() * sizeof(mp_limb_t);
+constexpr auto g_itch = itch::toom22_forced_t<SIZE>() * sizeof(mp_limb_t);
 #if SCRATCH_TYPE == 0
     // scratch not needed in benchmark-internal
     #define HELLO /**/
