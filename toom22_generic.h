@@ -304,7 +304,7 @@ toom22_interpolate_4k(mp_ptr ab_p, mp_ptr g_p, uint8_t sign, uint16_t n) {
     mpn_add_4k_plus_1(ab_p + (n / 2), t_senior, g_p, l);
 }
 
-// n even, not a multiple of 4; 12 <= n < 2**16
+// n even, not a multiple of 4; 10 <= n < 2**16
 void
 toom22_interpolate(mp_ptr ab_p, mp_ptr g_p, uint8_t sign, mp_size_t n) {
     mp_limb_t t_senior;
@@ -467,7 +467,7 @@ toom22_deg2_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
 void toom22_1x_broadwell(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr, uint16_t);
 void toom22_8x_broadwell(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr, mp_size_t);
 
-// n even, not a multiple of 8; 12 <= n
+// n even, not a multiple of 8; 10 <= n
 void
 toom22_2x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint16_t n) {
     if (n == 12) {
@@ -529,7 +529,7 @@ toom22_2x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
 }
 
 /*
-N even, 12 <= N
+N even, 10 <= N
 
 scratch size: s(2*h) = 2*h + s(h)
 */
@@ -576,7 +576,7 @@ call_addmul(mp_ptr rp, mp_srcptr up, mp_limb_t v0, uint16_t n, mp_ptr tail) {
     mpn_add_1_2arg(tail, senior);
 }
 
-// n: odd, >= 12
+// n: odd, > 12
 void
 toom22_1x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint16_t n) {
     n -= 1;
