@@ -738,6 +738,20 @@ struct toom22_forced_struct<N, N> {
     static constexpr uint64_t v() { return toom22_forced_t<N>(); }
 };
 
+template<uint16_t A, uint16_t B>
+struct toom22_broadwell_struct {
+    static constexpr uint64_t v() {
+         constexpr auto x = toom22_itch_broadwell_t<A>();
+         constexpr auto y = toom22_broadwell_struct<A + 1, B>::v();
+         return x > y ? x : y;
+    }
+};
+
+template<uint16_t N>
+struct toom22_broadwell_struct<N, N> {
+    static constexpr uint64_t v() { return toom22_itch_broadwell_t<N>(); }
+};
+
 // Itch size for forced call of toom22_2x_broadwell_t<N> or toom22_1x_broadwell_t<N>
 template<uint16_t N>
 constexpr uint64_t
@@ -752,11 +766,27 @@ toom22_forced_t() {
     }
 }
 
-// maximum of toom22_forced_t<> over range A..B
+// maximum of toom22_forced_t<>() over range A..B
 template<uint16_t A, uint16_t B>
 constexpr uint64_t
 toom22_forced_t_2arg() {
     return toom22_forced_struct<A, B>::v();
+}
+
+// maximum of toom22_itch_broadwell_t<>() over range A..B
+template<uint16_t A, uint16_t B>
+constexpr uint64_t
+toom22_broadwell_t_2arg() {
+    return toom22_broadwell_struct<A, B>::v();
+}
+
+// upper bound for calls of any toom22* over range A..B
+template<uint16_t A, uint16_t B>
+constexpr uint64_t
+toom22_whatever_t() {
+    constexpr auto x = toom22_forced_t_2arg<A, B>();
+    constexpr auto y = toom22_broadwell_t_2arg<A, B>();
+    return x > y ? x : y;
 }
 
 } // namespace itch
@@ -794,7 +824,7 @@ void
 toom22_8x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     if constexpr (N / 24 * 24 == N) {
         toom22_12_broadwell_t<N>(rp, scratch, ap, bp);
-    } else if constexpr (itch::is_power_of_2_t<N>) {
+    } else if constexpr (itch::is_power_of_2_t<N>()) {
         toom22_deg2_broadwell_t<N>(rp, scratch, ap, bp);
     } else {
         constexpr auto h = N / 2;

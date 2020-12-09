@@ -1,26 +1,7 @@
 """
 test subroutine toom22_broadwell_t<N>() for a range of N
 
-348 in code below is maximal scratch size, which is scratch size for
- toom22_broadwell_t<127>() and also max scratch size for any N in range 12..128
- 
-TODO: instead of generating code with repeated patterns, use loop over constexpr, like
-
-http://spraetor.github.io/2015/12/26/compile-time-loops.html
-
-https://nilsdeppe.com/posts/for-constexpr
-
-Relevant code on spraetor.github.io:
-    template <int I, int N>
-    struct Print {
-      static void run() {
-        std::cout << "Fibo<" << I << ">::value = " << Fibo<I>::value << "n";
-        Print<I+1,N>::run();
-      }
-    };
-    
-    template <int N>
-    struct Print<N,N> { static void run() {} };
+TODO: instead of generating code with repeated patterns, use loop over constexpr
 """
 
 g_head = r'''
@@ -31,7 +12,7 @@ g_head = r'''
 #include "test-internal.h"
 
 #define MAX_N @
-#define SCRATCH_SIZE 348
+constexpr auto SCRATCH_SIZE = itch::toom22_whatever_t<12, MAX_N>();
 #define RAND_SEED 20190725
 
 INT* g_scratch;
