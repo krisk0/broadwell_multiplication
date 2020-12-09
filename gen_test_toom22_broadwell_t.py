@@ -25,16 +25,6 @@ INT g_result_baad[2 * MAX_N];
 INT g_page_mask;
 INT g_page_unmask;
 
-template<uint16_t N>
-void
-call_toom22(mp_ptr rp, mp_ptr scr, mp_srcptr ap, mp_srcptr bp) {
-    if constexpr(N & 1) {
-        toom22_1x_broadwell_t<N>(rp, scr, ap, bp);
-    } else {
-        toom22_2x_broadwell_t<N>(rp, scr, ap, bp);
-    }
-}
-
 #define NS(x)                                                                       \
     namespace _ ## x {                                                              \
     constexpr uint16_t SIZE = x;                                                    \
@@ -44,7 +34,8 @@ call_toom22(mp_ptr rp, mp_ptr scr, mp_srcptr ap, mp_srcptr bp) {
     }                                                                               \
                                                                                     \
     void call_baad() {                                                              \
-        call_toom22<SIZE>(g_result_baad + 0, g_scratch, g_a + 0, g_b + 0);          \
+        force_call_toom22_broadwell<SIZE>(g_result_baad + 0, g_scratch, g_a + 0,    \
+                g_b + 0);                                                           \
     }
 '''
 
