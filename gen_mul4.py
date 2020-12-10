@@ -523,6 +523,14 @@ def guess_subroutine_name(target_file_name):
         n = n[:p]
     return n
 
+def swap_adox_adcx(dd):
+    rr = []
+    for d in dd:
+        x = d.replace('adox', 'ADCX').replace('adcx', 'adox').\
+                replace('ADCX', 'adcx')
+        rr.append(x)
+    return rr
+
 if __name__ == '__main__':
     g_out = sys.argv[1]
 

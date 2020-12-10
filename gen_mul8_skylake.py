@@ -262,13 +262,5 @@ def do_it(name, o):
 
     cook_asm(name, o, meat)
 
-def swap_adox_adcx(dd):
-    rr = []
-    for d in dd:
-        x = d.replace('adox', 'ADCX').replace('adcx', 'adox').\
-                replace('ADCX', 'adcx')
-        rr.append(x)
-    return rr
-
 with open(sys.argv[1], 'wb') as g_out:
     do_it(sys.argv[1], g_out)

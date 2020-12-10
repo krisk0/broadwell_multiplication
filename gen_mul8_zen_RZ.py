@@ -348,7 +348,7 @@ def do_it(o):
     meat += mul1_code(3, P.cutoff_comments(g_muladd_3), p)
     m4 = P.cutoff_comments(g_muladd_4)
     meat += mul1_code(4, m4, p)
-    m5 = swap_adox_adcx(m4)
+    m5 = P.swap_adox_adcx(m4)
     q = [int(x, 16) for x in g_perm.split(' ')]
     p = P.composition(p, q)
     meat += mul1_code(5, m5, p)
@@ -358,14 +358,6 @@ def do_it(o):
     meat += mul1_code(7, m5, p)
 
     cook_asm(o, meat)
-
-def swap_adox_adcx(dd):
-    rr = []
-    for d in dd:
-        x = d.replace('adox', 'ADCX').replace('adcx', 'adox').\
-                replace('ADCX', 'adcx')
-        rr.append(x)
-    return rr
 
 with open(sys.argv[1], 'wb') as g_out:
     do_it(g_out)
