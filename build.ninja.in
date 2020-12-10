@@ -4,7 +4,7 @@ toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
 build benchmarks: phony $
     benchm4_official.exe benchm4_basecase.exe $
-    benchm{8,9,10,11,12,13,14,15,16,24,25}_basecase.exe $
+    benchm{7,8,9,10,11,12,13,14,15,16,24,25}_basecase.exe $
     benchm{8,16,24}_official.exe benchm8_broadwell_125.exe $
     benchm16_toom22_wide.exe $
     benchm{32,55,64}_toom22_gmp.exe benchm{32,64}_official.exe $
@@ -33,7 +33,8 @@ build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
     test_bdiv_dbm1c_4k.exe test_bdiv_dbm1c_4k_inplace.exe test_shr.exe $
     test_mpn_mul2_add.exe test6_zen.exe test_mul_4x_zen_5arg_{4,8,12,16}.exe $
     test_mul_n_zen_4arg_{1,2,3,4,5,6,8,10,12,14,16,20,24}.exe $
-    test_itch_broadwell.exe test8_{broadwell_125,skylake}.exe test7_broadwell.exe
+    test_itch_broadwell.exe test8_{broadwell_125,skylake}.exe test7_broadwell.exe $
+    test7_t03.exe
 
 build exe: phony tests benchmarks
 
@@ -62,6 +63,12 @@ test8_broadwell_125.exe: test8.cpp mul8_broadwell_125.s @int_h
 test8_skylake.exe: test8.cpp mul8_skylake.s @int_h [+flags -DSKYLAKE=1]
 
 test8_zen.exe: test8.cpp mul8_zen.s @int_h [+flags -DZEN=1]
+
+test7_t03.exe: test8.cpp mul7_t03.s @int_h $
+    [+flags -DSIZE=7 -DTESTED=mul7_t03]
+
+benchm7_t03.exe: benchmark8.cpp mul7_t03.s @int_h benchmark-internal.c $
+    [+flags -DSIZE=7 -DTESTED=mul7_t03]
 
 test7_broadwell.exe: test8.cpp mul7_broadwell.s @int_h $
     [+flags -DSIZE=7 -DTESTED=mul7_broadwell]
@@ -131,6 +138,8 @@ mul6_zen.s: mul6_zen
 mul8_zen.s: mul8_zen
 
 mul7_broadwell.s: mul7_broadwell
+
+mul7_t03.s: mul7_t03
 
 mul8_skylake.s: mul8_skylake
 
