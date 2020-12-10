@@ -7,10 +7,16 @@ void __gmpn_mul_basecase(mp_ptr, mp_srcptr, mp_size_t, mp_srcptr, mp_size_t);
 void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_broadwell_125(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_skylake(mp_ptr, mp_srcptr, mp_srcptr);
+#if defined(TESTED)
+    void TESTED(mp_ptr, mp_srcptr, mp_srcptr);
+    #define BAAD(r, u, v) TESTED(r, u, v)
+#endif
 }
 
-#define GOOD(r, u, v) __gmpn_mul_basecase(r, u, 8, v, 8)
-#define SIZE 8
+#ifndef SIZE
+    #define SIZE 8
+#endif
+#define GOOD(r, u, v) __gmpn_mul_basecase(r, u, SIZE, v, SIZE)
 #define RAND_SEED 20190610
 
 #if ZEN
@@ -21,7 +27,9 @@ void mul8_skylake(mp_ptr, mp_srcptr, mp_srcptr);
 #elif SKYLAKE
     #define BAAD(r, u, v) mul8_skylake(r, u, v)
 #else
-    #define BAAD(r, u, v) mul8_broadwell_125(r, u, v)
+    #if !defined(BAAD)
+        #define BAAD(r, u, v) mul8_broadwell_125(r, u, v)
+    #endif
 #endif
 
 #include "test-internal.h"
