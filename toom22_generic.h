@@ -822,7 +822,7 @@ toom22_8x_broadwell_6arg(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
 template <uint16_t N>
 void
 toom22_8x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
-    if constexpr (N / 24 * 24 == N) {
+    if constexpr ((N / 24 * 24 == N) && (itch::is_power_of_2_t<N / 24>())) {
         toom22_12_broadwell_t<N>(rp, scratch, ap, bp);
     } else if constexpr (itch::is_power_of_2_t<N>()) {
         toom22_deg2_broadwell_t<N>(rp, scratch, ap, bp);
