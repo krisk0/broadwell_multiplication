@@ -8,6 +8,10 @@ void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_broadwell_125(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_skylake(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8x2_zen(mp_ptr, mp_srcptr, mp_srcptr);
+#if defined(TESTED)
+    void TESTED(mp_ptr, mp_srcptr, mp_srcptr);
+    #define SUBR(x, y, z) TESTED(x, y, z)
+#endif
 }
 
 #ifndef SIZE
@@ -27,16 +31,18 @@ void mul8x2_zen(mp_ptr, mp_srcptr, mp_srcptr);
 #define HELLO
 #define GOODBYE
 
-#if ZEN==1 && SIZE == 8
-    #define SUBR(x, y, z) mul8_zen(x, y, z)
-#endif
+#ifndef SUBR
+    #if ZEN==1 && SIZE == 8
+        #define SUBR(x, y, z) mul8_zen(x, y, z)
+    #endif
 
-#if SKYLAKE==1 && SIZE == 8
-    #define SUBR(x, y, z) mul8_skylake(x, y, z)
-#endif
+    #if SKYLAKE==1 && SIZE == 8
+        #define SUBR(x, y, z) mul8_skylake(x, y, z)
+    #endif
 
-#if _8x2
-    #define SUBR(x, y, z) mul8x2_zen(x, y, z)
+    #if _8x2
+        #define SUBR(x, y, z) mul8x2_zen(x, y, z)
+    #endif
 #endif
 
 #include "benchmark-internal.c"

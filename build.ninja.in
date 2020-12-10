@@ -23,7 +23,7 @@ build benchmarks: phony $
     benchm6_broadwell.exe $
     benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
     benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
-    benchm25_toom22_1x_loud.exe $
+    benchm25_toom22_1x_loud.exe benchm7_broadwell.exe $
     benchmark_8x2.exe benchm8_skylake.exe
 
 build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
@@ -64,6 +64,9 @@ test8_skylake.exe: test8.cpp mul8_skylake.s @int_h [+flags -DSKYLAKE=1]
 test8_zen.exe: test8.cpp mul8_zen.s @int_h [+flags -DZEN=1]
 
 test7_broadwell.exe: test8.cpp mul7_broadwell.s @int_h $
+    [+flags -DSIZE=7 -DTESTED=mul7_broadwell]
+
+benchm7_broadwell.exe: benchmark8.cpp mul7_broadwell.s @int_h benchmark-internal.c $
     [+flags -DSIZE=7 -DTESTED=mul7_broadwell]
 
 test_mul_4x_zen_5arg_%.exe: test_mul_4x_zen_5arg.c mul_4x_zen_5arg.s @int_h $

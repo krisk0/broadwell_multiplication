@@ -1,5 +1,5 @@
 '''
-7x7 multiplication targeting Ryzen and Broadwell
+7x7 multiplication targeting Broadwell and Ryzen. 94 ticks on Skylake, 85 on Ryzen
 '''
 
 """
@@ -222,7 +222,7 @@ def do_it(o):
     tail = cook_tail(m2)
     p = P.composition(p, q)
     meat += mul1_code(6, tail, p)
-        
+
     cook_asm(o, meat)
 
 def cook_tail(cc):
