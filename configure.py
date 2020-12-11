@@ -269,6 +269,16 @@ def do_it(o, i, all_targets):
             j = find_source(i + '.s')
             o.write('build $o/%s.o: compile_c_code %s\n\n' % (i, j))
 
+    implicit_sh_rule(o, set(all_targets) - ready_targets)
+
+def implicit_sh_rule(o, orphans):
+    for i in orphans:
+        if (i[:3] == '$o/'):
+            j = i[-2:]
+            if (j == '.s') or (j == '.h'):
+                k = 'gen_' + os.path.basename(i)[:-2] + '.py'
+                o.write('build %s: create_c_code %s\n' % (i, k))
+
 g_o_pattern = re.compile(r'\$o/(\S+)\.o')
 def add_o(tgt, wanted, already):
     for x in wanted:
