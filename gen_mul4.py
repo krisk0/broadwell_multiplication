@@ -531,6 +531,13 @@ def swap_adox_adcx(dd):
         rr.append(x)
     return rr
 
+def replace_symbolic_names_wr(code, m):
+    r = {}
+    for x in m.split(' '):
+        y = x.split(',')
+        r[y[0]] = '%' + y[1]
+    return replace_symbolic_vars_name(code, r)
+
 if __name__ == '__main__':
     g_out = sys.argv[1]
 
