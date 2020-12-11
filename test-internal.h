@@ -43,7 +43,9 @@ one_word(INT* t, unsigned size, unsigned x) {
 #ifdef GOOD
 
 INT g_u[SIZE];
-INT g_v[SIZE];
+#ifndef V_ALREADY_DEFINED
+    INT g_v[SIZE];
+#endif
 INT g_good[SIZE * 2];
 INT g_baad[SIZE * 2];
 
