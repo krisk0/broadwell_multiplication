@@ -134,7 +134,7 @@ def option_in_brackets(src):
     result = '%s = $%s %s' % (m.group(2), m.group(2), m.group(3))
     return m.group(1) + '\n    ' + result + '\n'
 
-def escape_1dot(x):
+def escape_dot_dollar(x):
     for y in '.$':
         x = x.replace(y, '\\' + y)
     return x
@@ -154,7 +154,7 @@ def expand_percent(src, all_t, ready_t):
         return src
     r = m.group(2)
     tgt = []
-    pa = re.compile(escape_1dot(p[0]) + '(.+)' + escape_1dot(p[1]))
+    pa = re.compile(escape_dot_dollar(p[0]) + '(.+)' + escape_dot_dollar(p[1]))
     for f in all_t:
         if f in ready_t:
             continue
@@ -172,7 +172,7 @@ def memorize_tgt(m, rule):
     m.add(f.group(1))
 
 g_macro_def = re.compile(r'(\S+) = (.*)')
-def ninja_style_macros(mm, src):
+def make_style_macros(mm, src):
     '''
     if src is 'name = smth', memorize macro smth
     else replace $name with smth
@@ -204,7 +204,6 @@ def expand_line(src, all_t, ready_t):
     tgt = bash_style_curly_braces_expand(src.rstrip())
     tgt = exe_rule(tgt)
     tgt = option_in_brackets(tgt)
-    tgt = expand_percent(tgt, all_t, ready_t)
     if tgt.find('\n') != -1:
         tgt,rez = tgt.split('\n'),[]
         for i in tgt:
@@ -212,9 +211,10 @@ def expand_line(src, all_t, ready_t):
         tgt = '\n'.join(rez)
     else:
         tgt = '\n'.join(expand_ampersand(tgt))
+    tgt = expand_percent(tgt, all_t, ready_t)
     if (not tgt) or (tgt[-1] != '\n'):
         tgt += '\n'
-    tgt = ninja_style_macros(g_macros, tgt)
+    tgt = make_style_macros(g_macros, tgt)
     if tgt:
         memorize_tgt(ready_t, tgt)
         return tgt
