@@ -19,15 +19,17 @@ jz align0
 
 g_load0 = '''
 movq 8(w0), t0
+!save w9
 movdqa 16(w0), t1
 movdqa 32(w0), t2
+!save w5
 movdqa 48(w0), t3
 '''
 
 def extract_v(i, t, align):
+    if (i == 1):
+        return 'movq t0, ' + t
     if align == 8:
-        if (i == 1):
-            return 'movq t0, ' + t
         if (i == 2):
             return 'pextrq $0x1, t0, ' + t
         if (i == 3):
@@ -41,8 +43,6 @@ def extract_v(i, t, align):
         if (i == 7):
             return 'movq t3, ' + t
     else:
-        if (i == 1):
-            return 'movq t0, ' + t
         if (i == 2):
             return 'movq t1, ' + t
         if (i == 3):
@@ -60,7 +60,7 @@ def mul1_code(i, jj, p, align):
     rr = ['# mul_add %s %s' % (align, i)]
     for j in jj:
         if j.find(':=v[i+1]') != -1:
-            j = extract_v(i+1, j[:2], align)
+            j = extract_v(i + 1, j[:2], align)
             if not j:
                 continue
         rr.append(j)
@@ -85,10 +85,15 @@ def mul1_code(i, jj, p, align):
 
     return rr
 
-def cook_asm(o, code):
-    xmm_save = P.save_registers_in_xmm(code, 9)
+def save_in_xmm(code, f):
+    for i in range(len(code)):
+        m = P.g_xmm_save_pattern.match(code[i])
+        if not m:
+            continue
+        m = m.group(1)
+        code[i] = 'movq %s, %s' % (m, f[m])
 
-    P.insert_restore(code, xmm_save)
+def cook_asm(o, code, xmm_save):
     code = '\n'.join(code)
     for k,v in xmm_save.items():
         code = code.replace('!restore ' + k, 'movq %s, %s' % (v, k))
@@ -104,21 +109,47 @@ def cook_asm(o, code):
 def alignment_code(shift):
     p = list(range(12))
     m = P.cutoff_comments(E.g_muladd_2)
-    meat = mul1_code(2, m, p, shift)
+    code = mul1_code(2, m, p, shift)
     q = [int(x, 16) for x in E.g_perm.split(' ')]
     for i in range(3, 8):
         p = P.composition(p, q)
-        meat += mul1_code(i, m, p, shift)
-    return meat
+        code += mul1_code(i, m, p, shift)
+    return code
+
+def starting_from(cc, s):
+    i = [i for i in range(len(cc)) if cc[i].find(s) != -1][0]
+    return cc[i:]
+
+def replace_el(cc, el, rr):
+    return '\n'.join(cc).replace(el, rr).split('\n')
+
+def replace_extract_v(cc, shift):
+    rr = []
+    for c in cc:
+        if c.find(':=v[2]') != -1:
+            c = extract_v(2, c[:2], shift)
+        rr.append(c)
+    return rr
 
 def do_it(o):
-    meat = P.cutoff_comments(g_preamble) + P.cutoff_comments(E.g_mul_01)[3:]
-    meat += alignment_code(8)
-    meat.append('align0:')
-    meat += P.cutoff_comments(g_load0)
-    meat += alignment_code(0)
+    mul_01 = P.cutoff_comments(E.g_mul_01)[3:]
+    mul_01 = replace_el(mul_01, 'pextrq $0x1, t0, w3', 'w3:=v[2]')
+    code = P.cutoff_comments(g_preamble) + replace_extract_v(mul_01, 8)
+    code += alignment_code(8)
+    code += ['retq', 'align0:']
 
-    cook_asm(o, meat)
+    xmm_save = P.save_registers_in_xmm(P.cutoff_comments(E.g_mul_01), 9)
+    P.insert_restore(code, xmm_save)
+
+    code += P.cutoff_comments(g_load0)
+    mul_01= starting_from(mul_01, 'mulx')
+    code += replace_extract_v(mul_01, 0)
+    code += alignment_code(0)
+
+    save_in_xmm(code, xmm_save)
+    P.insert_restore(code, xmm_save)
+
+    cook_asm(o, code, xmm_save)
 
 with open(sys.argv[1], 'wb') as g_out:
     do_it(g_out)

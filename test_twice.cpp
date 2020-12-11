@@ -25,8 +25,10 @@ mp_limb_t g_v_pool[1 + SIZE];
 int
 main() {
     g_v = g_v_pool + 0;
+    //printf("alignment %ld\n", ((INT)g_v) & 0xF);
     do_test();
     g_v += 1;
+    //printf("alignment %ld\n", ((INT)g_v) & 0xF);
     do_test();
 
     printf("Test passed\n");
