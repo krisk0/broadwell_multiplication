@@ -1,5 +1,5 @@
 '''
-8x8 multiplication targeting Ryzen. 98 ticks on Ryzen, 112 on Skylake
+8x8 multiplication targeting Ryzen. 98 ticks on Ryzen, 111 on Skylake
 '''
 
 """
@@ -16,14 +16,17 @@ w0  w1  w2  w3  w4  w7  up  rp  dd
 
 g_mul_01='''
 vzeroupper              | removing vzeroupper slows code down by 22 ticks (on Ryzen)
-movdqu 8(dd), t0                 | t0=v[1..2]
-!save w9
-movdqu 24(dd), t1                | t1=v[3..4]
-movdqu 40(dd), t2                | t2=v[5..6]
-movq 56(dd), t3                  | t3=v[7]
+movq dd, w0
 movq (dd), dd                    | ready v0
+movdqu 8(w0), t0                 | t0=v[1..2]
+!save w9
+movdqu 24(w0), t1                | t1=v[3..4]
+movdqu 40(w0), t2                | t2=v[5..6]
+movq 56(w0), t3                  | t3=v[7]   moving this line below !save wA
+                                 |            slows down by 2 ticks on Ryzen
 !save w5
-mulx (up), w1, w2                | w2 w1
+mulx (up), w1, w2                | w2 w1     moving this line up slows down
+                                 |            by 5 ticks
 mulx 8(up), w3, w4               | w4 w2+w3 w1
 !save w6
 mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
