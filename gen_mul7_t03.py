@@ -18,6 +18,8 @@ g_var_map = 'rp,rdi up,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
     'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 w5,rcx dd,rdx ' + \
     't0,xmm15 t1,xmm14 t2,xmm13 t3,xmm12'
 
+#TODO: try vmovups instead of movdqu
+
 g_mul_01 = '''
 vzeroupper               | removing this instruction results in no changes in
                          |  execution time

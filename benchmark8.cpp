@@ -45,4 +45,8 @@ void mul8x2_zen(mp_ptr, mp_srcptr, mp_srcptr);
     #endif
 #endif
 
-#include "benchmark-internal.c"
+#if defined(ALIGN16)
+    #include "benchmark-internal-align.c"
+#else
+    #include "benchmark-internal.c"
+#endif

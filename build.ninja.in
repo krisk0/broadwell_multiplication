@@ -127,9 +127,9 @@ test_itch_broadwell.h: test_itch_broadwell
 mul4_broadwell.s: mul4
 mul4_broadwell.h: mul4
 
-mpn_le_@.h: mpn_le [4 6 8]
+mpn_le_%.h: mpn_le [+extra %]
 
-toom22_mul_@_raw.h: toom22 [8 16]
+toom22_mul_%_raw.h: toom22 [+extra %]
 
 mul6.h: mul6
 
@@ -220,7 +220,12 @@ benchm8_skylake.exe: benchmark8.cpp mul8_skylake.s @int_h benchmark-internal.c $
 benchmark_8x2.exe: benchmark8.cpp mul8x2.s @int_h benchmark-internal.c $
     [+flags -D_8x2=1]
 
+benchmark_8x2a.exe: benchmark8.cpp mul8x2.s @int_h benchmark-internal-align.c $
+    [+flags -D_8x2=1 -DALIGN16=8]
+
 mul8x2.s: mul8x2
+
+mul8x2a.s: mul8x2 [+extra 1]
 
 benchm8_broadwell_125.exe: benchmark8.cpp mul8_broadwell_125.s @int_h $
     benchmark-internal.c [+flags -DSUBR=BROADWELL_125]
