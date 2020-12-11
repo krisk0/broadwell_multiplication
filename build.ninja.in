@@ -34,7 +34,7 @@ build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
     test_mpn_mul2_add.exe test6_zen.exe test_mul_4x_zen_5arg_{4,8,12,16}.exe $
     test_mul_n_zen_4arg_{1,2,3,4,5,6,8,10,12,14,16,20,24}.exe $
     test_itch_broadwell.exe test8_{broadwell_125,skylake}.exe test7_broadwell.exe $
-    test7_t03.exe
+    test7_t03.exe test8_aligned.exe
 
 build exe: phony tests benchmarks
 
@@ -63,6 +63,9 @@ test8_broadwell_125.exe: test8.cpp mul8_broadwell_125.s @int_h
 test8_skylake.exe: test8.cpp mul8_skylake.s @int_h [+flags -DSKYLAKE=1]
 
 test8_zen.exe: test8.cpp mul8_zen.s @int_h [+flags -DZEN=1]
+
+test8_aligned.exe: test_twice.cpp mul8_aligned.s @int_h $
+    [+flags -DTESTED=mul8_aligned]
 
 test7_t03.exe: test8.cpp mul7_t03.s @int_h $
     [+flags -DSIZE=7 -DTESTED=mul7_t03]
@@ -165,18 +168,18 @@ build $o/mpn_add_inplace.h: unroll_c_code gen_mpn_add_inplace.py $o/mpn_sub_inpl
 
 mpn_sub_n_small.h: mpn_sub_n_small
 
-mpn_sub_@.h: mpn_sub [4 6 8]
+mpn_sub_%.h: mpn_sub [+extra %]
 
 mpn_add_2_4arg.s: mpn_add_2_4arg
 
-subtract_lesser_from_bigger_@.h: subtract_lesser_from_bigger [6 8]
+subtract_lesser_from_bigger_%.h: subtract_lesser_from_bigger [+extra %]
 
 toom22_interpolate_@_raw.s: toom22_interpolate [16]
 
 build $o/toom22_interpolate_16.s: catenate $o/toom22_interpolate_16_raw.s $
         $o/mpn_add_2_4arg.s
 
-toom22_interpolate_@.h: toom22_interpolate [8 16]
+toom22_interpolate_%.h: toom22_interpolate [+extra %]
 
 bdiv_dbm1c_4k.h: bdiv_dbm1c_4k
 
