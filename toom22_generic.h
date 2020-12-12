@@ -24,6 +24,7 @@ extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 mp_limb_t __gmpn_addmul_1_adox(mp_ptr, mp_srcptr, mp_size_t, mp_limb_t);
 void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
+void mul8_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -824,7 +825,7 @@ void
 toom22_8x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     if constexpr ((N / 24 * 24 == N) && (itch::is_power_of_2_t<N / 24>())) {
         toom22_12_broadwell_t<N>(rp, scratch, ap, bp);
-    } else if constexpr (itch::is_power_of_2_t<N>()) {
+    } else if constexpr (itch::is_power_of_2_t<N>() && (N >= 16)) {
         toom22_deg2_broadwell_t<N>(rp, scratch, ap, bp);
     } else {
         constexpr auto h = N / 2;
@@ -1152,12 +1153,17 @@ toom22_1x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #endif
 }
 
-template <uint16_t N>
+template <uint16_t N, bool fear_of_page_break = true>
 void
 mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
-    // for N=6 of 8, use hand-optimized subroutine
+    // use hand-optimized subroutine if possible
     if constexpr (N == 8) {
-        mul8_zen(rp, ap, bp);
+        if constexpr(fear_of_page_break) {
+            // 2 ticks slower on Ryzen, same time on Skylake
+            mul8_aligned(rp, ap, bp); 
+        } else {
+            mul8_zen(rp, ap, bp);
+        }
     } else if constexpr (N == 6) {
         mul6_broadwell(rp, ap, bp);
     } else {
@@ -1177,7 +1183,7 @@ force_call_toom22_broadwell(mp_ptr rp, mp_ptr scr, mp_srcptr ap, mp_srcptr bp) {
 }
 
 // N: integer, not very big
-template <uint16_t N>
+template<uint16_t N>
 void
 toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #if SHOW_SUBROUTINE_NAME

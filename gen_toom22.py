@@ -35,7 +35,7 @@ toom22_mul@_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
 '''.replace('@/2', '%s' % (g_n / 2)).replace('@', '%s' % g_n)
 
 g_prefix_8 = '''
-template<uint16_t> void mul_basecase_t(mp_ptr, mp_srcptr, mp_srcptr);
+template<uint16_t, bool = true> void mul_basecase_t(mp_ptr, mp_srcptr, mp_srcptr);
 '''
 
 def do_it(tgt):
