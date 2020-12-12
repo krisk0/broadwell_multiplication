@@ -1,6 +1,8 @@
 '''
 8x8 multiplication targeting Ryzen and Skylake, modification of mul8_zen. Uses
- aligned loads of v[] into xmm's
+ aligned loads of v[] into xmm's.
+ 
+100 ticks on Ryzen, 111 on Skylake
 '''
 
 import os, re, sys
