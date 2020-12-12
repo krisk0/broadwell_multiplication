@@ -1,6 +1,6 @@
 o = ./automagic
 toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul8_zen.o $
-    $o/mul8_aligned.o
+    $o/mul8_aligned.o $o/mul7_t03.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
 build some_benchmarks: phony $
@@ -23,7 +23,7 @@ build some_benchmarks: phony $
 build more_benchmarks: phony $
     benchm{7,8,9,10,11,12,13,14,15,16,24,25}_basecase.exe $
     benchm8_broadwell_125.exe $
-    benchm{8,9,10,11,12,13,14,15,16,24,25,28,32,48,55,64,72,96,111}_toom22_t.exe $
+    benchm{8..16,24,25,28,32,48,55,64,72,96,111}_toom22_t.exe $
     benchm{16,24,25,28,32,55,64,96,111}_toom22_w.exe $
     benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
     benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
@@ -139,20 +139,6 @@ mul4_broadwell.h: mul4
 mpn_le_%.h: mpn_le [+extra %]
 
 toom22_mul_%_raw.h: toom22 [+extra %]
-
-mul6.h: mul6
-
-mul6_zen.s: mul6_zen
-
-mul8_zen.s: mul8_zen
-
-mul7_broadwell.s: mul7_broadwell
-
-mul7_t03.s: mul7_t03
-
-mul8_skylake.s: mul8_skylake
-
-mul8_broadwell_125.s: mul8_broadwell_125
 
 mul8_store_once.h: mul8_store1
 
