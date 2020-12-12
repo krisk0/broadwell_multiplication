@@ -1,16 +1,14 @@
 o = ./automagic
-toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul8_zen.o
+toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul8_zen.o $
+    $o/mul8_aligned.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
-build benchmarks: phony $
+build some_benchmarks: phony $
     benchm4_official.exe benchm4_basecase.exe $
-    benchm{7,8,9,10,11,12,13,14,15,16,24,25}_basecase.exe $
-    benchm{8,16,24}_official.exe benchm8_broadwell_125.exe $
+    benchm{8,16,24}_official.exe $
     benchm16_toom22_wide.exe $
     benchm{32,55,64}_toom22_gmp.exe benchm{32,64}_official.exe $
     benchm{32,64}_toom22_n.exe $
-    benchm{9,10,11,12,13,14,15,16,24,25,28,32,48,55,64,72,96,111}_toom22_t.exe $
-    benchm{16,24,25,28,32,55,64,96,111}_toom22_w.exe $
     # MUL_TOOM33_THRESHOLD = 73 for skylake
     benchm{28,32,48,55,64,72}_toom22_gmp.exe $
     benchm{96,111}_toom.exe $
@@ -20,10 +18,16 @@ build benchmarks: phony $
     benchm_toom22_broadwell_t.exe benchm_toom22_broadwell_t_c.exe $
     benchm_bdiv_dbm1c_4k.exe benchm_bdiv_dbm1c_4k_inplace.exe $
     benchm6_official.exe benchm6_basecase.exe benchm{6,8}_zen.exe $
-    benchm6_broadwell.exe $
+    benchm6_broadwell.exe benchm7_broadwell.exe 
+
+build more_benchmarks: phony $
+    benchm{7,8,9,10,11,12,13,14,15,16,24,25}_basecase.exe $
+    benchm8_broadwell_125.exe $
+    benchm{8,9,10,11,12,13,14,15,16,24,25,28,32,48,55,64,72,96,111}_toom22_t.exe $
+    benchm{16,24,25,28,32,55,64,96,111}_toom22_w.exe $
     benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
     benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
-    benchm25_toom22_1x_loud.exe benchm7_broadwell.exe $
+    benchm25_toom22_1x_loud.exe  $
     benchmark_8x2.exe benchm8_skylake.exe
 
 build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
@@ -36,7 +40,9 @@ build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
     test_itch_broadwell.exe test8_{broadwell_125,skylake}.exe test7_broadwell.exe $
     test7_t03.exe test8_aligned.exe
 
-build exe: phony tests benchmarks
+build exe: phony tests some_benchmarks
+
+build all: phony exe more_benchmarks
 
 default exe
 
