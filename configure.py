@@ -369,8 +369,27 @@ def list_of_targets(i):
     tgt.remove('$o/phony')
     return sorted(list(tgt))
 
+g_patt_two_dots = re.compile(r'(.+)\.\.(.+)')
+def expand_two_dots(s):
+    m = g_patt_two_dots.match(s)
+    if not m:
+        return [s]
+    try:
+        a,b = int(m.group(1)),int(m.group(2))
+    except:
+        try:
+            a,b = int(m.group(1), 0x10),int(m.group(2), 0x10)
+        except:
+            return [s]
+    if b >= a:
+        return [str(x) for x in range(a, b + 1)]
+    return [s]
+
 def comma_list_to_str(x, rr, y):
-    return ' '.join([x + r + y for r in rr.split(',')])
+    mm = []
+    for r in rr.split(','):
+        mm += expand_two_dots(r)
+    return ' '.join([x + m + y for m in mm])
 
 g_bash_like_curly_braces = re.compile(r'(.*?)\{(.+)\}(.*)')
 def bash_style_curly_braces_expand_subr(src):
@@ -386,9 +405,10 @@ def bash_style_curly_braces_expand(src):
     tgt = [bash_style_curly_braces_expand_subr(x) for x in src.split(' ')]
     return ' '.join(tgt)
 
-g_s_to_o = set()
-with open('build.ninja.in', 'rb') as g_i:
-    g_t = list_of_targets(g_i)
+if __name__ == '__main__':
+    g_s_to_o = set()
+    with open('build.ninja.in', 'rb') as g_i:
+        g_t = list_of_targets(g_i)
 
-with open('build.ninja.in', 'rb') as g_i, open('build.ninja', 'wb') as g_o:
-    do_it(g_o, g_i, g_t)
+    with open('build.ninja.in', 'rb') as g_i, open('build.ninja', 'wb') as g_o:
+        do_it(g_o, g_i, g_t)
