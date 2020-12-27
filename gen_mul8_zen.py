@@ -227,5 +227,6 @@ def do_it(o):
 
     cook_asm(o, meat)
 
-with open(sys.argv[1], 'wb') as g_out:
-    do_it(g_out)
+if __name__ == '__main__':
+    with open(sys.argv[1], 'wb') as g_out:
+        do_it(g_out)

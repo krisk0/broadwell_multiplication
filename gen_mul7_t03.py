@@ -30,7 +30,7 @@ movq (dd), dd
 movdqu 24(w0), t1        | t1=v[3..4]
 !save w7
 xor w1, w1               | zero flags
-movdqu 40(w0), t2        | t1=v[5..6]
+movdqu 40(w0), t2        | t2=v[5..6]
 mulx (up), w1, w2        | w2 w1
 !save w8
 mulx 8(up), w3, w4       | w4 w2+w3 w1

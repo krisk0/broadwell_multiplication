@@ -538,6 +538,13 @@ def replace_symbolic_names_wr(code, m):
         r[y[0]] = '%' + y[1]
     return replace_symbolic_vars_name(code, r)
 
+def starting_from(cc, s):
+    i = [i for i in range(len(cc)) if cc[i].find(s) != -1][0]
+    return cc[i:]
+
+def replace_in_string_array(cc, el, rr):
+    return '\n'.join(cc).replace(el, rr).split('\n')
+
 if __name__ == '__main__':
     g_out = sys.argv[1]
 

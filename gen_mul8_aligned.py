@@ -118,13 +118,6 @@ def alignment_code(shift):
         code += mul1_code(i, m, p, shift)
     return code
 
-def starting_from(cc, s):
-    i = [i for i in range(len(cc)) if cc[i].find(s) != -1][0]
-    return cc[i:]
-
-def replace_el(cc, el, rr):
-    return '\n'.join(cc).replace(el, rr).split('\n')
-
 def replace_extract_v(cc, shift):
     rr = []
     for c in cc:
@@ -135,16 +128,15 @@ def replace_extract_v(cc, shift):
 
 def do_it(o):
     mul_01 = P.cutoff_comments(E.g_mul_01)[3:]
-    mul_01 = replace_el(mul_01, 'pextrq $0x1, t0, w3', 'w3:=v[2]')
+    mul_01 = P.replace_in_string_array(mul_01, 'pextrq $0x1, t0, w3', 'w3:=v[2]')
     code = P.cutoff_comments(g_preamble) + replace_extract_v(mul_01, 8)
     code += alignment_code(8)
     code += ['retq', 'align0:']
-
     xmm_save = P.save_registers_in_xmm(P.cutoff_comments(E.g_mul_01), 9)
     P.insert_restore(code, xmm_save)
 
     code += P.cutoff_comments(g_load0)
-    mul_01= starting_from(mul_01, 'mulx')
+    mul_01 = P.starting_from(mul_01, 'mulx')
     code += replace_extract_v(mul_01, 0)
     code += alignment_code(0)
 
@@ -153,5 +145,6 @@ def do_it(o):
 
     cook_asm(o, code, xmm_save)
 
-with open(sys.argv[1], 'wb') as g_out:
-    do_it(g_out)
+if __name__ == '__main__':
+    with open(sys.argv[1], 'wb') as g_out:
+        do_it(g_out)
