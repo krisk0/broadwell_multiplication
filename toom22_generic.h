@@ -1161,7 +1161,7 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     if constexpr (N == 8) {
         if constexpr(fear_of_page_break) {
             // 2 ticks slower on Ryzen, same time on Skylake
-            mul8_aligned(rp, ap, bp); 
+            mul8_aligned(rp, ap, bp);
         } else {
             mul8_zen(rp, ap, bp);
         }
@@ -1170,7 +1170,7 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         call of mul7_t03() instead of MUL_BASECASE_SYMMETRIC() speeds up
          toom22_1x_broadwell<13>() by 30 ticks on Skylake
         */
-        mul7_t03(rp, ap, bp); 
+        mul7_t03(rp, ap, bp);
     } else if constexpr (N == 6) {
         mul6_broadwell(rp, ap, bp);
     } else {
