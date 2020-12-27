@@ -153,7 +153,7 @@ def expand_percent(src, all_t, ready_t):
     if len(p) != 2:
         return src
     r = m.group(2)
-    tgt = []
+    tgt,fresh = [],set()
     pa = re.compile(escape_dot_dollar(p[0]) + '(.+)' + escape_dot_dollar(p[1]))
     for f in all_t:
         if f in ready_t:
@@ -161,8 +161,11 @@ def expand_percent(src, all_t, ready_t):
         m = pa.match(f)
         if not m:
             continue
-        tgt.append('build ' + f + ':' + r.replace('%', m.group(1)))
+        curr = 'build ' + f + ':' + r.replace('%', m.group(1))
+        tgt.append(curr)
+        list_of_targets_subr(fresh, curr)
         ready_t.add(f)
+    all_t |= fresh
     return '\n'.join(tgt).replace('ы', '\n')
 
 def memorize_tgt(m, rule):
@@ -269,7 +272,19 @@ def do_it(o, i, all_targets):
             j = find_source(i + '.s')
             o.write('build $o/%s.o: compile_c_code %s\n\n' % (i, j))
 
-    implicit_sh_rule(o, set(all_targets) - ready_targets)
+    implicit_sh_rule(o, all_targets - ready_targets)
+
+"""
+def show_subset(ss, _id, patt):
+    ff = set()
+    for s in ss:
+        if s.find(patt) != -1:
+            ff.add(s)
+    if ff:
+        print 'Subset of %s that matches %s:' % (_id, patt), ff
+    else:
+        print 'Nothing in %s matches %s' % (_id, patt)
+"""
 
 def implicit_sh_rule(o, orphans):
     for i in orphans:
@@ -281,11 +296,18 @@ def implicit_sh_rule(o, orphans):
 
 g_o_pattern = re.compile(r'\$o/(\S+)\.o')
 def add_o(tgt, wanted, already):
+    fresh = set()
     for x in wanted:
         m = g_o_pattern.match(x)
         if (not m) or (x in already):
             continue
-        tgt.add(m.group(1))
+        s = m.group(1)
+        tgt.add(s)
+        s +=  '.s'
+        f = find_source(s)
+        if f != s:
+            fresh.add(f)
+    wanted |= fresh
 
 g_space_smth_pattern = re.compile(' .*')
 def escape_dot(i):
@@ -367,7 +389,7 @@ def list_of_targets(i):
         else:
             list_of_targets_subr(tgt, j)
     tgt.remove('$o/phony')
-    return sorted(list(tgt))
+    return tgt
 
 g_patt_two_dots = re.compile(r'(.+)\.\.(.+)')
 def expand_two_dots(s):
