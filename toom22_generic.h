@@ -25,6 +25,7 @@ void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 mp_limb_t __gmpn_addmul_1_adox(mp_ptr, mp_srcptr, mp_size_t, mp_limb_t);
 void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_aligned(mp_ptr, mp_srcptr, mp_srcptr);
+void mul7_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
@@ -1166,11 +1167,15 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
             mul8_zen(rp, ap, bp);
         }
     } else if constexpr (N == 7) {
-        /*
-        call of mul7_t03() instead of MUL_BASECASE_SYMMETRIC() speeds up
-         toom22_1x_broadwell<13>() by 30 ticks on Skylake
-        */
-        mul7_t03(rp, ap, bp);
+        if constexpr(fear_of_page_break) {
+            mul7_aligned(rp, ap, bp);
+        } else {
+            /*
+            call of mul7_t03() instead of MUL_BASECASE_SYMMETRIC() speeds up
+             toom22_1x_broadwell<13>() by 30 ticks on Skylake
+            */
+            mul7_t03(rp, ap, bp);
+        }
     } else if constexpr (N == 6) {
         mul6_broadwell(rp, ap, bp);
     } else {

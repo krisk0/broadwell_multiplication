@@ -16,7 +16,9 @@ void __gmpn_toom22_mul(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t, mp
 #endif
 #if !defined(VOLUME)
     #if SIZE < 50
-        #if SIZE == 8
+        #if SIZE < 8
+            #define VOLUME (1000*1000*150)
+        #elif SIZE == 8
             #define VOLUME (1000*1000*100)
         #else
             #define VOLUME (1000*1000*20)

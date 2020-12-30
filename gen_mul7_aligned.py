@@ -1,3 +1,7 @@
+'''
+7x7 multiplication that avoids movdqu. 89 ticks on Skylake, 77 on Ryzen
+'''
+
 import os, re, sys
 sys.dont_write_bytecode = 1
 
@@ -98,11 +102,11 @@ def alignment_code(shift):
             code += mul1_code(i, m3, p, shift)
         else:
             code += mul1_code(i, m2, p, shift)
-    
+
     tail = E.cook_tail(m2)
     p = P.composition(p, q)
     code += mul1_code(6, tail, p, shift)
-    
+
     return code
 
 def cook_asm(o, code, xmm_save):
