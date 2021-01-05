@@ -1,6 +1,6 @@
 '''
-6x6 multiplication that uses xmm to store v[] and avoids movdqu. __ ticks on Skylake,
- __ on Ryzen
+6x6 multiplication that uses xmm to store v[] and avoids movdqu. 66 ticks on Skylake,
+ 61 on Ryzen
 '''
 
 import os, re, sys

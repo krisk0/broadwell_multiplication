@@ -27,6 +27,7 @@ void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
+void mul6_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -1177,7 +1178,8 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
             mul7_t03(rp, ap, bp);
         }
     } else if constexpr (N == 6) {
-        mul6_broadwell(rp, ap, bp);
+        // mul6_aligned() is faster, not using mul6_broadwell()
+        mul6_aligned(rp, ap, bp);
     } else {
         // call asm subroutine from GMP, bypassing if's in mpn_mul_n()
         MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
