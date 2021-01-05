@@ -1,5 +1,5 @@
 '''
-7x7 multiplication that avoids movdqu. 89 ticks on Skylake, 77 on Ryzen
+7x7 multiplication that avoids movdqu. 88 ticks on Skylake, 77 on Ryzen
 '''
 
 import os, re, sys
@@ -19,7 +19,6 @@ jz align0
 movdqa 8(w0), t0         | t0=v[1..2]
 movdqa 24(w0), t1        | t1=v[3..4]
 !save w7
-xor w1, w1               | zero flags
 movdqa 40(w0), t2        | t2=v[5..6]
 '''
 
@@ -28,7 +27,6 @@ movq 8(w0), t0           | t0=v[1]
 movdqa 16(w0), t1        | t1=v[2..3]
 movdqa 32(w0), t2        | t2=v[4..5]
 !save w7
-xor w1, w1               | zero flags
 movq 48(w0), t3          | t3=v[6]
 '''
 

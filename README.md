@@ -10,7 +10,7 @@ Low-level big-integer arithmetic subroutines in C/C++/asm.
 
 Work-in-progress. Code needs cleaning. Some subroutines might not work as expected. However, if there is a benchmark published for a procedure, then this procedure is thoroughly tested and expected to be bug-free.
 
-Currently my code outperforms GMP for at least the following limb sizes: 6, 8, 16, 24, 32, 48, 64, 127.
+Currently my code outperforms GMP for at least the following limb sizes: 6, 7, 8, 16, 24, 32, 48, 64, 127.
 
 # Quick start
 
