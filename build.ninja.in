@@ -38,7 +38,7 @@ build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
     test_mpn_mul2_add.exe test6_zen.exe test_mul_4x_zen_5arg_{4,8,12,16}.exe $
     test_mul_n_zen_4arg_{1,2,3,4,5,6,8,10,12,14,16,20,24}.exe $
     test_itch_broadwell.exe test8_{broadwell_125,skylake}.exe test7_broadwell.exe $
-    test7_t03.exe test{7,8}_aligned.exe
+    test7_t03.exe test{6..8}_aligned.exe
 
 build exe: phony tests some_benchmarks
 

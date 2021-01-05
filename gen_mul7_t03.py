@@ -230,5 +230,6 @@ def do_it(o):
 def cook_tail(cc):
     return cc[:-2] + P.cutoff_comments(g_tail)
 
-with open(sys.argv[1], 'wb') as g_out:
-    do_it(g_out)
+if __name__ == '__main__':
+    with open(sys.argv[1], 'wb') as g_out:
+        do_it(g_out)
