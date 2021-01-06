@@ -1,10 +1,5 @@
 '''
-AMD Zen is faster than Intel Broadwell (in arithmetic operations per tick).
- However Zen dislikes immediate use of mulx result while Broadwell likes it.
- For this reason, low-level subroutines like mul6... must be rewritten.
-
-this subroutine spends 60 ticks on AMD Ryzen 7 3800X compared to 74 for
- __gmpn_mul_basecase: 23% better
+6x6 multiplication targeting AMD. 60 ticks on Ryzen, 87 on Broadwell
 '''
 
 """
