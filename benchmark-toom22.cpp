@@ -10,7 +10,12 @@ void __gmpn_toom22_mul(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t, mp
 #define TOOM_WRAP(x, y, z) toom22_xx_broadwell(x, scratch + 0, y, z, SIZE)
 #define TOOM_DEG2_T(x, y, z) toom22_deg2_broadwell_t<SIZE>(x, scratch + 0, y, z)
 #if SIZE > 8
-    #define TOOM_T(x, y, z) force_call_toom22_broadwell<SIZE>(x, scratch + 0, y, z)
+    #if 0 && (SIZE & 1)
+        #define TOOM_T(x, y, z) toom22_1x_n_minus<SIZE>(x, scratch + 0, y, z)
+    #else
+        #define TOOM_T(x, y, z) \
+            force_call_toom22_broadwell<SIZE>(x, scratch + 0, y, z)
+    #endif
 #else
     #define TOOM_T(x, y, z) mul_basecase_t<SIZE>(x, y, z)
 #endif

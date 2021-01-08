@@ -649,8 +649,8 @@ toom22_1x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
     benchmarking shows that two calls to __mpn_addmul_1(,,25,) cost 167 ticks,
      which means that __mpn_addmul_1() spends 3.34 tacts per limb on Skylake
 
-    __gmpn_addmul_1() found in x86_64/mulx/adx is slightly faster, so use it instead of
-     coreibwl __gmpn_addmul_1()
+    __gmpn_addmul_1() found in x86_64/mulx/adx is slightly faster, so use it instead
+     of coreibwl __gmpn_addmul_1()
     */
     call_addmul(rp, ap, bp[n], n, tail);
     call_addmul(rp, bp, ap[n], n, tail);
@@ -659,6 +659,20 @@ toom22_1x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
             g_2 += __rdtsc() - t;
         }
     #endif
+}
+
+// n: odd, not too big
+// 310 ticks on Ryzen for N=13, compared to 300 for __gmpn_mul_basecase()
+template<uint16_t N>
+void
+toom22_1x_n_minus(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
+    static constexpr auto n = N - 1;
+    toom22_2x_broadwell_t<n>(rp, scratch, ap, bp);
+    rp += n;
+    auto tail = rp + n;
+    mul_1by1(tail, ap[n], bp[n]);
+    call_addmul(rp, ap, bp[n], n, tail);
+    call_addmul(rp, bp, ap[n], n, tail);
 }
 
 namespace itch {
@@ -1210,7 +1224,7 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         } else {
             /*
             call of mul7_t03() instead of MUL_BASECASE_SYMMETRIC() speeds up
-             toom22_1x_broadwell<13>() by 30 ticks on Skylake
+             toom22_1x_broadwell_t<13>() by 30 ticks on Skylake
             */
             mul7_t03(rp, ap, bp);
         }

@@ -24,10 +24,10 @@ build more_benchmarks: phony $
     benchm{6..16,24,25}_basecase.exe $
     benchm8_broadwell_125.exe $
     benchm{6..16,24,25,28,32,48,55,64,72,96,111}_toom22_t.exe $
-    benchm{16,24,25,28,32,55,64,96,111}_toom22_w.exe $
+    benchm{6..16,24,25,28,32,55,64,96,111}_toom22_w.exe $
     benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
     benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
-    benchm25_toom22_1x_loud.exe  $
+    benchm{13,25}_toom22_1x_loud.exe  $
     benchmark_8x2.exe benchm8_skylake.exe
 
 build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
