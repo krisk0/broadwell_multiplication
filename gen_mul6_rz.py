@@ -1,7 +1,13 @@
 '''
-6x6 multiplication targeting Ryzen, uses red zone.
+6x6 multiplication targeting Ryzen, uses red zone. Estimated time on Ryzen: 10.5
+ ticks slower than mul6_zen, approximately 71 ticks.
 
-Ticks reported by benchm48_toom22_t.exe on Ryzen when using this subroutine: 3106.
+Ticks reported by benchm48_toom22_t.exe on Ryzen when using subroutine mul6_rz():
+ 3106. Ticks reported by benchm48_toom22_t.exe on Ryzen when using mul6_rz_macro():
+ 3011.
+
+Benefit of replacing subroutine mul6_rz() with macro mul6_rz_macro(): 95 ticks per
+ call of 48x48 multiplication, which is 3.5 ticks per call of 6x6 multiplication
 '''
 
 g_var_map = 'wD,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
@@ -146,6 +152,8 @@ g_perm = '1 2 0 3 C 4 6 7 8 9 A B 5 D'
 g_tail = '''
                      | s5' sC+dd s3+s4" s0 s2 s1 [6]
 movq s6, sD          | sD points to target
+| expected improvement from earlier extraction of rp: 3 ticks or less
+| observed improvement: 89 / 27 = 3.3
 movq @r[0], s7
 movq @r[1], s8
 movq @r[2], s9
@@ -230,7 +238,50 @@ def mul_code(i, jj, p):
 
     return [E.apply_s_permutation(x, p) for x in rr]
 
+def extract_register_name(vv):
+    uu = [u.split(',') for u in vv.split(' ')]
+    return set([x[1] for x in uu])
+
+g_wr_code = '''
+#define @w(r, u, v)
+    {
+        auto @w_r = r;
+        auto @w_u = u;
+        auto @w_v = v;
+        @n(@w_r, @w_u, @w_v);
+'''
+
+def cook_macro(o, code, xmm_save, var_map):
+    #discard save and restore instructions, and comments
+    code = [c for c in code if (c.find('!') == -1) and (c.find('#') == -1)]
+
+    code = '\n'.join(code)
+    code = P.replace_symbolic_names_wr(code, var_map)
+    code = code.replace('%', '%%')
+    scratch = extract_register_name(var_map) - set(['rdx', 'rdi', 'rsi'])
+
+    data = {
+            'input': ['rp D r_p'],
+            'input_output': ['up +S u_p', 'vp +d v_p'],
+            'macro_name': P.guess_subroutine_name(sys.argv[1]) + '_macro',
+            'macro_parameters': 'r_p u_p v_p',
+            'source': os.path.basename(sys.argv[0]),
+            'code_language': 'asm',
+            'clobber': 'cc memory ' + ' '.join(['%' + s for s in scratch]),
+           }
+
+    P.write_cpp_code(o, code, data)
+    o.write('\n')
+    n = data['macro_name']
+    ww = g_wr_code.strip().replace('@w', n + '_wr').replace('@n', n).split('\n')
+    for w in ww:
+        o.write(P.append_backslash(w, 84))
+    o.write('    }\n')
+
 def cook_asm(o, code, xmm_save, var_map):
+    if g_writing_macro:
+        cook_macro(o, code, xmm_save, var_map)
+        return
     P.insert_restore(code, xmm_save)
     code = '\n'.join(code)
     for k,v in xmm_save.items():
@@ -245,7 +296,9 @@ def cook_asm(o, code, xmm_save, var_map):
 
 def do_it(o):
     preamble = P.cutoff_comments(g_preamble)
-    xmm_save = P.save_registers_in_xmm(preamble, 11)
+    xmm_save = {}
+    if not g_writing_macro:
+        xmm_save = P.save_registers_in_xmm(preamble, 11)
     p = list(range(14))
     code = mul_code(0, preamble, p)
     m1 = P.cutoff_comments(g_mul_1)
@@ -256,12 +309,15 @@ def do_it(o):
         code += mul_code(i, m2, p)
         p = P.composition(p, q)
     tail = m2[:-1]
+    # extract rp as soon as s6 becomes useless
     tail = [tail[0], 'movq rp, s6'] + tail[1:] + P.cutoff_comments(g_tail)
     code += mul_code(5, tail, p)
 
-    G.save_in_xmm(code, xmm_save)
-    P.insert_restore(code, xmm_save)
+    if not g_writing_macro:
+        G.save_in_xmm(code, xmm_save)
+        P.insert_restore(code, xmm_save)
     cook_asm(o, code, xmm_save, g_var_map)
 
+g_writing_macro = (sys.argv[1][-1] == 'h')
 with open(sys.argv[1], 'wb') as g_out:
     do_it(g_out)
