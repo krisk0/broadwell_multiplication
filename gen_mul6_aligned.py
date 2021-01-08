@@ -1,6 +1,8 @@
 '''
 6x6 multiplication that uses xmm to store v[] and avoids movdqu. 66 ticks on Skylake,
  61 on Ryzen
+
+Ticks reported by benchm48_toom22_t.exe on Ryzen when using this subroutine: 2880.
 '''
 
 import os, re, sys
@@ -100,10 +102,10 @@ adox s5, s0              | s1+sB s4+sA+s9" s0+s8 s7+s3' s2 [i+1] s6=v[i+1]
 mulx 40(up), s5, dd      | dd s1+sB+s5 s4+sA+s9" s0+s8 s7+s3' s2 [i+1] s6=v[i+1]
 adcx s7, s3              | dd s1+sB+s5 s4+sA+s9" s0+s8' s3 s2 [i+1] s6=v[i+1]
 adox sA, s4              | dd s1+sB+s5" s4+s9 s0+s8' s3 s2 [i+1] s6=v[i+1]
-xchg dd, s6              | s6 s1+sB+s5" s4+s9 s0+s8' s3 s2 [i+1] 
+xchg dd, s6              | s6 s1+sB+s5" s4+s9 s0+s8' s3 s2 [i+1]
 '''
 
-g_tail = '''             | dd s1+sB+s5" s4+s9 s0+s8' s3 s2 [i+1] 
+g_tail = '''             | dd s1+sB+s5" s4+s9 s0+s8' s3 s2 [i+1]
 movq s2, i+1(rp)         | dd s1+sB+s5" s4+s9 s0+s8' s3 [i+2]
 movq s3, i+2(rp)         | dd s1+sB+s5" s4+s9 s0+s8' [i+3]
 movq $0, s2              | dd s1+sB+s5" s4+s9 s0+s8' [i+3] s2=0
@@ -182,7 +184,7 @@ def mul_code(i, jj_arg, p, align):
         rr[y] = src.rstrip()
 
     return rr
-    
+
 def alignment_code(shift):
     p = list(range(12))
     r = mul_code(0, P.cutoff_comments(g_mul01), p, shift)
