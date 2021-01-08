@@ -1223,12 +1223,12 @@ toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         // for some N, call Toom-22 subroutine even though N is small
         if constexpr ((N / 12 * 12 == N) && (itch::is_power_of_2_t<N / 12>())) {
             // toom22_2x_broadwell_t is smart enough
-            return toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
+            toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
+        } else if constexpr (itch::is_power_of_2_t<N>() && (N >= 16)) {
+            toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
+        } else {
+            mul_basecase_t<N>(rp, ap, bp);
         }
-        if constexpr (itch::is_power_of_2_t<N>() && (N >= 16)) {
-            return toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
-        }
-        mul_basecase_t<N>(rp, ap, bp);
     } else {
         force_call_toom22_broadwell<N>(rp, scratch, ap, bp);
     }
