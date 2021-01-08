@@ -1,5 +1,7 @@
 '''
 6x6 multiplication targeting Ryzen, uses red zone.
+
+Ticks reported by benchm48_toom22_t.exe on Ryzen when using this subroutine: 3106.
 '''
 
 g_var_map = 'wD,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
@@ -104,7 +106,6 @@ data lies like that: | sC' s4+sB s3+s5" s2 s1 s0 [i] dd=v[i]
 g_mul_2 = '''
                      | sC' s4+sB s3+s5" s2 s1 s0 [i]
 mulx s6, sA, sD      | sC' s4+sB s3+s5" s2 s1+sD s0+sA [i]
-|TODO: extract rp here
 adox s5, s3          | sC' s4+sB" s3 s2 s1+sD s0+sA [i]
 movq $0, s5          | sC' s4+sB" s3 s2 s1+sD s0+sA [i] s5=0
 adcx s5, sC          | sC s4+sB" s3 s2 s1+sD s0+sA [i]
@@ -144,7 +145,7 @@ g_perm = '1 2 0 3 C 4 6 7 8 9 A B 5 D'
 
 g_tail = '''
                      | s5' sC+dd s3+s4" s0 s2 s1 [6]
-movq rp, sD          | sD points to target
+movq s6, sD          | sD points to target
 movq @r[0], s7
 movq @r[1], s8
 movq @r[2], s9
@@ -173,9 +174,7 @@ movq s5, @R[11]
 import os, re, sys
 sys.dont_write_bytecode = 1
 
-#TODO: check if all imports needed
 import gen_mul4 as P
-import gen_mul7_aligned as S
 import gen_mul7_t03 as E
 import gen_mul6_aligned as W
 import gen_mul8_aligned as G
@@ -256,7 +255,8 @@ def do_it(o):
     for i in range(2, 5):
         code += mul_code(i, m2, p)
         p = P.composition(p, q)
-    tail = m2[:-1] + P.cutoff_comments(g_tail)
+    tail = m2[:-1]
+    tail = [tail[0], 'movq rp, s6'] + tail[1:] + P.cutoff_comments(g_tail)
     code += mul_code(5, tail, p)
 
     G.save_in_xmm(code, xmm_save)
