@@ -1,6 +1,6 @@
 o = ./automagic
-toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul8_zen.o $
-    $o/mul{6..8}_aligned.o $o/mul7_t03.o
+toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,8}_zen.o $
+    $o/mul{6..8}_aligned.o $o/mul7_t03.o $o/mul6_rz.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
 build some_benchmarks: phony $

@@ -28,6 +28,8 @@ void mul8_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
 void mul6_aligned(mp_ptr, mp_srcptr, mp_srcptr);
+void mul6_rz(mp_ptr, mp_srcptr, mp_srcptr);
+void mul6_zen(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -320,6 +322,12 @@ toom22_interpolate(mp_ptr ab_p, mp_ptr g_p, uint8_t sign, mp_size_t n) {
     mpn_add_n_plus_1(ab_p + (n / 2), t_senior, g_p, n);
 }
 
+#define USE_MUL6_RZ_MACRO 0
+
+#if USE_MUL6_RZ_MACRO
+    #include "automagic/mul6_rz.h"
+#endif
+
 void
 toom22_12e_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #if SHOW_SUBROUTINE_NAME
@@ -334,9 +342,17 @@ toom22_12e_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #endif
     auto sign = subtract_lesser_from_bigger_6(rp, ap, ap + 6);        // a0-a1
     sign ^= subtract_lesser_from_bigger_6(rp + 6, bp, bp + 6);        // b0-b1
+    #if USE_MUL6_RZ_MACRO
+    // mul6_rz_macro_wr() is faster than mul6_rz() by approximately 3.5 ticks
+    // mul6_rz() is slow on Ryzen, mul6_zen() should be called
+    mul6_rz_macro_wr(scratch, rp, rp + 6);
+    mul6_rz_macro_wr(rp, ap, bp);
+    mul6_rz_macro_wr(rp + 12, ap + 6, bp + 6);
+    #else
     mul_basecase_t<6>(scratch, rp, rp + 6);                           // at -1
     mul_basecase_t<6>(rp, ap, bp);                                    // at 0
     mul_basecase_t<6>(rp + 12, ap + 6, bp + 6);                       // at infinity
+    #endif
     #if LOUD_6_LINES
         printf("at -1: ");
         dump_number(scratch, 12);
