@@ -27,9 +27,13 @@ void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
-void mul6_aligned(mp_ptr, mp_srcptr, mp_srcptr);
-void mul6_rz(mp_ptr, mp_srcptr, mp_srcptr);
-void mul6_zen(mp_ptr, mp_srcptr, mp_srcptr);
+#if __znver2__
+    void mul6_zen(mp_ptr, mp_srcptr, mp_srcptr);
+    #define MUL6_SUBR mul6_zen
+#else
+    void mul6_aligned(mp_ptr, mp_srcptr, mp_srcptr);
+    #define MUL6_SUBR mul6_aligned
+#endif
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -368,7 +372,7 @@ toom22_12e_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #endif
 }
 
-// n = 3 * 2**k, k >= 3
+//n = 3 * 2**k, k >= 3
 void
 toom22_12_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
         uint16_t n) {
@@ -393,7 +397,11 @@ toom22_12_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
     toom22_interpolate_4k(rp, scratch, sign, n);
 }
 
-// N = 3 * 2**k, k >= 2
+/*
+N = 3 * 2**k, k >= 2
+Size 24 time (Broadwell/Ryzen): 999/853
+Size 48 time: 3293/2785
+*/
 template <uint16_t N>
 void
 toom22_12_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
@@ -1194,8 +1202,7 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
             mul7_t03(rp, ap, bp);
         }
     } else if constexpr (N == 6) {
-        // mul6_aligned() is faster, not using mul6_broadwell()
-        mul6_aligned(rp, ap, bp);
+        MUL6_SUBR(rp, ap, bp);
     } else {
         // call asm subroutine from GMP, bypassing if's in mpn_mul_n()
         MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
