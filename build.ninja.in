@@ -1,7 +1,8 @@
 o = ./automagic
 toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,8}_zen.o $
     $o/mul{6..8}_aligned.o $o/mul7_t03.o
-toom22_h = toom22_generic.h $o/toom22_generic_aux.h
+toom22_h = toom22_generic.h $o/toom22_generic_aux.h $
+    $o/subtract_longer_from_shorter_7.h
 
 build some_benchmarks: phony $
     benchm4_official.exe benchm4_basecase.exe $

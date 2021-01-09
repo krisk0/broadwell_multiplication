@@ -5,6 +5,7 @@
 
 #include "bordeless-alloc.h"
 #include "automagic/toom22_generic_aux.h"
+#include "automagic/subtract_longer_from_shorter_7.h"
 
 // TODO: maybe 26 as set in broadwell/skylake gmp-mparam.h? or 19 for zen?
 constexpr uint16_t TOOM_2X_BOUND = 28;
@@ -661,7 +662,7 @@ toom22_1x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
     #endif
 }
 
-// n: odd, not too big
+// N: odd, not too big
 // 310 ticks on Ryzen for N=13, compared to 300 for __gmpn_mul_basecase()
 template<uint16_t N>
 void
@@ -1051,12 +1052,26 @@ mpn_sub_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     }
 }
 
-template <uint16_t h, uint16_t q>
+template<uint16_t h, uint16_t q>
+void
+subtract_longer_from_shorter(mp_ptr tgt, mp_srcptr a_p) {
+    if constexpr(h == 7) {
+        /*
+        this optimization speeds up toom22_12_broadwell_t<13>() by 14 ticks on Ryzen
+         (from 308 to 294)
+        */
+        subtract_longer_from_shorter_7(tgt, a_p);
+    } else {
+        auto borrow = mpn_sub_n(tgt, a_p, a_p + h, q);
+        tgt[q] = a_p[q] - borrow;
+    }
+}
+
+template<uint16_t h, uint16_t q>
 uint8_t
 subtract_lesser_from_bigger(mp_ptr tgt, mp_srcptr a_p) {
     if (a_p[q]) {
-        auto borrow = mpn_sub_n(tgt, a_p, a_p + h, q);
-        tgt[q] = a_p[q] - borrow;
+        subtract_longer_from_shorter<h, q>(tgt, a_p);
         return 0;
     }
     /*
