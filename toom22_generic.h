@@ -1048,7 +1048,12 @@ mpn_sub_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         uint16_t l = (N / 4) - 1;
         mpn_sub_4k(rp, ap, bp, l);
     } else {
-        mpn_sub_n(rp, ap, bp, N);
+        if constexpr (N == 6) {
+            mpn_sub6(rp, ap, bp);
+        }
+        else {
+            mpn_sub_n(rp, ap, bp, N);
+        }
     }
 }
 
