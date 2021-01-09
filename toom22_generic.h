@@ -1114,6 +1114,19 @@ v1(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     return sign;
 }
 
+template<uint16_t N>
+mp_limb_t
+mpn_add_inplace_t(mp_ptr rp, mp_ptr ap) {
+    if constexpr((N / 4 * 4 == N) && (N >= 8)) {
+        mp_limb_t carry;
+        auto loop_count = N / 4 - 1;
+        mpn_add_4k_inplace(carry, rp, ap, loop_count);
+        return carry;
+    } else {
+        return mpn_add_n(rp, rp, ap, N);
+    }
+}
+
 /*
 |v1| of size 2*h at scratch + 0
 v0 of size 2*h at rp + 0
@@ -1133,18 +1146,18 @@ void
 interpolate(mp_ptr rp, mp_ptr scratch, uint8_t v1_sign) {
     if (v1_sign) {
         // v3 = |v1| + v0 + v2
-        (void)mpn_add_n(scratch, scratch, rp, 2 * h);
+        (void)mpn_add_inplace_t<2 * h>(scratch, rp);
     } else {
         // v3 = v0 - |v1| + v2
         (void)mpn_sub_n(scratch, rp, scratch, 2 * h);
     }
     // v2 is 2 limbs shorter, need to spread carry
-    auto carry = mpn_add_n(scratch, scratch, rp + 2 * h, 2 * q);
+    auto carry = mpn_add_inplace_t<2 * q>(scratch, rp + 2 * h);
     auto here = scratch + 2 * q;
     mpn_add_1_2arg(here, carry);
     // v3 stored at scratch
     here = rp + h;
-    carry = mpn_add_n(here, here, scratch, 2 * h);
+    carry = mpn_add_inplace_t<2 * h>(here, scratch);
     here = rp + 3 * h;
     // no worry of carry going too far, if caller allocated enough space at rp
     mpn_add_1_2arg(here, carry);
@@ -1231,10 +1244,7 @@ template <uint16_t N, bool fear_of_page_break = true>
 void
 mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     if constexpr (N == 13) {
-        /*
-        toom22_1x_broadwell_t<13>() is slightly faster than __gmpn_mul_basecase() on
-         Ryzen
-        */
+        // toom22_1x_broadwell_t<13>() is slightly faster than __gmpn_mul_basecase()
         mp_limb_t scratch[itch::toom22_forced_t<13>()];
         toom22_1x_broadwell_t<N>(rp, scratch, ap, bp);
         // use hand-optimized subroutine if possible
