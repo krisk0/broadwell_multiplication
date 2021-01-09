@@ -1225,8 +1225,15 @@ toom22_1x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
 template <uint16_t N, bool fear_of_page_break = true>
 void
 mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
-    // use hand-optimized subroutine if possible
-    if constexpr (N == 8) {
+    if constexpr (N == 13) {
+        /*
+        toom22_1x_broadwell_t<13>() is slightly faster than __gmpn_mul_basecase() on
+         Ryzen
+        */
+        mp_limb_t scratch[itch::toom22_forced_t<13>()];
+        toom22_1x_broadwell_t<N>(rp, scratch, ap, bp);
+        // use hand-optimized subroutine if possible
+    } else if constexpr (N == 8) {
         if constexpr(fear_of_page_break) {
             // 2 ticks slower on Ryzen, same time on Skylake
             mul8_aligned(rp, ap, bp);
