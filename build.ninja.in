@@ -196,7 +196,7 @@ toom22_mul_16.h: cstdint_gmp.h mpn_le_8.h mpn_sub_8.h $
 
 toom22_generic_aux.h: cstdint_gmp.h mpn_less_3arg.h mpn_less_3arg_hole.h $
     mpn_sub_4k.h mpn_add_4k_inplace.h $
-    mpn_sub_4k_inplace.h mpn_sub_6.h mpn_le_6.h subtract_lesser_from_bigger_6.h $
+    mpn_sub_4k_inplace.h mpn_sub_{6,7}.h mpn_le_6.h subtract_lesser_from_bigger_6.h $
     mpn_sub_n_small.h mpn_sub_inplace.h mpn_add_inplace.h mul6.h toom22_mul_16.h $
     mpn_sub_1x.h
 

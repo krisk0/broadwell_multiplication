@@ -78,7 +78,6 @@ toom22_12_itch(mp_size_t n) {
     return 12 * ((1 << (k+1)) - 1);
 }
 
-
 #define mpn_add_1_2arg(t_p, what) \
     __asm__ __volatile__ (        \
      " addq %1, (%0)\n"           \
@@ -170,6 +169,33 @@ subtract_lesser_from_bigger_1x(mp_ptr tgt, mp_srcptr a, uint16_t n_arg) {
     return less;
 }
 
+template<uint16_t N>
+uint8_t
+subtract_lesser_from_bigger_1x_t(mp_ptr tgt, mp_srcptr a) {
+    uint64_t n = N;
+    uint8_t less;
+    auto a_tail = a + n;                      // one limb past tail of a
+    auto b_tail = a_tail + n;                 // one limb past tail of b
+    mpn_less_3arg(less, a_tail, b_tail);
+
+    if constexpr (N == 7) {
+        // this speeds up 14x14 multiplication by 8 ticks (369 instead of 377)
+        if (less) {
+            mpn_sub7(tgt, a_tail, a);
+        } else {
+            mpn_sub7(tgt, a, a_tail);
+        }
+    } else {
+        if (less) {
+            mpn_sub_n(tgt, a_tail, a, n);
+        } else {
+            mpn_sub_n(tgt, a, a_tail, n);
+        }
+    }
+
+    return less;
+}
+
 extern "C" {
 mp_limb_t
 mpn_add_2_4arg(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n, uint16_t l);
@@ -227,12 +253,6 @@ subtract_in_place_then_add_4arg(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n, uint16_
 mp_limb_t
 subtract_in_place_then_add_3arg(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n_arg) {
     auto n = (mp_limb_t)n_arg;
-    #if 0
-        printf("original g = ");
-        dump_number(tgt, n);
-        printf("a = ");
-        dump_number((mp_ptr)ab_p, n);
-    #endif
     // TODO: 16-bit counter should be faster than 64-bit?
     #if HOMEGROWN_SUB
         auto result = n;
@@ -241,12 +261,6 @@ subtract_in_place_then_add_3arg(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n_arg) {
         mpn_sub_inplace(tgt_copy, ab_p, result);
     #else
         auto result = mpn_sub_n(tgt, ab_p, tgt, n);
-    #endif
-    #if 0
-        printf("at 1 g = ");
-        dump_number(tgt, n);
-        printf("b = ");
-        dump_number((mp_ptr)ab_p, n);
     #endif
     #if HOMEGROWN_SUB
         /*
@@ -259,10 +273,6 @@ subtract_in_place_then_add_3arg(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n_arg) {
         result ^= add_result;
     #else
         result ^= mpn_add_n(tgt, tgt, ab_p + n, n);
-    #endif
-    #if 0
-        printf("at 1 result=%lu g=", result);
-        dump_number(tgt, n);
     #endif
     return result;
 }
@@ -597,8 +607,8 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     } else {
         // N not 12 and does not divide by 8
         constexpr auto h = N / 2;
-        auto sign = subtract_lesser_from_bigger_1x(rp, ap, h);
-        sign ^= subtract_lesser_from_bigger_1x(rp + h, bp, h);
+        auto sign = subtract_lesser_from_bigger_1x_t<h>(rp, ap);
+        sign ^= subtract_lesser_from_bigger_1x_t<h>(rp + h, bp);
         auto slave_scratch = scratch + N;
         // for small h a proper subroutine will be called, don't need extra if here
         toom22_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
