@@ -36,6 +36,7 @@ void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
     #define MUL6_SUBR mul6_aligned
 #endif
 void mpn_add_4k_plus2_4arg(mp_ptr, mp_limb_t, mp_srcptr, uint16_t);
+mp_limb_t mpn_sub_2k_plus2_inplace(mp_ptr, mp_srcptr, uint16_t);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -278,6 +279,21 @@ subtract_in_place_then_add_3arg(mp_ptr tgt, mp_srcptr ab_p, mp_size_t n_arg) {
     return result;
 }
 
+template<uint16_t N>
+mp_limb_t
+subtract_in_place_then_add_t(mp_ptr tgt, mp_srcptr ab_p) {
+    auto n = (mp_limb_t)N;
+    mp_limb_t result;
+    if constexpr ((N & 3 == 2) && (N >= 6)) {
+        // zero gain from this optimization on Broadwell and Ryzen
+        result = mpn_sub_2k_plus2_inplace(tgt, ab_p, N / 4);
+    } else {
+        result = mpn_sub_n(tgt, ab_p, tgt, n);
+    }
+    result ^= mpn_add_n(tgt, tgt, ab_p + n, n);
+    return result;
+}
+
 /*
 n := 4*loops + 1
 add n+1-word number t_s t_p[n-1] t_p[n-2] ... t_p[1] t_p[0] to y (of bigger length)
@@ -363,7 +379,11 @@ toom22_interpolate(mp_ptr ab_p, mp_ptr g_p, uint8_t sign, mp_size_t n) {
     mpn_add_n_plus_1(ab_p + (n / 2), t_senior, g_p, n);
 }
 
-// n even, not a multiple of 4; 10 <= n < 2**16
+/*
+n even, not a multiple of 4; 10 <= n < 2**16
+
+No gain no loss, this subroutine is unused
+*/
 template<uint16_t N>
 void
 toom22_interpolate_t(mp_ptr ab_p, mp_ptr g_p, uint8_t sign) {
@@ -371,10 +391,10 @@ toom22_interpolate_t(mp_ptr ab_p, mp_ptr g_p, uint8_t sign) {
     if (sign) {
         t_senior = mpn_add_2_3arg(g_p, ab_p, N);
     } else {
-        t_senior = subtract_in_place_then_add_3arg(g_p, ab_p, N);
+        t_senior = subtract_in_place_then_add_t<N>(g_p, ab_p);
     }
     if constexpr (N & 3 == 2) {
-        // 6 ticks gain on Ryzen, no gain on Broadwell
+        // no gain no loss on Broadwell and Ryzen for N=14
         mpn_add_4k_plus2_4arg(ab_p + (N / 2), t_senior, g_p, N / 4);
     } else {
         mpn_add_n_plus_1(ab_p + (N / 2), t_senior, g_p, N);
@@ -629,12 +649,17 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         auto sign = subtract_lesser_from_bigger_1x_t<h>(rp, ap);
         sign ^= subtract_lesser_from_bigger_1x_t<h>(rp + h, bp);
         auto slave_scratch = scratch + N;
-        // for small h a proper subroutine will be called, don't need extra if here
+        // tried mul7_trice() here, got slight slow-down
         toom22_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
         toom22_broadwell_t<h>(rp, slave_scratch, ap, bp);
         toom22_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);
         if constexpr (N & 3) {
+            /*
+            Line below gives no gain on Broadwell or Ryzen
+
             toom22_interpolate_t<N>(rp, scratch, sign);
+            */
+            toom22_interpolate(rp, scratch, sign, N);
         } else {
             toom22_interpolate_4k_t<N>(rp, scratch, sign);
         }

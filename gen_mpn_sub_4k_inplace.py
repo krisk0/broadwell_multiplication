@@ -11,10 +11,12 @@ c, a -- numbers of equal word-length n .
 This macro subtracts c from a modulo m, puts result into carry and c_p:
 
 t := a - c mod m
-carry += t(n)
+carry -= t(n)
 put t(n-1) t(n-2) ... t(0) onto c_p
 
 On exit, c_p, a_p and loop_count are destroyed
+
+carry either remains unchanged, or grows by 1
 
 loop_count is of any basic unsigned integer type (uintX_t)
 """
