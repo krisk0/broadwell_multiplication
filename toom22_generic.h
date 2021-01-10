@@ -35,6 +35,7 @@ void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
     void mul6_aligned(mp_ptr, mp_srcptr, mp_srcptr);
     #define MUL6_SUBR mul6_aligned
 #endif
+void mpn_add_4k_plus2_4arg(mp_ptr, mp_limb_t, mp_srcptr, uint16_t);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -362,6 +363,24 @@ toom22_interpolate(mp_ptr ab_p, mp_ptr g_p, uint8_t sign, mp_size_t n) {
     mpn_add_n_plus_1(ab_p + (n / 2), t_senior, g_p, n);
 }
 
+// n even, not a multiple of 4; 10 <= n < 2**16
+template<uint16_t N>
+void
+toom22_interpolate_t(mp_ptr ab_p, mp_ptr g_p, uint8_t sign) {
+    mp_limb_t t_senior;
+    if (sign) {
+        t_senior = mpn_add_2_3arg(g_p, ab_p, N);
+    } else {
+        t_senior = subtract_in_place_then_add_3arg(g_p, ab_p, N);
+    }
+    if constexpr (N & 3 == 2) {
+        // 6 ticks gain on Ryzen, no gain on Broadwell
+        mpn_add_4k_plus2_4arg(ab_p + (N / 2), t_senior, g_p, N / 4);
+    } else {
+        mpn_add_n_plus_1(ab_p + (N / 2), t_senior, g_p, N);
+    }
+}
+
 #define USE_MUL6_RZ_MACRO 0
 
 #if USE_MUL6_RZ_MACRO
@@ -615,7 +634,7 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         toom22_broadwell_t<h>(rp, slave_scratch, ap, bp);
         toom22_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);
         if constexpr (N & 3) {
-            toom22_interpolate(rp, scratch, sign, N);
+            toom22_interpolate_t<N>(rp, scratch, sign);
         } else {
             toom22_interpolate_4k_t<N>(rp, scratch, sign);
         }

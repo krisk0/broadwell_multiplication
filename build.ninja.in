@@ -1,6 +1,6 @@
 o = ./automagic
 toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,8}_zen.o $
-    $o/mul{6..8}_aligned.o $o/mul7_t03.o
+    $o/mul{6..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h $
     $o/subtract_longer_from_shorter_7.h
 
@@ -39,7 +39,7 @@ build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
     test_mpn_mul2_add.exe test6_zen.exe test_mul_4x_zen_5arg_{4,8,12,16}.exe $
     test_mul_n_zen_4arg_{1,2,3,4,5,6,8,10,12,14,16,20,24}.exe $
     test_itch_broadwell.exe test8_{broadwell_125,skylake}.exe test7_broadwell.exe $
-    test7_t03.exe test{6..8}_aligned.exe test6_rz.exe
+    test7_t03.exe test{6..8}_aligned.exe test6_rz.exe test_mpn_add_4k_plus2_4arg.exe
 
 build exe: phony tests some_benchmarks
 
@@ -136,6 +136,9 @@ test_itch_broadwell.exe: test_itch_broadwell.cpp $toom22_o @int_h $toom22_h $
     $o/test_itch_broadwell.h
 
 test_itch_broadwell.h: test_itch_broadwell
+
+test_mpn_add_4k_plus2_4arg.exe: test_mpn_add_4k_plus2_4arg.cpp $toom22_o @int_h $
+    $toom22_h
 
 mul4_broadwell.s: mul4
 mul4_broadwell.h: mul4
