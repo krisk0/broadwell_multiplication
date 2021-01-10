@@ -15,7 +15,7 @@
 #endif
 
 void
-dump_number(INT* p, unsigned n) {
+dump_number(const INT* p, unsigned n) {
     for(unsigned i = n; i--;) {
         printf("%X:" PRINTF_FORMAT " ", i, p[i]);
     }
@@ -95,7 +95,7 @@ do_test() {
             GOOD(g_good + 0, g_u + 0, g_v + 0);
             BAAD(g_baad + 0, g_u + 0, g_v + 0);
             if (memcmp(g_good + 0, g_baad + 0, SIZE * 2 * sizeof(INT))) {
-                printf("Problem for a=%u b=%d\n", a, b);
+                fprintf(stderr, "Problem for a=%u b=%d\n", a, b);
                 dump_number(g_good + 0, SIZE * 2);
                 dump_number(g_baad + 0, SIZE * 2);
                 exit(1);

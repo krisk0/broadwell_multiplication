@@ -19,7 +19,7 @@ constexpr uint16_t TOOM_2X_BOUND = 28;
     #define MUL_BASECASE_SYMMETRIC(x, y, z, w) __gmpn_mul_basecase(x, y, z, w, z)
 #endif
 
-void dump_number(mp_limb_t* p, unsigned n);
+void dump_number(const mp_limb_t* p, unsigned n);
 
 extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
@@ -78,6 +78,7 @@ toom22_12_itch(mp_size_t n) {
     return 12 * ((1 << (k+1)) - 1);
 }
 
+
 #define mpn_add_1_2arg(t_p, what) \
     __asm__ __volatile__ (        \
      " addq %1, (%0)\n"           \
@@ -86,6 +87,17 @@ toom22_12_itch(mp_size_t n) {
      " addq $1, 8(%0)\n"          \
      " lea 8(%0), %0\n"           \
      " jc again%=\n"              \
+     "done%=:"                    \
+     :"+r"(t_p)                   \
+     :"r"(what)                   \
+     :"memory", "cc");
+
+// same as above, but changes at most 2 limbs
+#define mpn_add_1_2arg_twice(t_p, what) \
+    __asm__ __volatile__ (        \
+     " addq %1, (%0)\n"           \
+     " jnc done%=\n"              \
+     " addq $1, 8(%0)\n"          \
      "done%=:"                    \
      :"+r"(t_p)                   \
      :"r"(what)                   \
@@ -1117,13 +1129,27 @@ v1(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
 template<uint16_t N>
 mp_limb_t
 mpn_add_inplace_t(mp_ptr rp, mp_ptr ap) {
-    if constexpr((N / 4 * 4 == N) && (N >= 8)) {
-        mp_limb_t carry;
+    if constexpr ((N / 4 * 4 == N) && (N >= 8)) {
+        mp_limb_t carry = 0;
         auto loop_count = N / 4 - 1;
         mpn_add_4k_inplace(carry, rp, ap, loop_count);
         return carry;
     } else {
         return mpn_add_n(rp, rp, ap, N);
+    }
+}
+
+template<uint16_t N>
+void
+mpn_sub_inplace_t(mp_ptr rp, mp_ptr ap) {
+    if constexpr ((N / 4 * 4 == N) && (N >= 8)) {
+        // 1 tick speedup for N=12 => 1 tick speedup of toom22_broadwell_t<13>()
+        auto loop_count = N / 4 - 1;
+        auto ap_copy = ap, rp_copy = rp;
+        // TODO: can catch another tick or two
+        mpn_sub_4k(rp, ap_copy, rp_copy, loop_count);
+    } else {
+        (void)mpn_sub_n(rp, ap, rp, N);
     }
 }
 
@@ -1137,8 +1163,8 @@ v3 = v2 + v0 - v1           2*h limbs
 add 2*h-limb v3 to number at rp + h
 
 v3 is known to fit 2*h limbs, which means that limb at index 2*h need not be cared
- for. For instance, no carry from limb at index 2*h-1 is possible when calculating
- v3 = v2 + v0 + |v1|.
+ for. For instance, carry from limb at index 2*h-1 should be discarded when
+ calculating v3 = v2 + v0 + |v1|.
 */
 
 template <uint16_t h, uint16_t q>
@@ -1149,12 +1175,13 @@ interpolate(mp_ptr rp, mp_ptr scratch, uint8_t v1_sign) {
         (void)mpn_add_inplace_t<2 * h>(scratch, rp);
     } else {
         // v3 = v0 - |v1| + v2
-        (void)mpn_sub_n(scratch, rp, scratch, 2 * h);
+        (void)mpn_sub_inplace_t<2 * h>(scratch, rp);
     }
     // v2 is 2 limbs shorter, need to spread carry
     auto carry = mpn_add_inplace_t<2 * q>(scratch, rp + 2 * h);
     auto here = scratch + 2 * q;
-    mpn_add_1_2arg(here, carry);
+    // TODO: can spread carry inside assembler macro
+    mpn_add_1_2arg_twice(here, carry);
     // v3 stored at scratch
     here = rp + h;
     carry = mpn_add_inplace_t<2 * h>(here, scratch);
@@ -1215,28 +1242,34 @@ toom22_1x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     constexpr auto h = (N + 1) / 2;
     constexpr auto q = h - 1;
     #if LOUD_6_LINES
+    if constexpr ((N == 13) || (N == 25)) {
         printf("toom22_1x_broadwell_t(%u)\n", N);
         printf("a=");
         dump_number((mp_ptr)ap, N);
         printf("b=");
         dump_number((mp_ptr)bp, N);
+    }
     #endif
     auto v1_sign = toom22_1x::v1<h, q>(rp, scratch, ap, bp);   // |v1| at scratch + 0
     toom22_broadwell_t<h>(rp, scratch + 2 * h, ap, bp);        // v0 at rp + 0
     toom22_broadwell_t<q>(rp + 2 * h, scratch + 2 * h, ap + h, bp + h);
                                                                // v2 at rp + 2*h
     #if LOUD_6_LINES
+    if constexpr ((N == 13) || (N == 25)) {
         printf("at -1: ");
         dump_number(scratch, 2 * h);
         printf("at  0: ");
         dump_number(rp, 2 * h);
         printf("at  i: ");
         dump_number(rp + 2 * h, 2 * q);
+    }
     #endif
     toom22_1x::interpolate<h, q>(rp, scratch, v1_sign);
     #if LOUD_6_LINES
+    if constexpr ((N == 13) || (N == 25)) {
         printf("a*b = ");
         dump_number(rp, 2 * N);
+    }
     #endif
 }
 

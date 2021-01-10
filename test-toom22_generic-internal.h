@@ -26,6 +26,11 @@ junior_words(INT* t, unsigned x) {
 
 void
 test() {
+    #if defined(SCRATCH_SIZE)
+        printf("testing size %d, scratch size: %d\n", SIZE, (int)SCRATCH_SIZE);
+    #else
+        printf("testing size %d\n", SIZE);
+    #endif
     memset(g_a, 0, OPERAND_SIZE);
     memset(g_b, 0, OPERAND_SIZE);
     call_good();
@@ -44,7 +49,7 @@ test() {
             call_good();
             call_baad();
             if (memcmp(g_result_good + 0, g_result_baad + 0, RESULT_SIZE)) {
-                printf("Problem for a=%u b=%d\n", a, b);
+                printf("Problem for a=%u b=%d, size=%d\n", a, b, SIZE);
                 dump_number(g_result_good + 0, SIZE * 2);
                 dump_number(g_result_baad + 0, SIZE * 2);
                 exit(1);
@@ -59,7 +64,7 @@ test() {
             do_test();
         }
     }
-    
+
     for(unsigned i = 0; i < SIZE; i++) {
         g_a[i] = ((INT)0x3) << 62;
     }
