@@ -126,6 +126,8 @@ g_tail = '''
                          | dd s8+sB+s4' s0+sA" s5 s3 s1 s2 {i+1}
 movq s2, i+1(rp)
 movq s1, i+2(rp)         | dd s8+sB+s4' s0+sA" s5 s3 {i+3}
+| tried 'xchg s1, s0' optimization here (to restore rbx earlier), benchmark shows
+|  some slow-down
 movq $0, s2              | dd s8+sB+s4' s0+sA" s5 s3 {i+3} s2=0
 adcx sB, s8              | dd' s8+s4 s0+sA" s5 s3 {i+3} s2=0
 movq s3, i+3(rp)

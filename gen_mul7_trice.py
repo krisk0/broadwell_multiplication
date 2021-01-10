@@ -53,8 +53,6 @@ movq 16(%rsp), s4
 add $40, %rsp
 '''
 
-#TODO: save some of sI to stack, not xmm
-
 g_xmm_pattern = re.compile(r'xmm(.+?)\b')
 def chew_code(ii):
     inside,r = False,[]
