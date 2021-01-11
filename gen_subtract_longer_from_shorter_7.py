@@ -35,18 +35,18 @@ import gen_mul4 as P
 
 g_b_patt = re.compile(r'(.)\(bp\)')
 g_a_patt = re.compile(r'(.)\((.p)\)')
-def chew_line(s):
+def chew_line(s, b_ofs):
     m = g_b_patt.search(s)
     if m:
-        return s.replace(m.group(), '%s(ap)' % (56 + int(m.group(1)) * 8))
-    
+        return s.replace(m.group(), '%s(ap)' % (b_ofs * 8 + int(m.group(1)) * 8))
+
     m = g_a_patt.search(s)
     if m:
         return s.replace(m.group(), '%s(%s)' % (int(m.group(1)) * 8, m.group(2)))
 
     return s
 
-def do_it(tgt):
+def do_it(tgt, code, b_ofs):
     data = {
             'macro_name': P.guess_subroutine_name(sys.argv[1]),
             'scratch': ['w%s s%s' % (i, i) for i in range(4)],
@@ -58,13 +58,14 @@ def do_it(tgt):
             'code_language': 'asm',
             'macro_parameters': 'r_p a_p',
             }
-    
+
     all_vars = P.extract_int_vars_name(data['scratch']) + ['ap', 'rp']
-    code = '\n'.join([chew_line(x) for x in P.cutoff_comments(g_code)])
+    code = '\n'.join([chew_line(x, b_ofs) for x in P.cutoff_comments(code)])
     for v in all_vars:
         code = re.sub(r'\b%s\b' % v, '%%[%s]' % v, code)
-    
+
     P.write_cpp_code(tgt, code, data)
 
-with open(sys.argv[1], 'wb') as g_o:
-    do_it(g_o)
+if __name__ == '__main__':
+    with open(sys.argv[1], 'wb') as g_o:
+        do_it(g_o, g_code, 7)

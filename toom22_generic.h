@@ -1132,12 +1132,15 @@ mpn_sub_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
 template<uint16_t h, uint16_t q>
 void
 subtract_longer_from_shorter(mp_ptr tgt, mp_srcptr a_p) {
-    if constexpr(h == 7) {
+    if constexpr (h == 7) {
         /*
-        this optimization speeds up toom22_12_broadwell_t<13>() by 14 ticks on Ryzen
+        this optimization speeds up toom22_broadwell_t<13>() by 14 ticks on Ryzen
          (from 308 to 294)
         */
         subtract_longer_from_shorter_7(tgt, a_p);
+    } else if constexpr (h == 8) {
+        // 1 tick on Broadwell, 4 ticks on Ryzen for toom22_broadwell_t<15>()
+        subtract_longer_from_shorter_8(tgt, a_p);
     } else {
         auto borrow = mpn_sub_n(tgt, a_p, a_p + h, q);
         tgt[q] = a_p[q] - borrow;
