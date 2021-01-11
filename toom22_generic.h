@@ -37,6 +37,7 @@ void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
 #endif
 void mpn_add_4k_plus2_4arg(mp_ptr, mp_limb_t, mp_srcptr, uint16_t);
 mp_limb_t mpn_sub_2k_plus2_inplace(mp_ptr, mp_srcptr, uint16_t);
+void mul7_2arg(mp_ptr, mp_srcptr);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -650,7 +651,12 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         sign ^= subtract_lesser_from_bigger_1x_t<h>(rp + h, bp);
         auto slave_scratch = scratch + N;
         // tried mul7_trice() here, got slight slow-down
-        toom22_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
+        if constexpr (h == 7) {
+            // this optimization gave 7 ticks on Broadwell, 3 ticks on Ryzen
+            mul7_2arg(scratch, rp);
+        } else {
+            toom22_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
+        }
         toom22_broadwell_t<h>(rp, slave_scratch, ap, bp);
         toom22_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);
         if constexpr (N & 3) {

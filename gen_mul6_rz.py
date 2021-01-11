@@ -191,7 +191,7 @@ g_iplus_patt = re.compile(r'i\+(.+?)\b')
 g_u_patt = re.compile(r'@u\[(.+)\]')
 g_r_patt = re.compile(r'@r\[(.+)\]')
 g_t_patt = re.compile(r'@R\[(.+)\]')
-g_v_patt = re.compile(r'(.+):=v\[(.+)]')
+g_v_patt = re.compile(r'(.+):=v\[(.+)\]')
 def evaluate_row(i, s):
     m = g_iplus_patt.search(s)
     if m:
