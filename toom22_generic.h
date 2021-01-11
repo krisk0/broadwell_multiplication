@@ -652,7 +652,7 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         auto slave_scratch = scratch + N;
         // tried mul7_trice() here, got slight slow-down
         if constexpr (h == 7) {
-            // this optimization gave 7 ticks on Broadwell, 3 ticks on Ryzen
+            // this optimization gave 7 ticks on Broadwell, 12 ticks on Ryzen
             mul7_2arg(scratch, rp);
         } else {
             toom22_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
@@ -1185,7 +1185,12 @@ v1(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     auto sign = subtract_lesser_from_bigger<h, q>(rp + h, ap);
     // place another subtraction result at rp
     sign ^= subtract_lesser_from_bigger<h, q>(rp, bp);
-    toom22_broadwell_t<h>(scratch, scratch + 2*h, rp + h, rp);
+    if constexpr (h == 7) {
+        // gain 7 ticks on Broadwell, 2 on Ryzen
+        mul7_2arg(scratch, rp);
+    } else {
+        toom22_broadwell_t<h>(scratch, scratch + 2*h, rp + h, rp);
+    }
     return sign;
 }
 
