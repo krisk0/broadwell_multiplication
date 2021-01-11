@@ -96,6 +96,7 @@ movq i+2(rp), sA         | s9+sB s4+s2+s8 s0+s7+s1" s3| s5+sA' s6 {i+1}
 adcx sA, s5              | s9+sB s4+s2+s8 s0+s7+s1" s3|' s5 s6 {i+1}
 adox s7, s0              | s9+sB s4+s2+s8" s0+s1 s3|' s5 s6 {i+1}
 mulx 48(up), s7, sA      | sA s9+sB+s7 s4+s2+s8" s0+s1 s3|' s5 s6 {i+1}
+| TODO: problem with s7: late restore
 movq i+3(rp), dd         | sA s9+sB+s7 s4+s2+s8" s0+s1 s3+dd' s5 s6 {i+1}
 adcx dd, s3              | sA s9+sB+s7 s4+s2+s8" s0+s1' s3 s5 s6 {i+1}
 dd:=v[i+1]
@@ -115,14 +116,16 @@ movq s6, i+1(rp)         | dd s9+sB+s7" s2+s8' s0 s3 s5 {i+2}
 movq s5, i+2(rp)         | dd s9+sB+s7" s2+s8' s0 s3 {i+3}
 movq s9, s5              | dd s5+sB+s7" s2+s8' s0 s3 {i+3}
 movq s3, i+3(rp)         | dd s5+sB+s7" s2+s8' s0 {i+4}
+| "movq %xmm9, s3" here (to later restore w6) slows down code by 2 ticks
 movq s0, i+4(rp)         | dd" s5+s7 s2+s8' {i+5}
 adox sB, s5
 adcx s8, s2              | dd" s5+s7' s2 {i+5}
 movq $0, s0
 adox s0, dd              | dd s5+s7' s2 {i+5}
-| TODO: special care for s7?
 movq s2, i+5(rp)
 adcx s7, s5              | dd' s5 {i+6}
+| s7 restored too late (here), but attempts to fix the problem slow down 14x14
+|  multiplication
 movq s5, i+6(rp)
 adcq $0, dd
 movq dd, i+7(rp)
@@ -186,8 +189,6 @@ def cook_asm(o, code, var_map):
 
     P.insert_restore(code, xmm_save)
     code = '\n'.join(code)
-    for k,v in xmm_save.items():
-        code = code.replace('!restore ' + k, 'movq %s, %s' % (v, k))
 
     code = P.replace_symbolic_names_wr(code, var_map)
 
