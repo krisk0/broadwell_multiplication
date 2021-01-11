@@ -96,7 +96,6 @@ movq i+2(rp), sA         | s9+sB s4+s2+s8 s0+s7+s1" s3| s5+sA' s6 {i+1}
 adcx sA, s5              | s9+sB s4+s2+s8 s0+s7+s1" s3|' s5 s6 {i+1}
 adox s7, s0              | s9+sB s4+s2+s8" s0+s1 s3|' s5 s6 {i+1}
 mulx 48(up), s7, sA      | sA s9+sB+s7 s4+s2+s8" s0+s1 s3|' s5 s6 {i+1}
-| TODO: problem with s7: late restore
 movq i+3(rp), dd         | sA s9+sB+s7 s4+s2+s8" s0+s1 s3+dd' s5 s6 {i+1}
 adcx dd, s3              | sA s9+sB+s7 s4+s2+s8" s0+s1' s3 s5 s6 {i+1}
 dd:=v[i+1]
@@ -111,24 +110,39 @@ new: sA s9+sB+s7" s2+s8' s0 s3 s5 s6
 g_perm = '2 0 3 1 7 5 4 6 8 A B 9'
 
 g_tail = '''
-movq sA, dd              | dd s9+sB+s7" s2+s8' s0 s3 s5 s6 {i+1}
-movq s6, i+1(rp)         | dd s9+sB+s7" s2+s8' s0 s3 s5 {i+2}
-movq s5, i+2(rp)         | dd s9+sB+s7" s2+s8' s0 s3 {i+3}
-movq s9, s5              | dd s5+sB+s7" s2+s8' s0 s3 {i+3}
-movq s3, i+3(rp)         | dd s5+sB+s7" s2+s8' s0 {i+4}
-| "movq %xmm9, s3" here (to later restore w6) slows down code by 2 ticks
-movq s0, i+4(rp)         | dd" s5+s7 s2+s8' {i+5}
-adox sB, s5
-adcx s8, s2              | dd" s5+s7' s2 {i+5}
+                         | s9+sB s4+s2+s8" s0+s1 s3|' s5 s6 {i+1}
+movq s6, i+1(rp)
+movq s5, i+2(rp)         | s9+sB s4+s2+s8" s0+s1 s3|' {i+3}
+mulx 48(up), s5, up      | up s9+sB+s5 s4+s2+s8" s0+s1 s3|' {i+3}
+movq i+3(rp), dd         | up s9+sB+s5 s4+s2+s8" s0+s1 dd+s3' {i+3}
+adcx dd, s3              | up s9+sB+s5 s4+s2+s8" s0+s1' s3 {i+3}
+movq s9, dd              | up dd+sB+s5 s4+s2+s8" s0+s1' s3 {i+3}
+movq s3, i+3(rp)         | up dd+sB+s5 s4+s2+s8" s0+s1' {i+4}
+adox s4, s2              | up dd+sB+s5" s2+s8 s0+s1' {i+4}
+adcx s1, s0              | up dd+sB+s5" s2+s8' s0 {i+4}
+movq s0, i+4(rp)
+adox sB, dd              | up" dd+s5 s2+s8' {i+5}
+adcx s8, s2              | up" dd+s5' s2 {i+5}
+movq s2, i+5(rp)         | up" dd+s5' {i+6}
+movq $0, s2
+adox s2, up              | up dd+s5' {i+6}
+adcx s5, dd              | up' dd {i+6}
+movq dd, i+6(rp)
+adcx s2, up
+movq up, i+7(rp)
+'''
+
+'''
+same perfomance on Ryzen:
+adcx s8, s2              | up dd+sB+s5"' s2 {i+5}
+movq s2, i+5(rp)         | up dd+sB+s5"' {i+6}
+adox sB, dd              | up" dd+s5' {i+6}
 movq $0, s0
-adox s0, dd              | dd s5+s7' s2 {i+5}
-movq s2, i+5(rp)
-adcx s7, s5              | dd' s5 {i+6}
-| s7 restored too late (here), but attempts to fix the problem slow down 14x14
-|  multiplication
-movq s5, i+6(rp)
-adcq $0, dd
-movq dd, i+7(rp)
+adcx s5, dd              | up"' dd {i+6}
+movq dd, i+6(rp)         | up"' {i+7}
+adox s0, up              | up' {i+7}
+adcx s0, up
+movq up, i+7(rp)
 '''
 
 import os, re, sys
@@ -206,7 +220,8 @@ def do_it(o, mul_01, muladd, tail, perm, var_map):
     for i in range(3, 6):
         p = P.composition(p, q)
         code += mul_add_code(i, mm, p)
-    mm += P.cutoff_comments(tail)
+    j = [j for j in range(len(mm)) if mm[j].find('mulx 48(') != -1][0]
+    mm = mm[:j] + P.cutoff_comments(tail)
     p = P.composition(p, q)
     code += mul_add_code(6, mm, p)
     cook_asm(o, code, var_map)
