@@ -60,7 +60,7 @@ main() {
 
 import os, sys
 
-g_min_n = int(os.getenv('min_n', 10))
+g_min_n = int(os.getenv('min_n', 9))
 g_max_n = int(os.getenv('max_n', 51))
 
 def do_it(o):
