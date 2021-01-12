@@ -42,6 +42,7 @@ void mpn_add_4k_plus2_4arg(mp_ptr, mp_limb_t, mp_srcptr, uint16_t);
 mp_limb_t mpn_sub_2k_plus2_inplace(mp_ptr, mp_srcptr, uint16_t);
 void mul7_2arg(mp_ptr, mp_srcptr);
 void mul5_aligned(mp_ptr, mp_srcptr, mp_srcptr);
+void mul3(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -1396,7 +1397,10 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     } else if constexpr (N == 5) {
         // gain 20 ticks on Broadwell, 11 ticks on Ryzen for 11x11 multiplication
         mul5_aligned(rp, ap, bp);
-    } else {
+    } else if constexpr (N == 3) {
+        mul3(rp, ap, bp);
+    }
+    else {
         // call asm subroutine from GMP or something very similar
         MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
     }
