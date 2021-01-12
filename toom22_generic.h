@@ -5,7 +5,10 @@
 
 #include "bordeless-alloc.h"
 #include "automagic/toom22_generic_aux.h"
-#include "automagic/subtract_longer_from_shorter_7.h"
+
+#if __znver2__
+    #define AMD_ZEN 1
+#endif
 
 // TODO: maybe 26 as set in broadwell/skylake gmp-mparam.h? or 19 for zen?
 constexpr uint16_t TOOM_2X_BOUND = 28;
@@ -28,7 +31,7 @@ void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
-#if __znver2__
+#if AMD_ZEN
     void mul6_zen(mp_ptr, mp_srcptr, mp_srcptr);
     #define MUL6_SUBR mul6_zen
 #else
@@ -1197,7 +1200,7 @@ v1(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
 template<uint16_t N>
 mp_limb_t
 mpn_add_inplace_t(mp_ptr rp, mp_ptr ap) {
-    if constexpr ((N / 4 * 4 == N) && (N >= 8)) {
+    if constexpr ((N & 3 == 0) && (N >= 8)) {
         mp_limb_t carry = 0;
         auto loop_count = N / 4 - 1;
         mpn_add_4k_inplace(carry, rp, ap, loop_count);
