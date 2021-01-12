@@ -1372,7 +1372,7 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     } else if constexpr (N == 6) {
         MUL6_SUBR(rp, ap, bp);
     } else {
-        // call asm subroutine from GMP, bypassing if's in mpn_mul_n()
+        // call asm subroutine from GMP or something very similar
         MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
     }
 }
