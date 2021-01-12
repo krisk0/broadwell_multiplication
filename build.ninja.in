@@ -40,7 +40,8 @@ build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
     test_mul_n_zen_4arg_{1,2,3,4,5,6,8,10,12,14,16,20,24}.exe $
     test_itch_broadwell.exe test8_{broadwell_125,skylake}.exe test7_broadwell.exe $
     test7_t03.exe test{5..8}_aligned.exe test7_2arg.exe test6_rz.exe $
-    test_mpn_add_4k_plus2_4arg.exe test_mpn_sub_2k_plus2_inplace.exe
+    test_mpn_add_4k_plus2_4arg.exe test_mpn_sub_2k_plus2_inplace.exe $
+    test_mul11.exe
 
 build exe: phony tests some_benchmarks
 
@@ -104,6 +105,9 @@ test6.exe: test6.cpp @int_h $o/mul6.h
 test6_zen.exe: test6.cpp mul6_zen.s @int_h [+flags -DZEN=1]
 
 test16.exe: test16.cpp $toom22_o @int_h $toom22_h
+
+test_mul11.exe: test_whatever_mul.cpp $toom22_o @int_h $toom22_h $
+    [+flags -DSIZE=11 -DTESTED=mul_11]
 
 test_toom22_generic.exe: test_toom22_generic.cpp $toom22_o @int_h $toom22_h
 
@@ -211,7 +215,7 @@ toom22_generic_aux.h: cstdint_gmp.h mpn_less_3arg.h mpn_less_3arg_hole.h $
     mpn_sub_4k.h mpn_add_4k_inplace.h $
     mpn_sub_4k_inplace.h mpn_sub_{6,7}.h mpn_le_6.h subtract_lesser_from_bigger_6.h $
     mpn_sub_n_small.h mpn_sub_inplace.h mpn_add_inplace.h mul6.h toom22_mul_16.h $
-    mpn_sub_1x.h subtract_longer_from_shorter_{7,8}.h
+    mpn_sub_1x.h subtract_longer_from_shorter_{6..8}.h
 
 shr1_x_avx2.h: shr1_4_avx2.h shr1_7_avx2.h shr1_10_avx2.h shr1_6k_plus1_avx2.h $
     shr1_9k_plus1_avx2.h

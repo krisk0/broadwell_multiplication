@@ -31,7 +31,7 @@ movq w2, 6(rp)
 movq w3, 7(rp)
 '''
 
-import os, re, sys
+import sys
 sys.dont_write_bytecode = 1
 
 import gen_subtract_longer_from_shorter_7 as F

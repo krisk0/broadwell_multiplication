@@ -41,6 +41,7 @@ void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
 void mpn_add_4k_plus2_4arg(mp_ptr, mp_limb_t, mp_srcptr, uint16_t);
 mp_limb_t mpn_sub_2k_plus2_inplace(mp_ptr, mp_srcptr, uint16_t);
 void mul7_2arg(mp_ptr, mp_srcptr);
+void mul5_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -1135,7 +1136,10 @@ mpn_sub_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
 template<uint16_t h, uint16_t q>
 void
 subtract_longer_from_shorter(mp_ptr tgt, mp_srcptr a_p) {
-    if constexpr (h == 7) {
+    if constexpr (h == 6) {
+        // gain 7 ticks on Broadwell, 3 ticks on Ryzen for toom22_broadwell_t<11>
+        subtract_longer_from_shorter_6(tgt, a_p);
+    } else if constexpr (h == 7) {
         /*
         this optimization speeds up toom22_broadwell_t<13>() by 14 ticks on Ryzen
          (from 308 to 294)
@@ -1344,6 +1348,24 @@ toom22_1x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #endif
 }
 
+void
+addmul_8x3(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
+    mp_limb_t scratch[11];
+    mpn_mul(scratch, ap, 8, bp, 3);
+    auto carry = mpn_add_n(rp, rp, scratch, 11);
+    rp += 11;
+    mpn_add_1_2arg(rp, carry);
+}
+
+void
+mul_11(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
+    mul_basecase_t<8>(rp, ap, bp);
+    rp += 8;
+    mul_basecase_t<3>(rp + 8, ap + 8, bp + 8);
+    addmul_8x3(rp, ap, bp + 8);
+    addmul_8x3(rp, bp, ap + 8);
+}
+
 template <uint16_t N, bool fear_of_page_break = true>
 void
 mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
@@ -1354,7 +1376,7 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         // use hand-optimized subroutine if possible
     } else if constexpr (N == 8) {
         if constexpr(fear_of_page_break) {
-            // 2 ticks slower on Ryzen, same time on Skylake
+            // 2 ticks slower than mul8_zen on Ryzen, same time on Skylake
             mul8_aligned(rp, ap, bp);
         } else {
             mul8_zen(rp, ap, bp);
@@ -1371,6 +1393,9 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         }
     } else if constexpr (N == 6) {
         MUL6_SUBR(rp, ap, bp);
+    } else if constexpr (N == 5) {
+        // gain 20 ticks on Broadwell, 11 ticks on Ryzen for 11x11 multiplication
+        mul5_aligned(rp, ap, bp);
     } else {
         // call asm subroutine from GMP or something very similar
         MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
