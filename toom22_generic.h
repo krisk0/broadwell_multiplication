@@ -1361,7 +1361,10 @@ addmul_8x3_slow(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     mpn_add_1_2arg(rp, carry);
 }
 
-// 244 ticks on Broadwell, 2 ticks faster than __gmpn_mul_basecase(11)
+/*
+244 ticks on Broadwell, 2 ticks faster than __gmpn_mul_basecase(11)
+228 ticks on Ryzen, 15 ticks slower than __gmpn_mul_basecase(11)
+*/
 void
 mul_11(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     mul_basecase_t<8>(rp, ap, bp);
