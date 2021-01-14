@@ -19,7 +19,7 @@ build some_benchmarks: phony $
     benchm_toom22_broadwell_t.exe benchm_toom22_broadwell_t_c.exe $
     benchm_bdiv_dbm1c_4k.exe benchm_bdiv_dbm1c_4k_inplace.exe $
     benchm6_official.exe benchm6_basecase.exe benchm{6,8}_zen.exe $
-    benchm{6,7}_broadwell.exe
+    benchm{6,7,11}_broadwell.exe
 
 build more_benchmarks: phony $
     benchm{6..16,24,25}_basecase.exe $
