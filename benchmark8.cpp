@@ -2,6 +2,10 @@
 
 #include <gmp.h>
 
+#if defined(EXTRA_INCLUDE)
+    #include EXTRA_INCLUDE
+#endif
+
 extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);

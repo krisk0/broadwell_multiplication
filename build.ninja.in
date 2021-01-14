@@ -1,7 +1,7 @@
 o = ./automagic
 toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,8}_zen.o $
     $o/mul{5..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o $
-    $o/mpn_sub_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul3.o
+    $o/mpn_sub_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul3.o $o/addmul_8x3.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
 build some_benchmarks: phony $
@@ -19,7 +19,7 @@ build some_benchmarks: phony $
     benchm_toom22_broadwell_t.exe benchm_toom22_broadwell_t_c.exe $
     benchm_bdiv_dbm1c_4k.exe benchm_bdiv_dbm1c_4k_inplace.exe $
     benchm6_official.exe benchm6_basecase.exe benchm{6,8}_zen.exe $
-    benchm6_broadwell.exe benchm7_broadwell.exe
+    benchm{6,7}_broadwell.exe
 
 build more_benchmarks: phony $
     benchm{6..16,24,25}_basecase.exe $
@@ -41,7 +41,7 @@ build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
     test_itch_broadwell.exe test8_{broadwell_125,skylake}.exe test7_broadwell.exe $
     test7_t03.exe test{5..8}_aligned.exe test7_2arg.exe test6_rz.exe $
     test_mpn_add_4k_plus2_4arg.exe test_mpn_sub_2k_plus2_inplace.exe $
-    test_mul{3,11}.exe
+    test_mul{3,11}.exe test_addmul_8x3.exe
 
 build exe: phony tests some_benchmarks
 
@@ -94,6 +94,10 @@ test7_broadwell.exe: test8.cpp mul7_broadwell.s @int_h $
 benchm7_broadwell.exe: benchmark8.cpp mul7_broadwell.s @int_h benchmark-internal.c $
     [+flags -DSIZE=7 -DTESTED=mul7_broadwell]
 
+benchm11_broadwell.exe: benchmark8.cpp $toom22_o @int_h $toom22_h $
+    benchmark-internal.c [+flags -DSIZE=7 -DTESTED=mul_11 $
+    -DEXTRA_INCLUDE='"toom22_generic.h"']
+
 test_mul_4x_zen_5arg_%.exe: test_mul_4x_zen_5arg.c mul_4x_zen_5arg.s @int_h $
     [+flags -DSIZE=%]
 
@@ -111,6 +115,8 @@ test_mul3.exe: test_whatever_mul.cpp $toom22_o @int_h $toom22_h $
 
 test_mul11.exe: test_whatever_mul.cpp $toom22_o @int_h $toom22_h $
     [+flags -DSIZE=11 -DTESTED=mul_11]
+
+test_addmul_8x3.exe: test_addmul_8x3.cpp $toom22_o @int_h $toom22_h
 
 test_toom22_generic.exe: test_toom22_generic.cpp $toom22_o @int_h $toom22_h
 
@@ -230,6 +236,8 @@ benchm6_zen.exe: benchmark6.cpp mul6_zen.s @int_h benchmark-internal.c $
 benchm6_broadwell.exe: benchmark6.cpp @int_h benchmark-internal.c $
     $o/mul6.h [+flags -DSUBR=C_BROADWELL]
 
+#benchm11_broadwell.exe: 
+
 benchm8_zen.exe: benchmark8.cpp mul8_zen.s @int_h benchmark-internal.c $
     [+flags -DZEN=1]
 
@@ -312,5 +320,3 @@ benchmark_mul_4x_zen_5arg_%.exe: benchmark_mul_4x_zen_5arg.cpp mul_4x_zen_5arg.s
 
 benchmark_mul_n_zen_4arg_%.exe: benchmark_mul_n_zen_4arg.cpp mul_n_zen_4arg.s $
     @int_h [+flags -DSIZE=%]
-
-mul_n_zen_4arg.s: mul_n_zen_4arg

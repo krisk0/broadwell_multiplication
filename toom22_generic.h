@@ -10,12 +10,13 @@
     #define AMD_ZEN 1
 #endif
 
-// TODO: maybe 26 as set in broadwell/skylake gmp-mparam.h? or 19 for zen?
+// TODO: decrease to 12 and test/benchmark
 constexpr uint16_t TOOM_2X_BOUND = 28;
 
 #define LOUD_6_LINES 0
 #define SHOW_SUBROUTINE_NAME 0
 
+// TODO: benchmark if mul_n_zen_4arg() is useful
 #if defined(MUL_BASECASE_4ARG)
     #define MUL_BASECASE_SYMMETRIC(x, y, z, w) MUL_BASECASE_4ARG(x, y, z, w)
 #else
@@ -27,6 +28,7 @@ void dump_number(const mp_limb_t* p, unsigned n);
 extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 mp_limb_t __gmpn_addmul_1_adox(mp_ptr, mp_srcptr, mp_size_t, mp_limb_t);
+void mul_11(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_aligned(mp_ptr, mp_srcptr, mp_srcptr);
@@ -43,6 +45,7 @@ mp_limb_t mpn_sub_2k_plus2_inplace(mp_ptr, mp_srcptr, uint16_t);
 void mul7_2arg(mp_ptr, mp_srcptr);
 void mul5_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul3(mp_ptr, mp_srcptr, mp_srcptr);
+void addmul_8x3(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
@@ -1350,7 +1353,7 @@ toom22_1x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
 }
 
 void
-addmul_8x3(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
+addmul_8x3_slow(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     mp_limb_t scratch[11];
     mpn_mul(scratch, ap, 8, bp, 3);
     auto carry = mpn_add_n(rp, rp, scratch, 11);
@@ -1358,6 +1361,7 @@ addmul_8x3(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     mpn_add_1_2arg(rp, carry);
 }
 
+// 244 ticks on Broadwell, 2 ticks faster than __gmpn_mul_basecase(11)
 void
 mul_11(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     mul_basecase_t<8>(rp, ap, bp);
@@ -1371,6 +1375,10 @@ template <uint16_t N, bool fear_of_page_break = true>
 void
 mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     if constexpr (N == 13) {
+        /*
+        TODO: reduce TOOM_2X_BOUND to 12, then remove toom22_1x_broadwell_t<13>()
+         call below
+        */
         // toom22_1x_broadwell_t<13>() is slightly faster than __gmpn_mul_basecase()
         mp_limb_t scratch[itch::toom22_forced_t<13>()];
         toom22_1x_broadwell_t<N>(rp, scratch, ap, bp);
