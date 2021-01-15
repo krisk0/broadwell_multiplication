@@ -16,13 +16,13 @@
 void
 test_3arg(mp_ptr c, mp_ptr u, mp_ptr v) {
     INT r0[14], r1[14];
-    
+
     memcpy(r0 + 0, c + 0, sizeof(r0));
     GOOD(r0 + 0, u, v);
-    
+
     memcpy(r1 + 0, c + 0, sizeof(r0));
     BAAD(r1 + 0, u, v);
-    
+
     if (memcmp(r0 + 0, r1 + 0, sizeof(r0))) {
         printf("Problem\n");
         dump_number(c + 0, 14);
@@ -40,9 +40,11 @@ single_one_in_u_v(mp_ptr c, mp_ptr u, mp_ptr v) {
         deg2(u, 8, i);
         for(unsigned j = 0; j < 3 * BITS_PER_LIMB; j++) {
             deg2(v, 3, j);
+            //printf("i,j=%u,%u\n", i, j);
             test_3arg(c, u, v);
         }
     }
+
     memset(u, 0, 8 * sizeof(INT));
     memset(v, 0, 3 * sizeof(INT));
 }
@@ -50,10 +52,10 @@ single_one_in_u_v(mp_ptr c, mp_ptr u, mp_ptr v) {
 void
 do_test_addmul() {
     INT c[14], u[8], v[3];
-    
+
     memset(c + 0, 0, sizeof(c));
     single_one_in_u_v(c + 0, u + 0, v + 0);
-    
+
     memset(u + 0, 0, sizeof(u));
     memset(v + 0, 0, sizeof(v));
     for(unsigned d = 0; d < BITS_PER_LIMB * 14; d++) {

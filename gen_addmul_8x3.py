@@ -7,10 +7,14 @@ Multiplies 8-limb number u by 3-limb number v; adds result to 14-limb number r;
 r' := r + u * v
 
 Take 0: not caching u.
-
-Code targets Broadwell and Ryzen. Uses rsp[-11]..rsp[-1] as scratch:
- sc[x] = rsp[x-11]
 '''
+
+"""
+g_code_slow uses 6 limbs of red zone: sc[x] = rsp[x-6]. mul_11() using this code
+ spends 242 ticks on Broadwell and 228 on Ryzen.
+"""
+
+g_sc_shift = 6
 
 g_code = '''
 !save w6
@@ -144,6 +148,157 @@ ado3(w1[12], w0, w5)
 ado3(w1[13], w0, w5)
 '''
 
+"""
+Take 1: caching u. Take 1 is slower than take0 by 2 ticks on Ryzen.
+
+code below uses 12 limbs of scratch
+g_sc_shift = 12
+"""
+
+g_code_take1 = '''
+xor w0, w0
+!save w6
+movq dd[1], t0
+movq dd[2], t1
+!save w7
+movq dd[0], dd
+movq rp, t2
+movq up[0], rp
+movq rp, sc[0]             | cache u[0]
+!save w8
+mulx rp, w0, w1            | w1 w0
+movq up[1], rp
+!save w9
+movq rp, sc[1]             | cache u[1]
+mulx rp, w2, w3            | w3 w1+w2 w0
+!save wA
+movq up[2], rp
+movq rp, sc[2]             | cache u[2]
+!save wB
+movq t0, wB                | wB=v[1]
+mulx rp, w4, w5            | w5 w3+w4 w1+w2 w0
+movq up[3], rp
+movq rp, sc[3]             | cache u[3]
+mulx rp, w6, w7            | w7 w5+w6 w3+w4 w1+w2 w0
+movq up[4], rp
+movq rp, sc[4]             | cache u[4]
+mulx rp, w8, w9            | w9 w7+w8 w5+w6 w3+w4 w1+w2 w0
+adcx w2, w1                | w9 w7+w8 w5+w6 w3+w4' w1 w0
+movq up[5], rp
+movq rp, sc[5]             | cache u[5]
+mulx rp, w2, wA            | wA w9+w2 w7+w8 w5+w6 w3+w4' w1 w0
+adcx w4, w3                | wA w9+w2 w7+w8 w5+w6' w3 w1 w0
+movq up[6], rp
+movq rp, sc[6]             | cache u[6]
+mulx rp, w4, rp            | rp wA+w4 w9+w2 w7+w8 w5+w6' w3 w1 w0
+adcx w6, w5                | rp wA+w4 w9+w2 w7+w8' w5 w3 w1 w0
+movq up[7], w6
+movq w6, sc[7]             | cache u[7]
+mulx w6, w6, up            | up rp+w6 wA+w4 w9+w2 w7+w8' w5 w3 w1 w0
+movq wB, dd                | dd=v[1]
+movq w0, sc[8]             | up rp+w6 wA+w4 w9+w2 w7+w8' w5 w3 w1 [1]
+mulx sc[0], w0, wB         | up rp+w6 wA+w4 w9+w2 w7+w8' w5 w3+wB w1+w0 [1]
+adcx w8, w7                | up rp+w6 wA+w4 w9+w2' w7 w5 w3+wB w1+w0 [1]
+movq w3, sc[9]             | up rp+w6 wA+w4 w9+w2' w7 w5 {9}+wB w1+w0 [1]
+mulx sc[1], w3, w8         | up rp+w6 wA+w4 w9+w2' w7 w5+w8 {9}+wB+w3 w1+w0 [1]
+adcx w9, w2                | up rp+w6 wA+w4' w2 w7 w5+w8 {9}+wB+w3 w1+w0 [1]
+movq w5, sc[10]            | up rp+w6 wA+w4' w2 w7 {A}+w8 {9}+wB+w3 w1+w0 [1]
+mulx sc[2], w5, w9         | up rp+w6 wA+w4' w2 w7+w9 {A}+w8+w5 {9}+wB+w3 w1+w0 [1]
+adcx wA, w4                | up rp+w6' w4 w2 w7+w9 {A}+w8+w5 {9}+wB+w3 w1+w0 [1]
+movq w7, sc[11]            | up rp+w6' w4 w2 {B}+w9 {A}+w8+w5 {9}+wB+w3 w1+w0 [1]
+mulx sc[3], w7, wA     | up rp+w6' w4 w2+wA {B}+w9+w7 {A}+w8+w5 {9}+wB+w3 w1+w0 [1]
+adox w1, w0            | up rp+w6' w4 w2+wA {B}+w9+w7 {A}+w8+w5 {9}+wB+w3" w0 [1]
+movq sc[9], w1         | up rp+w6' w4 w2+wA {B}+w9+w7 {A}+w8+w5 w1+wB+w3" w0 [1]
+movq w0, sc[9]         | up rp+w6' w4 w2+wA {B}+w9+w7 {A}+w8+w5 w1+wB+w3" [2]
+adcx w6, rp            | up' rp w4 w2+wA {B}+w9+w7 {A}+w8+w5 w1+wB+w3" [2]
+mulx sc[4], w0, w6     | up' rp w4+w6 w2+wA+w0 {B}+w9+w7 {A}+w8+w5 w1+wB+w3" [2]
+adox wB, w1            | up' rp w4+w6 w2+wA+w0 {B}+w9+w7 {A}+w8+w5" w1+w3 [2]
+movq $0, wB
+adcx wB, up            | up rp w4+w6 w2+wA+w0 {B}+w9+w7 {A}+w8+w5" w1+w3 [2]
+movq sc[10], wB        | up rp w4+w6 w2+wA+w0 {B}+w9+w7 wB+w8+w5" w1+w3 [2]
+adox wB, w8            | up rp w4+w6 w2+wA+w0 {B}+w9+w7" w8+w5 w1+w3 [2]
+movq t1, wB            | up rp w4+w6 w2+wA+w0 {B}+w9+w7" w8+w5 w1+w3 [2] wB=d[2]
+adcx w3, w1            | up rp w4+w6 w2+wA+w0 {B}+w9+w7" w8+w5' w1 [2] wB=d[2]
+movq sc[11], w3        | up rp w4+w6 w2+wA+w0 w3+w9+w7" w8+w5' w1 [2] wB=d[2]
+adox w9, w3            | up rp w4+w6 w2+wA+w0" w3+w7 w8+w5' w1 [2] wB=d[2]
+movq w1, sc[10]        | up rp w4+w6 w2+wA+w0" w3+w7 w8+w5' [3] wB=d[2]
+mulx sc[5], w1, w9     | up rp+w9 w4+w6+w1 w2+wA+w0" w3+w7 w8+w5' [3] wB=d[2]
+adcx w8, w5            | up rp+w9 w4+w6+w1 w2+wA+w0" w3+w7' w5 [3] wB=d[2]
+adox wA, w2            | up rp+w9 w4+w6+w1" w2+w0 w3+w7' w5 [3] wB=d[2]
+mulx sc[6], w8, wA     | up+wA rp+w9+w8 w4+w6+w1" w2+w0 w3+w7' w5 [3] wB=d[2]
+adcx w7, w3            | up+wA rp+w9+w8 w4+w6+w1" w2+w0' w3 w5 [3] wB=d[2]
+adox w6, w4            | up+wA rp+w9+w8" w4+w1 w2+w0' w3 w5 [3] wB=d[2]
+mulx sc[7], w6, w7     | w7 up+wA+w6 rp+w9+w8" w4+w1 w2+w0' w3 w5 [3] wB=d[2]
+movq wB, dd
+adcx w2, w0            | w7 up+wA+w6 rp+w9+w8" w4+w1' w0 w3 w5 [3]
+mulx sc[0], w2, wB     | w7 up+wA+w6 rp+w9+w8" w4+w1' w0 w3 w5+wB w2| [2]
+adox w9, rp            | w7 up+wA+w6" rp+w8 w4+w1' w0 w3 w5+wB w2| [2]
+adcx w4, w1            | w7 up+wA+w6" rp+w8' w1 w0 w3 w5+wB w2| [2]
+mulx sc[1], w4, w9     | w7 up+wA+w6" rp+w8' w1 w0 w3+w9 w5+wB+w4 w2| [2]
+adox wA, up            | w7" up+w6 rp+w8' w1 w0 w3+w9 w5+wB+w4 w2| [2]
+adcx w8, rp            | w7" up+w6' rp w1 w0 w3+w9 w5+wB+w4 w2| [2]
+mulx sc[2], w8, wA     | w7" up+w6' rp w1 w0+wA w3+w9+w8 w5+wB+w4 w2| [2]
+movq w5, sc[11]        | w7" up+w6' rp w1 w0+wA w3+w9+w8 wB+w4| w2| [2]
+movq $0, w5
+adox w5, w7            | w7 up+w6' rp w1 w0+wA w3+w9+w8 wB+w4| w2| [2]
+adcx w6, up            | w7' up rp w1 w0+wA w3+w9+w8 wB+w4| w2| [2]
+ado3(sc[10], w2, w5)   | w7' up rp w1 w0+wA w3+w9+w8 wB+w4|" [3]
+mulx sc[3], w2, w5     | w7' up rp w1+w5 w0+wA+w2 w3+w9+w8 wB+w4|" [3]
+movq $0, w6
+adcx w6, w7            | w7 up rp w1+w5 w0+wA+w2 w3+w9+w8 wB+w4|" [3]
+ado3(sc[11], wB, w6)   | w7 up rp w1+w5 w0+wA+w2 w3+w9+w8" w4| [3]
+mulx sc[4], w6, wB     | w7 up rp+wB w1+w5+w6 w0+wA+w2 w3+w9+w8" w4| [3]
+movq w7, t0            | t0 up rp+wB w1+w5+w6 w0+wA+w2 w3+w9+w8" w4| [3]
+movq sc[11], w7        | t0 up rp+wB w1+w5+w6 w0+wA+w2 w3+w9+w8" w4+w7 [3]
+adcx w7, w4            | t0 up rp+wB w1+w5+w6 w0+wA+w2 w3+w9+w8"' w4 [3]
+movq w4, sc[11]        | t0 up rp+wB w1+w5+w6 w0+wA+w2 w3+w9+w8"' [4]
+movq t2, w4
+adox w9, w3            | t0 up rp+wB w1+w5+w6 w0+wA+w2" w3+w8' [4]
+mulx sc[5], w7, w9     | t0 up+w9 rp+wB+w7 w1+w5+w6 w0+wA+w2" w3+w8' [4]
+adcx w8, w3            | t0 up+w9 rp+wB+w7 w1+w5+w6 w0+wA+w2"' w3 [4]
+adox wA, w0            | t0 up+w9 rp+wB+w7 w1+w5+w6" w0+w2' w3 [4]
+mulx sc[6], w8, wA     | t0+wA up+w9+w8 rp+wB+w7" w1+w6 w0+w2' w3 [4]
+adox w5, w1
+movq t0, w5            | wA+w5 up+w9+w8 rp+wB+w7" w1+w6 w0+w2' w3 [4]
+adcx w2, w0            | wA+w5 up+w9+w8 rp+wB+w7" w1+w6' w0 w3 [4]
+mulx sc[7], w2, dd     | dd wA+w5+w2 up+w9+w8 rp+wB+w7" w1+w6' w0 w3 [4]
+adox wB, rp            | dd wA+w5+w2 up+w9+w8" rp+w7 w1+w6' w0 w3 [4] w4=rp
+adcx w6, w1            | dd wA+w5+w2 up+w9+w8" rp+w7' w1 w0 w3 [4] w4=rp
+movq w1, t1            | dd wA+w5+w2 up+w9+w8" rp+w7' t1 t2 w3 [4] w4=rp
+movq sc[8], w1
+movq sc[9], w6
+movq sc[10], wB
+movq w0, t2            | dd wA+w5+w2 up+w9+w8" rp+w7' t1 t2 w3 .. wB w6 w1  w4=rp
+movq sc[11], w0        | dd wA+w5+w2 up+w9+w8" rp+w7' t1 t2 w3 w0 wB w6 w1  w4=rp
+movq w4[0], t0         | prefetch r[0]
+adox w9, up            | dd wA+w5+w2" up+w8 rp+w7' t1 t2 w3 w0 wB w6 w1  w4=rp
+adcx w7, rp            | dd wA+w5+w2" up+w8' rp t1 t2 w3 w0 wB w6 w1  w4=rp
+                       | possible delay 1 tick
+adox wA, w5            | dd" w5+w2 up+w8' rp t1 t2 w3 w0 wB w6 w1  w4=rp
+adcx w8, up            | dd" w5+w2' up rp t1 t2 w3 w0 wB w6 w1  w4=rp
+movq $0, w8            | dd" w5+w2' up rp t1 t2 w3 w0 wB w6 w1  w4=rp w8=0
+adox w8, dd            | dd w5+w2' up rp t1 t2 w3 w0 wB w6 w1  w4=rp w8=0
+ado3(w4[0], w1, w7)    | dd w5+w2' up rp t1 t2 w3 w0 wB w6 [1]  w4=rp w8=0
+adcx w5, w2            | dd' w2 up rp t1 t2 w3 w0 wB w6" [1]  w4=rp w8=0
+ado3(w4[1], w6, w5)    | dd' w2 up rp t1 t2 w3 w0 wB" [2]  w4=rp w8=0
+movq t2, w6            | dd' w2 up rp t1 w6 w3 w0 wB" [2]  w4=rp w8=0
+adcx w8, dd            | dd w2 up rp t1 w6 w3 w0 wB" [2]  w4=rp w8=0
+movq t1, w5            | w8 w8 w8 dd w2 up rp w5 w6 w3 w0 wB" [2]  w4=rp
+ado3(w4[2], wB, w7)    | w8 w8 w8 dd w2 up rp w5 w6 w3 w0" [3]  w4=rp
+ado3(w4[3], w0, w7)    | w8 w8 w8 dd w2 up rp w5 w6 w3" [4]  w4=rp
+ado3(w4[4], w3, w0)    | w8 w8 w8 dd w2 up rp w5 w6" [5]  w4=rp
+ado3(w4[5], w6, w0)    | w8 w8 w8 dd w2 up rp w5" [6]  w4=rp
+ado3(w4[6], w5, w0)    | w8 w8 w8 dd w2 up rp" [7]  w4=rp
+movq $0, w5            | w5 w5 w5 dd w2 up rp" [7]  w4=rp
+ado3(w4[7], rp, w0)    | w5 w5 w5 dd w2 up" [8]  w4=rp
+ado3(w4[8], up, w0)    | w5 w5 w5 dd w2" [9]  w4=rp
+ado3(w4[9], w2, w0)    | w5 w5 w5 dd" [10]  w4=rp
+ado3(w4[10], dd, w0)   | w5 w5 w5" [11]  w4=rp
+ado3(w4[11], w5, w0)
+ado3(w4[12], w5, w0)
+ado3(w4[13], w5, w0)
+'''
+
 import re, sys
 sys.dont_write_bytecode = 1
 
@@ -162,11 +317,11 @@ def evaluate_row(s):
                 'adox %s, %s' % (m.group(2), m.group(3)),\
                 evaluate_row('movq %s, %s' % (m.group(3), m.group(1)))[0]\
                ]
-    
+
     m = g_sc_patt.search(s)
     if m:
-        s = s.replace(m.group(), ('st[%s]' % (int(m.group(1)) - 11)))
-    
+        s = s.replace(m.group(), ('st[%s]' % (int(m.group(1)) - g_sc_shift)))
+
     m = g_array_patt.search(s)
     if m:
         k = int(m.group(2))
@@ -174,7 +329,7 @@ def evaluate_row(s):
             s = s.replace(m.group(), '%s(%s)' % (8 * k, m.group(1)))
         else:
             s = s.replace(m.group(), '(%s)' % m.group(1))
-    
+
     return [s]
 
 def do_it(o, code, var_map):

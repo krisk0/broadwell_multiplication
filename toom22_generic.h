@@ -1362,7 +1362,7 @@ addmul_8x3_slow(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
 }
 
 /*
-244 ticks on Broadwell, 2 ticks faster than __gmpn_mul_basecase(11)
+242 ticks on Broadwell, 1 ticks faster than __gmpn_mul_basecase(11)
 228 ticks on Ryzen, 15 ticks slower than __gmpn_mul_basecase(11)
 */
 void
