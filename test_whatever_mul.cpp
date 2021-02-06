@@ -2,10 +2,6 @@
 
 #include <gmp.h>
 
-extern "C" {
-void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
-}
-
 #include "toom22_generic.h"
 
 #if defined(EXTRA_INCLUDE)
@@ -15,6 +11,11 @@ void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 #ifndef TESTED
     #error TESTED not defined
 #endif
+
+extern "C" {
+void __gmpn_mul_basecase(mp_ptr, mp_srcptr, mp_size_t, mp_srcptr, mp_size_t);
+void TESTED(mp_ptr, mp_srcptr, mp_srcptr);
+}
 
 #define GOOD(r, u, v) __gmpn_mul_basecase(r, u, SIZE, v, SIZE)
 #define BAAD(r, u, v) TESTED(r, u, v)
