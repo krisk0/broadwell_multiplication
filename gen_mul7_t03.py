@@ -75,6 +75,7 @@ mulx 48(up), w5, dd      | dd w0+wB+w5" w9+w6 w3+w7' w1 w2 w4 {2} w8=v[2]
 movq $0, wA              | dd w0+wB+w5" w9+w6 w3+w7' w1 w2 w4 {2} w8=v[2]  wA=0
 adcx w7, w3              | dd w0+wB+w5" w9+w6' w3 w1 w2 w4 {2} w8=v[2] wA=0
 adox wB, w0              | dd" w0+w5 w9+w6' w3 w1 w2 w4 {2} w8=v[2] wA=0
+| TODO: dd is not ready, try to do without `xchg dd, smth` and benchmark
 xchg dd, w8              | w8" w0+w5 w9+w6' w3 w1 w2 w4 {2} wA=0
 '''
 
