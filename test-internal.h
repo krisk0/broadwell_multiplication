@@ -9,7 +9,9 @@
     INT g_v[SIZE];
 #endif
 INT g_good[SIZE * 2];
-INT g_baad[SIZE * 2];
+#ifndef R_ALREADY_DEFINED
+    INT g_baad[SIZE * 2];
+#endif
 
 void
 junior_words(INT* t, unsigned x) {
