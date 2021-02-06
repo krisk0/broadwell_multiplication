@@ -312,10 +312,10 @@ g_sc_patt = re.compile(r'sc\[(.+)\]')
 def evaluate_row(s):
     m = g_ado3_patt.match(s)
     if m:
-        return [\
-                evaluate_row('movq %s, %s' % (m.group(1), m.group(3)))[0],\
-                'adox %s, %s' % (m.group(2), m.group(3)),\
-                evaluate_row('movq %s, %s' % (m.group(3), m.group(1)))[0]\
+        return [
+                evaluate_row('movq %s, %s' % (m.group(1), m.group(3)))[0],
+                'adox %s, %s' % (m.group(2), m.group(3)),
+                evaluate_row('movq %s, %s' % (m.group(3), m.group(1)))[0]
                ]
 
     m = g_sc_patt.search(s)
