@@ -478,10 +478,13 @@ def save_registers_in_xmm(cc, s0):
         if not m:
             continue
         m = m.group(1)
-        t = '%%xmm%s' % s0
-        s0 -= 1
+        try:
+            t = result[m]
+        except:
+            t = '%%xmm%s' % s0
+            s0 -= 1
+            result[m] = t
         cc[i] = 'movq %s, %s' % (m, t)
-        result[m] = t
     return result
 
 def composition(a, b):
