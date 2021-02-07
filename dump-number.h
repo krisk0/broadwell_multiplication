@@ -19,8 +19,20 @@
     #define INT uint64_t
 #endif
 
+unsigned
+senior_zeroes(const INT* p, unsigned n) {
+    unsigned i;
+    for(i = n; i--;) {
+        if(p[i]) {
+            return n - 1 - i;
+        }
+    }
+    return n - 1;
+}
+
 void
 dump_number(const INT* p, unsigned n) {
+    n -= senior_zeroes(p, n);
     for(unsigned i = n; i--;) {
         printf("%X:" PRINTF_FORMAT " ", i, p[i]);
     }
