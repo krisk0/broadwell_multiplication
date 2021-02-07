@@ -36,7 +36,7 @@ vzeroupper
 movq up, w0
 sub $@stack_taken, sp
 and $0xF, w0
-jz .u_align_0
+jz u_align_0
 movq up[0], w0
 movq up[1], w1
 !save w7
@@ -63,8 +63,8 @@ movq w7, sp[7]
 movq w8, sp[8]
 movq w9, sp[9]
 movq wC, sp[10]
-jmp .done_memcpy_u
-.u_align_0:
+jmp done_memcpy_u
+u_align_0:
 dqa_or_aps up[0], x0
 if !amd: movq up[10], w0
 dqa_or_aps up[2], x1                | movdqa on Broadwell, movaps on Ryzen
@@ -81,7 +81,7 @@ movaps x2, sp[4]
 movaps x3, sp[6]
 !save w9
 movaps x4, sp[8]
-.done_memcpy_u:
+done_memcpy_u:
 !save wA
 '''
 
@@ -90,7 +90,7 @@ movq dd, w0
 and $0xF, dd
 !save wB
 movq w0[0], dd
-jz .v_align_0
+jz v_align_0
 dqa_or_aps w0[1], x0        | x0=v[1..2]
 dqa_or_aps w0[3], x1        | x1=v[3..4]
 dqa_or_aps w0[5], x2        | x2=v[5..6]
@@ -99,7 +99,7 @@ dqa_or_aps w0[9], x4        | x4=v[9..10]
 '''
 
 g_v_load_0 = '''
-.v_align_0:
+v_align_0:
 movq w0[1], x0              | x0=v[1]
 dqa_or_aps w0[2], x1        | x1=v[2..3]
 dqa_or_aps w0[4], x2        | x2=v[4..5]
@@ -144,7 +144,7 @@ data lies like that: sC sA+sB s7+s9 s6+s0 s4+s5 s2+s3' s1 [4+i] dd=v[i]
 g_mul_1_zen = '''
                         | sC sA+sB s7+s9 s6+s0 s4+s5 s2+s3' s1 [4+i]
 mulx sp[0], s8, sD      | sC sA+sB s7+s9 s6+s0 s4+s5 s2+s3' s1 .. .. sD| s8| [i]
-movq s1, rr[i+5]        | sC sA+sB s7+s9 s6+s0 s4+s5 s2+s3' .. .. .. sD| s8| [i]
+movq s1, rr[i+4]        | sC sA+sB s7+s9 s6+s0 s4+s5 s2+s3' .. .. .. sD| s8| [i]
 adcx s3, s2             | sC sA+sB s7+s9 s6+s0 s4+s5' s2 .. .. .. sD| s8| [i]
 mulx sp[1], s1, s3      | sC sA+sB s7+s9 s6+s0 s4+s5' s2 .. .. s3| sD+s1| s8| [i]
 movq s2, rr[i+5]        | sC sA+sB s7+s9 s6+s0 s4+s5' .. .. .. s3| sD+s1| s8| [i]
@@ -287,27 +287,27 @@ movq s1, rr[i+7]      | s3 sD+s8+s7 s9+s5+s6 s0+sA+sC" s2| sB|' [i+6]
 '''
 
 """
-old sD sC+s9+sB sA+s4+s0 s7+s5+s2" s1| s3| == s6 s8'
-new sB sD+s8+s7 s9+s5+s6 s0+sA+sC" s2| sB| == s1 s4'
+old sD sC+s9+sB sA+s4+s0 s7+s5+s2" s1| s3|' == s6 s8
+new s3 sD+s8+s7 s9+s5+s6 s0+sA+sC" s2| sB|' == s1 s4
               0 1 2 3 4 5 6 7 8 9 A B C D                             """
 g_perm_zen = '6 2 C B 5 A 1 0 4 8 9 7 D 3'
 
 g_mul_9_zen_piece2 = '''
-                        | s8=w5=rcx, i=9
-                        | sD s9 s0+sA s2+s7+s1 sB+s3|" s6| sC|' [13] s4=v[i+1]
-| adc3(rr[i+4], sC, s8) | w3 w6 wA+w4 w8+w1+w0 w2+wB|" wC| w7|' [13] w9=v[i+1]
-movq x0, w5           | w3 w6 wA+w4 w8+w1+w0 w2+wB|" wC| w7|' [13] w9=v[i+1] w5
-movq w3, rr[16]       | ^7 w6 wA+w4 w8+w1+w0 w2+wB|" wC| w7|' [13] w9=v[i+1] w5
-mulx sp[8], w3, wD    | ^7 w6+wD wA+w4+w3 w8+w1+w0 w2+wB|" wC| w7|' [13] w9 w5
-adox wB, w2           | ^7 w6+wD wA+w4+w3 w8+w1+w0" w2| wC| w7|' [13] w9 w5
-adc3(rr[13], w7, wB)  | ^7 w6+wD wA+w4+w3 w8+w1+w0" w2| wC|' [14] w9 w5
-mulx sp[9], w7, wB    | ^7+wB w6+wD+w7 wA+w4+w3 w8+w1+w0" w2| wC|' [14] w9 w5
-adox w8, w1           | ^7+wB w6+wD+w7 wA+w4+w3" w1+w0 w2| wC|' [14] w9 w5
-adc3(rr[14], wC, w8)  | ^7+wB w6+wD+w7 wA+w4+w3" w1+w0 w2|' [15] w9 w5
-mulx sp[10], w8, wC   | wC ^7+wB+w8 w6+wD+w7 wA+w4+w3" w1+w0 w2|' [15] w9 w5
-movq w9, dd           | wC ^7+wB+w8 w6+wD+w7 wA+w4+w3" w1+w0 w2|' [15] w5=rp & 0xF
-adox wA, w4           | wC ^7+wB+w8 w6+wD+w7" w4+w3 w1+w0 w2|' [15] w5=rp & 0xF
-mulx sp[0], w9, wA    | wC ^7+wB+w8 w6+wD+w7" w4+w3 w1+w0 w2|' [3] wA| w9| [10] w5
+| s0->WB s1->W0 s2->W6 s3->WC s4->WA s5->W9 s6->W7 s7->W3 s8->W5 s9->W4 sA->W8 sB->WD sC->W1 sD->W2
+| After adc3(rr[i+4], sC, s8):
+|                              sD s9 s0+sA s2+s7+s1 sB+s3|" s6|' == s4=v[10]
+|                              w2 w4 wB+w8 w6+w3+w0 wD+wC|" w7|' == wA=v[10]
+|                              s8=w5=rcx, i=9
+movq x0, w5           | w2 w4 wB+w8 w6+w3+w0 wD+wC|" w7|' == wA=v[10] w5=jump_cond
+adox wD, wC           | w2 w4 wB+w8 w6+w3+w0" wC| w7|' == wA=v[10] w5=jump_cond
+mulx sp[8], w1, w9    | w2 w4+w9 wB+w8+w1 w6+w3+w0" wC| w7|' == wA=v[10] w5=jump_cond
+adox w6, w3           | w2 w4+w9 wB+w8+w1" w3+w0 wC| w7|' [14] wA w5
+adc3(rr[i+5], w7, w6) | w2 w4+w9 wB+w8+w1" w3+w0 wC|' [15] wA=v[10] w5=jump_cond
+mulx sp[9], w6, w7    | w2+w7 w4+w9+w6 wB+w8+w1" w3+w0 wC|' [15] wA w5
+adox wB, w8           | w2+w7 w4+w9+w6" w8+w1 w3+w0 wC|' [15] wA w5
+adc3(rr[i+6], wC, wD) | w2+w7 w4+w9+w6" w8+w1 w3+w0' [16] wA w5
+mulx sp[10], wC, wD   | wD w2+w7+wC w4+w9+w6" w8+w1 w3+w0' [16] wA w5
+movq wA, dd           | wD w2+w7+wC w4+w9+w6" w8+w1 w3+w0' [16] w5=jump_cond
 if !aligned: jrcxz mul_10_aligned_gate_0 | one extra jump due to limitiation of jrcxz
 if aligned: jrcxz mul_10_aligned_gate_1
 jmp mul_10_unaligned
@@ -319,119 +319,128 @@ jmp mul_10_aligned
 g_mul_10_zen = '''
 if aligned: mul_10_aligned:
 if !aligned: mul_10_unaligned:
-                      | wC ^6+wB+w8 w6+wD+w7" w4+w3 w1+w0 w2|' [3] wA| w9| [10]
+                      | wD w2+w7+wC w4+w9+w6" w8+w1 w3+w0' [16]
 movq rr[0], x2
 if !aligned: movq rr[9], x0 | x0 [9]
-movq rr[15], w5       | wC ^6+wB+w8 w6+wD+w7" w4+w3 w1+w0 w2+w5' [3] wA| w9| [10]
-adcx w5, w2           | wC ^6+wB+w8 w6+wD+w7" w4+w3 w1+w0' w2 [3] wA| w9| [10]
-adox wD, w6           | wC ^6+wB+w8" w6+w7 w4+w3 w1+w0' w2 [3] wA| w9| [10]
-mulx sp[1], w5, wD    | wC ^6+wB+w8" w6+w7 w4+w3 w1+w0' w2 [2] wD| wA+w5| w9| [10]
-adcx w1, w0           | wC ^6+wB+w8" w6+w7 w4+w3' w0 w2 [2] wD| wA+w5| w9| [10]
-movq rr[16], w1       | wC w1+wB+w8" w6+w7 w4+w3' w0 w2 [2] wD| wA+w5| w9| [10]
-adox wB, w1           | wC" w1+w8 w6+w7 w4+w3' w0 w2 [2] wD| wA+w5| w9| [10]
-movq w2, rr[15]       | wC" w1+w8 w6+w7 w4+w3' w0 [3] wD| wA+w5| w9| [10]
-mulx sp[2], w2, wB    | wC" w1+w8 w6+w7 w4+w3' w0 [2] wB| wD+w2| wA+w5| w9| [10]
-adcx w4, w3           | wC" w1+w8 w6+w7' w3 w0 [2] wB| wD+w2| wA+w5| w9| [10]
-movq $0, w4
-adox w4, wC           | wC w1+w8 w6+w7' w3 w0 [2] wB| wD+w2| wA+w5| w9| [10]
-movq w0, rr[15]       | wC w1+w8 w6+w7' w3 [3] wB| wD+w2| wA+w5| w9| [10]
-mulx sp[3], w0, w4    | wC w1+w8 w6+w7' w3 [2] w4| wB+w0| wD+w2| wA+w5| w9| [10]
-adcx w7, w6           | wC w1+w8' w6 w3 [2] w4| wB+w0| wD+w2| wA+w5| w9| [10]
-if aligned: movq rr[1], w7
-if aligned: pinsrq $1, w7, x2 | x2=rr[0..1]
-movq rr[10], w7       | wC w1+w8' w6 w3 [2] w4| wB+w0| wD+w2| wA+w5| w9+w7 [10]
-adox w9, w7           | wC w1+w8' w6 w3 [2] w4| wB+w0| wD+w2| wA+w5|" w7 [10]
-if aligned: movq w7, x0 | x0 [10]
-if !aligned: pinsrq $1, w7, x0 | x0_x0 [9]
-                      | wC w1+w8' w6 w3 [2] w4| wB+w0| wD+w2| wA+w5|" [11]
-mulx sp[4], w7, w9    | wC w1+w8' w6 w3 .. w9| w4+w7| wB+w0| wD+w2| wA+w5|" [11]
-adcx w8, w1           | wC' w1 w6 w3 .. w9| w4+w7| wB+w0| wD+w2| wA+w5|" [11]
-adox wA, w5           | wC' w1 w6 w3 .. w9| w4+w7| wB+w0| wD+w2|" w5| [11]
-mulx sp[5], w8, wA    | wC' w1 w6 w3 wA| w9+w8| w4+w7| wB+w0| wD+w2|" w5| [11]
-adox wD, w2           | wC' w1 w6 w3 wA| w9+w8| w4+w7| wB+w0|" w2| w5| [11]
-movq $0, wD
-adcx wD, wC           | wC w1 w6 w3 wA| w9+w8| w4+w7| wB+w0|" w2| w5| [11]
-adox wB, w0           | wC w1 w6 w3 wA| w9+w8| w4+w7|" w0| w2| w5| [11]
-movq rr[11], wD       | wC w1 w6 w3 wA| w9+w8| w4+w7|" w0| w2| w5+wD [11]
-adcx wD, w5           | wC w1 w6 w3 wA| w9+w8| w4+w7|" w0| w2|' w5 [11]
-mulx sp[6], wB, wD    | wC w1 w6 w3+wD wA+wB| w9+w8| w4+w7|" w0| w2|' w5 [11]
-if aligned: pinsrq $1, w5, x0 |    x0_x0 [10]
-if !aligned: movq w5, rr[11] |   x0_x0 [9]
-                      | wC w1 w6 w3+wD wA+wB| w9+w8| w4+w7|" w0| w2|' [12]
-movq rr[12], w5       | wC w1 w6 w3+wD wA+wB| w9+w8| w4+w7|" w0| w2+w5' [12]
-adox w7, w4           | wC w1 w6 w3+wD wA+wB| w9+w8|" w4| w0| w2+w5' [12]
-adcx w5, w2           | wC w1 w6 w3+wD wA+wB| w9+w8|" w4| w0|' w2 [12]
-if aligned: movq w2, x1 |    x1 x0_x0 [10]
-if !aligned: movq w2, rr[12] |   x0_x0 [9]
-movq x9, w2           | wC w1 w6 w3+wD wA+wB| w9+w8|" w4| w0|' [13] w2
-mulx sp[7], w5, w7    | wC w1 w6+w7 w3+wD+w5 wA+wB| w9+w8|" w4| w0|' [13]
-adox w9, w8           | wC w1 w6+w7 w3+wD+w5 wA+wB|" w8| w4| w0|' [13]
-adc3(rr[13], w0, w9)  | wC w1 w6+w7 w3+wD+w5 wA+wB|" w8| w4|' [14]
-mulx sp[8], w0, w9    | wC w1+w9 w6+w7+w0 w3+wD+w5 wA+wB|" w8| w4|' [14]
-adox wB, wA           | wC w1+w9 w6+w7+w0 w3+wD+w5" wA| w8| w4|' [14]
-adc3(rr[14], w4, wB)  | wC w1+w9 w6+w7+w0 w3+wD+w5" wA| w8|' [15]
-mulx sp[9], wB, w4    | wC+w4 w1+w9+wB w6+w7+w0 w3+wD+w5" wA| w8|' [15]
-adox w3, wD           | wC+w4 w1+w9+wB w6+w7+w0" wD+w5 wA| w8|' [15]
-mulx sp[10], w3, dd   | dd wC+w4+w3 w1+w9+wB w6+w7+w0" wD+w5 wA| w8|' [15]
-adox w7, w6           | dd wC+w4+w3 w1+w9+wB" w6+w0 wD+w5 wA| w8|' [15]
-if aligned: movq rr[13], w7
-if aligned: pinsrq $1, w7, x1 |    x1_x1 x0_x0 [10]
-movq rr[15], w7
-adcx w7, w8           | dd wC+w4+w3 w1+w9+wB" w6+w0 wD+w5 wA|' w8 [15]
-adox w1, w9           | dd wC+w4+w3" w9+wB w6+w0 wD+w5 wA|' w8 [15]
-movq rr[16], w1       | dd wC+w4+w3" w9+wB w6+w0 wD+w5 wA+w1' w8 [15]
-adcx wA, w1           | dd wC+w4+w3" w9+wB w6+w0 wD+w5' w1 w8 [15]
-if aligned: movq rr[14], wA
-movq w8, w2[15]       | :: {15}
-                      | dd wC+w4+w3" w9+wB w6+w0 wD+w5' w1 [16]
-if aligned: movdqa x2, w2[0]  | :: {13} [2]
-if !aligned: movq x2, w2[0]   | :: {14} ::
-if aligned: movdqa x0, w2[10] | :: {3} [2] {8} [2]
-if !aligned: movdqa x0, w2[9] | :: {4} [2] {8} ::
-if aligned: movdqa x1, w2[12] | :: .. [4] {8} [2]
-if aligned: movq wA, w2[14]   | :: [5] {8} [2]
-adox wC, w4           | dd" w4+w3 w9+wB w6+w0 wD+w5' w1 [16]
-adcx wD, w5           | dd" w4+w3 w9+wB w6+w0' w5 w1 [16]
-if aligned: movq rr[2], w8
-if aligned: movq rr[3], x0
-if aligned: movq rr[4], x1
-if aligned: movq rr[5], x2
-if !aligned: movdqa rr[1], x0
-if !aligned: movdqa rr[3], x1
-if !aligned: movdqa rr[5], x2
-if !aligned: movdqa rr[7], x3
-movq $0, wC
-adox wC, dd           | dd w4+w3 w9+wB w6+w0' w5 w1 [16]
-adcx w6, w0           | dd w4+w3 w9+wB' w0 w5 w1 [16] w2
-if aligned: movq rr[6], w6
-if aligned: movq rr[7], wA
-if aligned: movq rr[8], wC
-if aligned: movq rr[9], wD
-xchg w1, w9           | dd w4+w3 w1+wB' w0 w5 w9 [16] w2
-if aligned: movq w8, w2[2]
-if aligned: movq x0, w2[3]
-if aligned: movq x1, w2[4]
-if aligned: movq x2, w2[5]
-if !aligned: movdqa x0, w2[1]
-if !aligned: movdqa x1, w2[3]
-if !aligned: movdqa x2, w2[5]
-if !aligned: movdqa x3, w2[7]
-adcx wB, w1           | dd w4+w3' w1 w0 w5 w9 [16] w2
-if aligned: movq w6, w2[6]
-if aligned: movq wA, w2[7]
-if aligned: movq wC, w2[8]
-if aligned: movq wD, w2[9]
-| TODO: reduce code size by moving .all_done label here
-movq w9, w2[16]       | dd w4+w3' w1 w0 w5 [17] w2
-adcx w4, w3           | dd' w3 w1 w0 w5 [17] w2
-movq w5, w2[17]
-movq w0, w2[18]       | dd' w3 w1 [19]
-movq $0, w5
-adcx w5, dd           | dd w3 w1 [19]
-movq w1, w2[19]
-movq w3, w2[20]
-movq dd, w2[21]
-if !aligned: jmp .all_done
+adox w9, w4           | wD w2+w7+wC" w4+w6 w8+w1 w3+w0' [16]
+adcx w3, w0           | wD w2+w7+wC" w4+w6 w8+w1' w0 [16]
+mulx sp[0], w3, w9    | wD w2+w7+wC" w4+w6 w8+w1' w0 [4] w9| w3| [10]
+adox w7, w2           | wD" w2+wC w4+w6 w8+w1' w0 [4] w9| w3| [10]
+adcx w8, w1           | wD" w2+wC w4+w6' w1 w0 [4] w9| w3| [10]
+mulx sp[1], w7, w8    | wD" w2+wC w4+w6' w1 w0 [3] w8| w9+w7| w3| [10]
+if !aligned: movq $0, w5
+adox w5, wD           | wD w2+wC w4+w6' w1 w0 [3] w8| w9+w7| w3| [10]
+adcx w6, w4           | wD w2+wC' w4 w1 w0 [3] w8| w9+w7| w3| [10]
+mulx sp[2], w5, w6    | wD w2+wC' w4 w1 w0 [2] w6| w8+w5| w9+w7| w3| [10]
+mulx sp[3], wA, wB    | wD w2+wC' w4 w1 w0 .. wB| w6+wA| w8+w5| w9+w7| w3| [10]
+movq wD, rr[0]        | ^^ w2+wC' w4 w1 w0 .. wB| w6+wA| w8+w5| w9+w7| w3| [10]
+movq rr[10], wD       | ^^ w2+wC' w4 w1 w0 .. wB| w6+wA| w8+w5| w9+w7| w3+wD [10]
+adox wD, w3           | ^^ w2+wC' w4 w1 w0 .. wB| w6+wA| w8+w5| w9+w7|" w3 [10]
+if !aligned: pinsrq $1, w3, x0 | x0_x0 [9]
+if aligned: movq w3, x0        | x0 [10]
+                      | ^^ w2+wC' w4 w1 w0 .. wB| w6+wA| w8+w5| w9+w7|" [11]
+movq rr[0], wD        | wD w2+wC' w4 w1 w0 .. wB| w6+wA| w8+w5| w9+w7|" [11]
+adcx wC, w2           | wD' w2 w4 w1 w0 .. wB| w6+wA| w8+w5| w9+w7|" [11]
+mulx sp[4], w3, wC    | wD' w2 w4 w1 w0 wC| wB+w3| w6+wA| w8+w5| w9+w7|" [11]
+adox w9, w7           | wD' w2 w4 w1 w0 wC| wB+w3| w6+wA| w8+w5|" w7| [11]
+movq $0, w9
+adcx w9, wD           | wD w2 w4 w1 w0 wC| wB+w3| w6+wA| w8+w5|" w7| [11]
+movq wD, rr[0]        | ^0 w2 w4 w1 w0 wC| wB+w3| w6+wA| w8+w5|" w7| [11]
+mulx sp[5], w9, wD    | ^0 w2 w4 w1 w0+wD wC+w9| wB+w3| w6+wA| w8+w5|" w7| [11]
+adox w8, w5           | ^0 w2 w4 w1 w0+wD wC+w9| wB+w3| w6+wA|" w5| w7| [11]
+movq rr[11], w8       | ^0 w2 w4 w1 w0+wD wC+w9| wB+w3| w6+wA|" w5| w7+w8 [11]
+adcx w8, w7           | ^0 w2 w4 w1 w0+wD wC+w9| wB+w3| w6+wA|" w5|' w7 [11]
+if !aligned: movq w7, x1       | x1 x0_x0 [9]
+if aligned: pinsrq $1, w7, x0  | x0_x0 [10]
+                      | ^0 w2 w4 w1 w0+wD wC+w9| wB+w3| w6+wA|" w5|' [12]
+mulx sp[6], w7, w8    | ^0 w2 w4 w1+w8 w0+wD+w7 wC+w9| wB+w3| w6+wA|" w5|' [12]
+adox wA, w6           | ^0 w2 w4 w1+w8 w0+wD+w7 wC+w9| wB+w3|" w6| w5|' [12]
+movq rr[12], wA       | ^0 w2 w4 w1+w8 w0+wD+w7 wC+w9| wB+w3|" w6| w5+wA' [12]
+adcx wA, w5           | ^0 w2 w4 w1+w8 w0+wD+w7 wC+w9| wB+w3|" w6|' w5 [12]
+movq w5, x3           | ^0 w2 w4 w1+w8 w0+wD+w7 wC+w9| wB+w3|" w6|' [13]
+| if !aligned:                   x3 x1 x0_x0 [9]
+| if aligned:                    x3 x0_x0 [10]
+mulx sp[7], wA, w5    | ^0 w2 w4+w5 w1+w8+wA w0+wD+w7 wC+w9| wB+w3|" w6|' [13]
+adox wB, w3           | ^0 w2 w4+w5 w1+w8+wA w0+wD+w7 wC+w9|" w3| w6|' [13]
+movq rr[13], wB       | ^0 w2 w4+w5 w1+w8+wA w0+wD+w7 wC+w9|" w3| w6+wB' [13]
+adcx wB, w6           | ^0 w2 w4+w5 w1+w8+wA w0+wD+w7 wC+w9|" w3|' w6 [13]
+movq w6, x4           | ^0 w2 w4+w5 w1+w8+wA w0+wD+w7 wC+w9|" w3|' [14]
+| if !aligned:                   x4 x3 x1 x0_x0 [9]
+| if aligned:                    x4 x3 x0_x0 [10]
+mulx sp[8], w6, wB    | ^0 w2+wB w4+w5+w6 w1+w8+wA w0+wD+w7 wC+w9|" w3|' [14]
+adox w9, wC           | ^0 w2+wB w4+w5+w6 w1+w8+wA w0+wD+w7" wC| w3|' [14]
+movq rr[14], w9       | ^0 w2+wB w4+w5+w6 w1+w8+wA w0+wD+w7" wC| w3+w9' [14]
+adcx w9, w3           | ^0 w2+wB w4+w5+w6 w1+w8+wA w0+wD+w7" wC|' w3 [14]
+movq w3, x5           | ^0 w2+wB w4+w5+w6 w1+w8+wA w0+wD+w7" wC|' [15]
+| if !aligned:                   x5 x4 x3 x1 x0_x0 [8] x2
+| if aligned:                    x5 x4 x3 x0_x0 [10]
+if !aligned: movdqa rr[1], x6  | x5 x4 x3 x1 x0_x0 [6] x6_x6 x2
+if aligned: movq rr[1], w3
+if aligned: pinsrq $1, w3, x2  | x5 x4 x3 x0_x0 [8] x2_x2
+mulx sp[9], w9, w3    | ^0+w3 w2+wB+w9 w4+w5+w6 w1+w8+wA w0+wD+w7" wC|' [15]
+adox wD, w0           | ^0+w3 w2+wB+w9 w4+w5+w6 w1+w8+wA" w0+w7 wC|' [15]
+movq rr[15], wD       | ^0+w3 w2+wB+w9 w4+w5+w6 w1+w8+wA" w0+w7 wC+wD' [15]
+adcx wD, wC           | ^0+w3 w2+wB+w9 w4+w5+w6 w1+w8+wA" w0+w7' wC [15]
+mulx sp[10], wD, dd   | dd ^0+w3+wD w2+wB+w9 w4+w5+w6 w1+w8+wA" w0+w7' wC [15]
+adox w1, w8           | dd ^0+w3+wD w2+wB+w9 w4+w5+w6" w8+wA w0+w7' wC [15]
+movq x9, w1           | dd ^0+w3+wD w2+wB+w9 w4+w5+w6" w8+wA w0+w7' wC [15] w1=rp
+adcx w0, w7           | dd ^0+w3+wD w2+wB+w9 w4+w5+w6" w8+wA' w7 wC [15] w1=rp
+movq rr[0], w0        | dd w0+w3+wD w2+wB+w9 w4+w5+w6" w8+wA' w7 wC [15] w1=rp
+if !aligned: movdqa rr[3], x7  | x5 x4 x3 x1 x0_x0 [4] x7_x7 x6_x6 x2
+if aligned: movq rr[2], x6   | x5 x4 x3 x0_x0 [7] x6 x2_x2
+adox w5, w4           | dd w0+w3+wD w2+wB+w9" w4+w6 w8+wA' w7 wC [15] w1=rp
+if !aligned: movdqa rr[5], x8  | x5 x4 x3 x1 x0_x0 [2] x8_x8 x7_x7 x6_x6 x2
+if aligned: movq rr[3], x7   | x5 x4 x3 x0_x0 [6] x7 x6 x2_x2
+adcx wA, w8           | dd w0+w3+wD w2+wB+w9" w4+w6' w8 w7 wC [15] w1=rp
+if !aligned: movdqa rr[7], x9  | x5 x4 x3 x1 x0_x0 x9_x9 x8_x8 x7_x7 x6_x6 x2
+if aligned: movq rr[3], x7     | x5 x4 x3 x0_x0 [6] x7 x6 x2_x2
+adox wB, w2           | dd w0+w3+wD" w2+w9 w4+w6' w8 w7 wC [15] w1=rp
+if aligned: movq rr[4], x8     | x5 x4 x3 x0_x0 [5] x8 x7 x6 x2_x2
+adcx w6, w4           | dd w0+w3+wD" w2+w9' w4 w8 w7 wC [15] w1=rp
+if aligned: movq rr[5], x9     | x5 x4 x3 x0_x0 [4] x9 x8 x7 x6 x2_x2
+adox w3, w0           | dd" w0+wD w2+w9' w4 w8 w7 wC [15] w1=rp
+if aligned: movq rr[6], w2     | x5 x4 x3 x0_x0 [3] w2 x9 x8 x7 x6 x2_x2
+adcx w9, w2           | dd" w0+wD' w2 w4 w8 w7 wC [15] w1=rp
+if !aligned: movq x2, w1[0]    | x5 x4 x3 x1 x0_x0 x9_x9 x8_x8 x7_x7 x6_x6 [1]
+if aligned: movq rr[7], w3     | x5 x4 x3 x0_x0 [2] w3 w2 x9 x8 x7 x6 x2_x2
+movq $0, w5           | dd" w0+wD' w2 w4 w8 w7 wC [15] w1 w2 w3 w5
+adox w5, dd           | dd w0+wD' w2 w4 w8 w7 wC [15] w1 w2 w3 w5
+if aligned: movq rr[8], w6     | x5 x4 x3 x0_x0 .. w6 w3 w2 x9 x8 x7 x6 x2_x2
+adcx wD, w0           | dd' w0 w2 w4 w8 w7 wC [15] w1 w2 w3 w5
+if aligned: movq rr[9], wD     | x5 x4 x3 x0_x0 wD w6 w3 w2 x9 x8 x7 x6 x2_x2
+if !aligned: movdqa x6, w1[1]  | x5 x4 x3 x1 x0_x0 x9_x9 x8_x8 x7_x7 [3]
+if !aligned: movdqa x7, w1[3]  | x5 x4 x3 x1 x0_x0 x9_x9 x8_x8 [5]
+if aligned: movdqa x2, w1[0]   | x5 x4 x3 x0_x0 wD w6 w3 w2 x9 x8 x7 x6 [2]
+if aligned: movq x6, w1[2]     | x5 x4 x3 x0_x0 wD w6 w3 w2 x9 x8 x7 [3]
+if aligned: movq x7, w1[3]     | x5 x4 x3 x0_x0 wD w6 w3 w2 x9 x8 [4]
+adcx w5, dd           | dd w0 w2 w4 w8 w7 wC [15]
+movq w8, w5           | dd w0 w2 w4 w5 w7 wC [15]
+if !aligned: movdqa x8, w1[5]  | x5 x4 x3 x1 x0_x0 x9_x9 [7]
+if !aligned: movdqa x9, w1[7]  | x5 x4 x3 x1 x0_x0 [9]
+if !aligned: movdqa x0, w1[9]  | x5 x4 x3 x1 [11]
+if !aligned: movq x1, w1[11]  | x5 x4 x3 [12]
+if !aligned: movq x3, w1[12]  | x5 x4 [13]
+if !aligned: movq x4, w1[13]  | x5 [14]
+if !aligned: movq x5, w1[14]
+if aligned: movq x8, w1[4]     | x5 x4 x3 x0_x0 wD w6 w3 w2 x9 [5]
+if aligned: movq x9, w1[5]     | x5 x4 x3 x0_x0 wD w6 w3 w2 [6]
+if aligned: movq w2, w1[6]     | x5 x4 x3 x0_x0 wD w6 w3 [7]
+if aligned: movq w3, w1[7]     | x5 x4 x3 x0_x0 wD w6 [8]
+if aligned: movq w6, w1[8]     | x5 x4 x3 x0_x0 wD [9]
+if aligned: movq wD, w1[9]     | x5 x4 x3 x0_x0 [10]
+if aligned: movdqa x0, w1[10]  | x5 x4 x3 [12]
+if aligned: movq x3, w1[12]  | x5 x4 [13]
+if aligned: movq x4, w1[13]  | x5 [14]
+if aligned: movq x5, w1[14]
+movq wC, w1[15]       | dd w0 w2 w4 w5 w7 [16]
+movq w7, w1[16]       | dd w0 w2 w4 w5 [17]
+movq w5, w1[17]       | dd w0 w2 w4 [18]
+movq w4, w1[18]       | dd w0 w2 [19]
+movq w2, w1[19]       | dd w0 [20]
+movq w0, w1[20]       | dd [20]
+movq dd, w1[21]
+if !aligned: jmp all_done
+| TODO: reduce code size by sharing 7 movq lines above
 '''
 
 g_mul_2_bwl = '''
@@ -496,8 +505,8 @@ adox sB, s6           | sD s7+sA+s4 s8+s5+s1" s6+s2 s9+s3' s0 [i+6]
 '''
 
 """
-old s7 sC+s9+s5 s8+sB+s1" s3+sA s2+s0' s4
-new sD s7+sA+s4 s8+s5+s1" s6+s2 s9+s3' s0
+old s7 sC+s9+s5 s8+sB+s1" s3+sA s2+s0' s4 == s6 sD
+new sD s7+sA+s4 s8+s5+s1" s6+s2 s9+s3' s0 == sC sB
               0 1 2 3 4 5 6 7 8 9 A B C D"""
 g_perm_bwl = '3 1 9 6 0 4 C D 8 A 2 5 7 B'
 
@@ -641,7 +650,7 @@ if !aligned: movdqa x3, w5[7]
 if !aligned: movdqa x4, w5[9]
 if aligned: movdqa x4, w5[8]
 movq dd, w5[21]
-if !aligned: jmp .all_done
+if !aligned: jmp all_done
 '''
 
 def extract_v(t, i, a):
@@ -739,6 +748,11 @@ def chew_code(src, amd, i, aligned, p):
 
     if i:
         rr = ['# mul_add %s' % i]
+        if p:
+            e = '# '
+            for x in range(len(p)):
+                e += 's%X->W%X ' % (x, p[x])
+            rr.append(e)
     else:
         rr = []
 
@@ -748,7 +762,13 @@ def chew_code(src, amd, i, aligned, p):
             rr += k
 
     if p:
-        return [E.apply_s_permutation(x, p) for x in rr]
+        re = []
+        for x in rr:
+            if x[0] == '#':
+                re.append(x)
+            else:
+                re.append(E.apply_s_permutation(x, p))
+        return re
     return rr
 
 def cook_asm(o, code, var_map):
@@ -833,28 +853,33 @@ def do_it(o, amd):
     code = re.sub(r'\bwD\b', 'rp', code)
     code = code.split('\n')
 
-    code += ['.all_done:', 'add $%s,sp' % g_stack_taken]
+    code += ['all_done:', 'add $%s,sp' % g_stack_taken]
     cook_asm(o, code, var_map)
 
 def show_postcondition():
     p = list(range(0xD + 1))
     q = [int(x, 16) for x in g_perm_bwl.split(' ')]
+    b = '''s7 sC+s9+s5 s8+sB+s1" s3+sA s2+s0' s4 == s6 sD'''
     l = '''sD s7+sA+s4 s8+s5+s1" s6+s2 s9+s3' s0 == sC sB'''
     l9 = '''sD sA+s4+s2 s8+s5+sB" s6+s1 s9+s7' sC'''
     print 'Broadwell'
     for i in range(2, 10):
-        print 'i=%X' % i, E.apply_s_permutation(l, p)
+        print 'i=%X pre' % i, E.apply_s_permutation(b, p)
         if i == 9:
             print E.apply_s_permutation(l9, p)
+        print 'i=%X pst' % i, E.apply_s_permutation(l, p)
         p = P.composition(p, q)
-    l = '''sB sD+s8+s7 s9+s5+s6 s0+sA+s4" s2| s7|' == s1 sC'''
-    l9 = '''sD s9 s0+sA s2+s7+s1 sB+s3|" s6| sC|' [i+4] s4=v[i+1]'''
+    p = list(range(0xD + 1))
+    b = '''sD sC+s9+sB sA+s4+s0 s7+s5+s2" s1| s3|' == s6 s8'''
+    l = '''s3 sD+s8+s7 s9+s5+s6 s0+sA+sC" s2| sB|' == s1 s4'''
+    l9 = '''sD s9 s0+sA s2+s7+s1 sB+s3|" s6|' == s4=v[10]'''
     q = [int(x, 16) for x in g_perm_zen.split(' ')]
     print '\nZen'
     for i in range(2, 10):
-        print 'i=%X' % i, E.apply_s_permutation(l, p)
+        print 'i=%X pre' % i, E.apply_s_permutation(b, p)
         if i == 9:
             print E.apply_s_permutation(l9, p)
+        print 'i=%X pst' % i, E.apply_s_permutation(l, p)
         p = P.composition(p, q)
 
 if __name__ == '__main__':
