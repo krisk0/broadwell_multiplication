@@ -308,15 +308,17 @@ mulx sp[10], w8, wC   | wC ^7+wB+w8 w6+wD+w7 wA+w4+w3" w1+w0 w2|' [15] w9 w5
 movq w9, dd           | wC ^7+wB+w8 w6+wD+w7 wA+w4+w3" w1+w0 w2|' [15] w5=rp & 0xF
 adox wA, w4           | wC ^7+wB+w8 w6+wD+w7" w4+w3 w1+w0 w2|' [15] w5=rp & 0xF
 mulx sp[0], w9, wA    | wC ^7+wB+w8 w6+wD+w7" w4+w3 w1+w0 w2|' [3] wA| w9| [10] w5
-jrcxz .Lmul_10_aligned_gate  | jump if rp aligned
-jmp .Lmul_10_unaligned | jump over v-aligned code
-.Lmul_10_aligned_gate:
-jmp .Lmul_10_aligned
+if !aligned: jrcxz mul_10_aligned_gate_0 | one extra jump due to limitiation of jrcxz
+if aligned: jrcxz mul_10_aligned_gate_1
+jmp mul_10_unaligned
+if !aligned: mul_10_aligned_gate_0:
+if aligned: mul_10_aligned_gate_1:
+jmp mul_10_aligned
 '''
 
 g_mul_10_zen = '''
-if aligned: .Lmul_10_aligned:
-if !aligned: .Lmul_10_unaligned:
+if aligned: mul_10_aligned:
+if !aligned: mul_10_unaligned:
                       | wC ^6+wB+w8 w6+wD+w7" w4+w3 w1+w0 w2|' [3] wA| w9| [10]
 movq rr[0], x2
 if !aligned: movq rr[9], x0 | x0 [9]
@@ -336,7 +338,7 @@ movq w0, rr[15]       | wC w1+w8 w6+w7' w3 [3] wB| wD+w2| wA+w5| w9| [10]
 mulx sp[3], w0, w4    | wC w1+w8 w6+w7' w3 [2] w4| wB+w0| wD+w2| wA+w5| w9| [10]
 adcx w7, w6           | wC w1+w8' w6 w3 [2] w4| wB+w0| wD+w2| wA+w5| w9| [10]
 if aligned: movq rr[1], w7
-if aligned: pinsrq w7, $1, x2 | x2=rr[0..1]
+if aligned: pinsrq $1, w7, x2 | x2=rr[0..1]
 movq rr[10], w7       | wC w1+w8' w6 w3 [2] w4| wB+w0| wD+w2| wA+w5| w9+w7 [10]
 adox w9, w7           | wC w1+w8' w6 w3 [2] w4| wB+w0| wD+w2| wA+w5|" w7 [10]
 if aligned: movq w7, x0 | x0 [10]
@@ -523,19 +525,19 @@ movq s3, s0           | sD x0+sA+s4 ^7+s8+s5 sB+s6+s1" s9+s7' sC [i+6] s0
 adox sB, s6           | sD x0+sA+s4 ^7+s8+s5" s6+s1 s9+s7' sC [i+6] s0
 movq x0, s2           | sD sA+s4+s2 ^7+s8+s5" s6+s1 s9+s7' sC [i+6] s0
 movq rr[i+7], sB      | sD sA+s4+s2 s8+s5+sB" s6+s1 s9+s7' sC [i+6] s0=rcx=rp & 0xF
-if !aligned: jrcxz .Lmul_10_aligned_gate_0
-if aligned: jrcxz .Lmul_10_aligned_gate_1
-jmp .Lmul_10_unaligned
-if !aligned: .Lmul_10_aligned_gate_0:
-if aligned: .Lmul_10_aligned_gate_1:
-jmp .Lmul_10_aligned
+if !aligned: jrcxz mul_10_aligned_gate_0
+if aligned: jrcxz mul_10_aligned_gate_1
+jmp mul_10_unaligned
+if !aligned: mul_10_aligned_gate_0:
+if aligned: mul_10_aligned_gate_1:
+jmp mul_10_aligned
 '''
 
 #TODO: replace movdqa reg, mem with movaps and benchmark
 
 g_mul_10_bwl = '''
-if aligned: .Lmul_10_aligned:
-if !aligned: .Lmul_10_unaligned:
+if aligned: mul_10_aligned:
+if !aligned: mul_10_unaligned:
                       | sD sA+s4+s2 s8+s5+sB" s6+s1 s9+s7' sC [15]
                       | wC w2+wB+w9 w8+wD+w7" w0+w1 wA+w6' w3 [15]
 movq x9, w5
@@ -594,7 +596,7 @@ movq w1, w5[15]       | wC w2+w8 wD+wA+w4 w9+wB+w0" w6+w7' [16] w5
 mulx sp[9], w1, w3    | wC+w3 w2+w8+w1 wD+wA+w4 w9+wB+w0" w6+w7' [16] w5
 adox wB, w9           | wC+w3 w2+w8+w1 wD+wA+w4" w9+w0 w6+w7' [16] w5
 mulx sp[10], wB, dd   | dd wC+w3+wB w2+w8+w1 wD+wA+w4" w9+w0 w6+w7' [16] w5
-if !aligned: movdqa rr[7], x3 | 
+if !aligned: movdqa rr[7], x3 |
 if !aligned: movdqa rr[9], x4 | x4_x4 x3_x3 x2_x2 x1_x1 x0_x0 __
 adcx w7, w6           | dd wC+w3+wB w2+w8+w1 wD+wA+w4" w9+w0' w6 [16] w5
 if aligned: movq rr[1], w7
@@ -797,9 +799,9 @@ def v_alignment_code(amd, v_alignment, xmm_save):
         m_A = P.cutoff_comments(g_mul_10_bwl)
         q = [int(i, 16) for i in g_perm_bwl.split(' ')]
     m_9 = form_m9(m_2, amd)
-    
+
     p = list(range(0xD + 1))
-    
+
     code += chew_code(m_1, amd, 1, aligned, p)
     code += chew_code(m_2, amd, 2, aligned, p)
     for i in range(3, 9):
@@ -807,7 +809,7 @@ def v_alignment_code(amd, v_alignment, xmm_save):
         code += chew_code(m_2, amd, i, aligned, p)
     p = P.composition(p, q)
     code += chew_code(m_9, amd, 9, aligned, p)
-    
+
     if aligned:
         code += chew_code(m_A, amd, 10, False, None)
         P.insert_restore(code, xmm_save)
