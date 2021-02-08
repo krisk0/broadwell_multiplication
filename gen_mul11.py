@@ -1,9 +1,8 @@
 '''
 11x11 multiplication. Different code for Broadwell and Ryzen.
 
-Without this subroutine, 22x22 multiplication spends 880 ticks on Skylake and 808
- on Ryzen. With this subroutine, 889 on Skylake (9 ticks slower) and 938 ticks on
- Ryzen (49 ticks slower).
+With this subroutine, 22x22 multiplication becomes slightly slower on Skylake (3-10
+ ticks) and noticeably slower on Ryzen (approx by 130 ticks)
 '''
 
 import os, re, sys
@@ -27,8 +26,6 @@ xmm usage:
 memory layout:
 sp[0]
 uu[0] .. uu[11] rr[0] .. rr[21]
-
-TODO: decrease stack usage
 """
 
 g_save_regs_max = 15
@@ -690,6 +687,20 @@ def evaluate_if(s, how, maybe_excl, body):
         return body
     return s
 
+g_movdqa_patt = re.compile('^movdqa ')
+def replace_movdqa_with_movaps(s):
+    m = g_movdqa_patt.match(s)
+    if not m:
+        return s
+    return s.replace('movdqa', 'movaps')
+
+g_movdqa_to_mem_patt = re.compile('^movdqa x')
+def replace_movdqa_to_mem_with_movaps(s):
+    m = g_movdqa_to_mem_patt.match(s)
+    if not m:
+        return s
+    return s.replace('movdqa', 'movaps')
+
 g_v_patt = re.compile(r'(.+):=v\[(.+)\]')
 g_iplus_patt = re.compile(r'i\+(.+?)\b')
 g_if_aligned_patt = re.compile(r'if (.*?)aligned: (.+)')
@@ -743,7 +754,13 @@ def evaluate_row(s, i, amd, aligned):
                 'movq %s, %s' % (m.group(4), m.group(2)),
                ]
 
-    # TODO: try `movaps mem, xmm0` instead of `movdqa mem, xmm0` on Ryzen, benchmark
+    # Replace (some of) movdqa with movaps
+    '''
+    movaps instead of movdqa makes code slower on Ryzen, slightly faster on Skylake
+    if amd:
+        s = replace_movdqa_with_movaps(s)
+    '''
+    s = replace_movdqa_to_mem_with_movaps(s)
 
     return [s]
 

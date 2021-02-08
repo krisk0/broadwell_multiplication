@@ -1390,7 +1390,7 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         mp_limb_t scratch[itch::toom22_forced_t<13>()];
         toom22_1x_broadwell_t<N>(rp, scratch, ap, bp);
         // use hand-optimized subroutine if possible
-    #if 1
+    #if 0
     // MUL11_SUBR() is too slow
     } else if constexpr (N == 11) {
         MUL11_SUBR(rp, ap, bp);
