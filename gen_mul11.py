@@ -399,20 +399,21 @@ if aligned: movq rr[4], x8     | x5 x4 x3 x0_x0 [5] x8 x7 x6 x2_x2
 adcx w6, w4           | dd w0+w3+wD" w2+w9' w4 w8 w7 wC [15] w1=rp
 if aligned: movq rr[5], x9     | x5 x4 x3 x0_x0 [4] x9 x8 x7 x6 x2_x2
 adox w3, w0           | dd" w0+wD w2+w9' w4 w8 w7 wC [15] w1=rp
-if aligned: movq rr[6], w2     | x5 x4 x3 x0_x0 [3] w2 x9 x8 x7 x6 x2_x2
+
+if aligned: movq rr[6], w3     | x5 x4 x3 x0_x0 [3] w3 x9 x8 x7 x6 x2_x2
 adcx w9, w2           | dd" w0+wD' w2 w4 w8 w7 wC [15] w1=rp
 if !aligned: movq x2, w1[0]    | x5 x4 x3 x1 x0_x0 x9_x9 x8_x8 x7_x7 x6_x6 [1]
-if aligned: movq rr[7], w3     | x5 x4 x3 x0_x0 [2] w3 w2 x9 x8 x7 x6 x2_x2
-movq $0, w5           | dd" w0+wD' w2 w4 w8 w7 wC [15] w1 w2 w3 w5
-adox w5, dd           | dd w0+wD' w2 w4 w8 w7 wC [15] w1 w2 w3 w5
-if aligned: movq rr[8], w6     | x5 x4 x3 x0_x0 .. w6 w3 w2 x9 x8 x7 x6 x2_x2
+if aligned: movq rr[7], w9     | x5 x4 x3 x0_x0 [2] w9 w3 x9 x8 x7 x6 x2_x2
+movq $0, w5           | dd" w0+wD' w2 w4 w8 w7 wC [15] w1 w3 w9 w5
+adox w5, dd           | dd w0+wD' w2 w4 w8 w7 wC [15] w1 w3 w9 w5
+if aligned: movq rr[8], w6     | x5 x4 x3 x0_x0 .. w6 w9 w3 x9 x8 x7 x6 x2_x2
 adcx wD, w0           | dd' w0 w2 w4 w8 w7 wC [15] w1 w2 w3 w5
-if aligned: movq rr[9], wD     | x5 x4 x3 x0_x0 wD w6 w3 w2 x9 x8 x7 x6 x2_x2
+if aligned: movq rr[9], wD     | x5 x4 x3 x0_x0 wD w6 w9 w3 x9 x8 x7 x6 x2_x2
 if !aligned: movdqa x6, w1[1]  | x5 x4 x3 x1 x0_x0 x9_x9 x8_x8 x7_x7 [3]
 if !aligned: movdqa x7, w1[3]  | x5 x4 x3 x1 x0_x0 x9_x9 x8_x8 [5]
-if aligned: movdqa x2, w1[0]   | x5 x4 x3 x0_x0 wD w6 w3 w2 x9 x8 x7 x6 [2]
-if aligned: movq x6, w1[2]     | x5 x4 x3 x0_x0 wD w6 w3 w2 x9 x8 x7 [3]
-if aligned: movq x7, w1[3]     | x5 x4 x3 x0_x0 wD w6 w3 w2 x9 x8 [4]
+if aligned: movdqa x2, w1[0]   | x5 x4 x3 x0_x0 wD w6 w9 w3 x9 x8 x7 x6 [2]
+if aligned: movq x6, w1[2]     | x5 x4 x3 x0_x0 wD w6 w9 w3 x9 x8 x7 [3]
+if aligned: movq x7, w1[3]     | x5 x4 x3 x0_x0 wD w6 w9 w3 x9 x8 [4]
 adcx w5, dd           | dd w0 w2 w4 w8 w7 wC [15]
 movq w8, w5           | dd w0 w2 w4 w5 w7 wC [15]
 if !aligned: movdqa x8, w1[5]  | x5 x4 x3 x1 x0_x0 x9_x9 [7]
@@ -422,15 +423,15 @@ if !aligned: movq x1, w1[11]  | x5 x4 x3 [12]
 if !aligned: movq x3, w1[12]  | x5 x4 [13]
 if !aligned: movq x4, w1[13]  | x5 [14]
 if !aligned: movq x5, w1[14]
-if aligned: movq x8, w1[4]     | x5 x4 x3 x0_x0 wD w6 w3 w2 x9 [5]
-if aligned: movq x9, w1[5]     | x5 x4 x3 x0_x0 wD w6 w3 w2 [6]
-if aligned: movq w2, w1[6]     | x5 x4 x3 x0_x0 wD w6 w3 [7]
-if aligned: movq w3, w1[7]     | x5 x4 x3 x0_x0 wD w6 [8]
+if aligned: movq x8, w1[4]     | x5 x4 x3 x0_x0 wD w6 w9 w3 x9 [5]
+if aligned: movq x9, w1[5]     | x5 x4 x3 x0_x0 wD w6 w9 w3 [6]
+if aligned: movq w3, w1[6]     | x5 x4 x3 x0_x0 wD w6 w9 [7]
+if aligned: movq w9, w1[7]     | x5 x4 x3 x0_x0 wD w6 [8]
 if aligned: movq w6, w1[8]     | x5 x4 x3 x0_x0 wD [9]
 if aligned: movq wD, w1[9]     | x5 x4 x3 x0_x0 [10]
 if aligned: movdqa x0, w1[10]  | x5 x4 x3 [12]
-if aligned: movq x3, w1[12]  | x5 x4 [13]
-if aligned: movq x4, w1[13]  | x5 [14]
+if aligned: movq x3, w1[12]    | x5 x4 [13]
+if aligned: movq x4, w1[13]    | x5 [14]
 if aligned: movq x5, w1[14]
 movq wC, w1[15]       | dd w0 w2 w4 w5 w7 [16]
 movq w7, w1[16]       | dd w0 w2 w4 w5 [17]
