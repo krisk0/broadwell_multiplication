@@ -1,5 +1,9 @@
 '''
 11x11 multiplication. Different code for Broadwell and Ryzen.
+
+Without this subroutine, 22x22 multiplication spends 880 ticks on Skylake and 808
+ on Ryzen. With this subroutine, 889 on Skylake (9 ticks slower) and 938 ticks on
+ Ryzen (49 ticks slower).
 '''
 
 import os, re, sys
@@ -12,7 +16,7 @@ import gen_mul8_aligned as G
 g_var_map = 'rp,rdi up,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
     'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 w5,rcx dd,rdx sp,rsp'
 
-g_stack_taken = 0x118
+g_stack_taken = 0xE8
 
 """
 xmm usage:
