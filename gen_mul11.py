@@ -2,7 +2,7 @@
 11x11 multiplication. Different code for Broadwell and Ryzen.
 
 With this subroutine, 22x22 multiplication becomes slightly slower on Skylake (3-10
- ticks) and noticeably slower on Ryzen (approx by 130 ticks)
+ ticks) and noticeably slower on Ryzen (approx by 80 ticks)
 '''
 
 import os, re, sys
@@ -749,10 +749,14 @@ def evaluate_row(s, i, amd, aligned):
     m = g_adx3_patt.match(s)
     if m:
         return [
+                'ad%sx %s, %s' % (m.group(1), m.group(2), m.group(3)),
+                'movq %s, %s' % (m.group(3), m.group(2)),
+               ]
+    '''
                 'movq %s, %s' % (m.group(2), m.group(4)),
                 'ad%sx %s, %s' % (m.group(1), m.group(3), m.group(4)),
                 'movq %s, %s' % (m.group(4), m.group(2)),
-               ]
+    '''
 
     # Replace (some of) movdqa with movaps
     '''
