@@ -43,7 +43,7 @@ single_byte(uint64_t x) {
     for(int i = 1; i < 8; i++) {
         a[i] = 1 + a[i - 1];
     }
-    memcpy(&x, a+0, sizeof(x));
+    memcpy(&x, a + 0, sizeof(x));
     return x;
 }
 
