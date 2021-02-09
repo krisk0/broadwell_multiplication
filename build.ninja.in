@@ -77,6 +77,9 @@ test8_zen.exe: test8.cpp mul8_zen.s @int_h [+flags -DZEN=1]
 test%_aligned.exe: test_twice.cpp mul%_aligned.s @int_h $
     [+flags -DTESTED=mul%_aligned -DSIZE=%]
 
+test_mul8_take2.exe: test_twice.cpp mul8_take2.s @int_h $
+    [+flags -DTESTED=mul8_take2 -DSIZE=8]
+
 test7_2arg.exe: test_2arg.cpp mul7_2arg.s @int_h $
     [+flags -DTESTED=mul7_2arg -DSIZE=7]
 
@@ -255,6 +258,9 @@ benchm8_zen.exe: benchmark8.cpp mul8_zen.s @int_h benchmark-internal.c $
 
 benchm8_skylake.exe: benchmark8.cpp mul8_skylake.s @int_h benchmark-internal.c $
     [+flags -DSKYLAKE=1]
+
+benchm8_take2.exe: benchmark8.cpp mul8_take2.s @int_h benchmark-internal.c $
+    [+flags -DTESTED=mul8_take2]
 
 benchmark_8x2.exe: benchmark8.cpp mul8x2.s @int_h benchmark-internal.c $
     [+flags -D_8x2=1]
