@@ -7,7 +7,6 @@ sys.dont_write_bytecode = 1
 
 import gen_mul4 as P
 import gen_mul7_t03 as E
-import gen_mul8_aligned as G
 
 g_preamble = '''
 vzeroupper
@@ -134,7 +133,7 @@ def do_it(o):
     code += replace_extract_v(mul_01, 0)
     code += alignment_code(0)
 
-    G.save_in_xmm(code, xmm_save)
+    P.save_in_xmm(code, xmm_save)
     P.insert_restore(code, xmm_save)
 
     cook_asm(o, code, xmm_save)

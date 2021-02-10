@@ -10,7 +10,6 @@ sys.dont_write_bytecode = 1
 
 import gen_mul4 as P
 import gen_mul7_t03 as E
-import gen_mul8_aligned as G
 
 g_var_map = 'rp,rdi up,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
     'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 w5,rcx dd,rdx sp,rsp'
@@ -872,7 +871,7 @@ def do_it(o, amd):
 
     xmm_save = P.save_registers_in_xmm(code, g_save_regs_max)
     code += v_alignment_code(amd, 8, xmm_save) + v_alignment_code(amd, 0, xmm_save)
-    G.save_in_xmm(code, xmm_save)
+    P.save_in_xmm(code, xmm_save)
 
     code = '\n'.join(code)
     code = re.sub(r'\bwC\b', 'up', code)

@@ -548,6 +548,14 @@ def starting_from(cc, s):
 def replace_in_string_array(cc, el, rr):
     return '\n'.join(cc).replace(el, rr).split('\n')
 
+def save_in_xmm(code, f):
+    for i in range(len(code)):
+        m = g_xmm_save_pattern.match(code[i])
+        if not m:
+            continue
+        m = m.group(1)
+        code[i] = 'movq %s, %s' % (m, f[m])
+
 if __name__ == '__main__':
     g_out = sys.argv[1]
 
