@@ -1,8 +1,8 @@
 '''
-6x6 multiplication that uses xmm to store v[] and avoids movdqu. 66 ticks on Skylake,
- 61 on Ryzen
+6x6 multiplication that uses xmm to store v[] and avoids movdqu. ?66 ticks on Skylake,
+ ?61 on Ryzen
 
-Ticks reported by benchm48_toom22_t.exe on Ryzen when using this subroutine: 2880.
+Ticks reported by benchm48_toom22_t.exe on Ryzen when using this subroutine: ?2880.
 '''
 
 import os, re, sys
@@ -16,31 +16,24 @@ g_preamble = '''
 vzeroupper
 movq dd, w0
 and $0xF, dd
-!save w6
 movq (w0), dd
 jz align0
 movdqa 8(w0), t0         | t0=v[1..2]
 movdqa 24(w0), t1        | t1=v[3..4]
-!save w7
 movq 40(w0), t2          | t2=v[5]
 '''
 
 g_load0 = '''
 movq 8(w0), t0           | t0=v[1]
 movdqa 16(w0), t1        | t1=v[2..3]
-!save w7
 movdqa 32(w0), t2        | t2=v[4..5]
 '''
 
 g_mul01 = '''
-!save w8
 mulx (up), w0, w1        | w1 w0
-!save w9
 mulx 8(up), w2, w3       | w3 w1+w2 w0
-!save wA
 wA:=v[1]
 mulx 16(up), w4, w5      | w5 w3+w4 w1+w2 w0
-!save wB
 mulx 24(up), w6, w7      | w7 w5+w6 w3+w4 w1+w2 w0
 mulx 32(up), w8, w9      | w9 w7+w8 w5+w6 w3+w4 w1+w2 w0
 movq w0, (rp)            | w9 w7+w8 w5+w6 w3+w4 w1+w2 ..
@@ -197,15 +190,12 @@ def alignment_code(shift):
 def do_it(o):
     code = P.cutoff_comments(g_preamble)
     mul_01 = P.cutoff_comments(g_mul01)
-    xmm_save = P.save_registers_in_xmm(code + mul_01, 9)
-    code += alignment_code(8) + ['retq', 'align0:']
-    P.insert_restore(code, xmm_save)
+    code += alignment_code(8)
+    code += P.g_std_end + ['retq', 'align0:']
     code += P.cutoff_comments(g_load0)
     code += alignment_code(0)
 
-    P.save_in_xmm(code, xmm_save)
-    P.insert_restore(code, xmm_save)
-    S.cook_asm(o, code, xmm_save)
+    P.cook_asm(o, code, E.g_var_map, True)
 
 with open(sys.argv[1], 'wb') as g_out:
     do_it(g_out)

@@ -10,33 +10,27 @@ Take 0: not caching u.
 '''
 
 """
-g_code_slow uses 6 limbs of red zone: sc[x] = rsp[x-6]. mul_11() using this code
+g_code_take1 uses 6 limbs of red zone: sc[x] = rsp[x-6]. mul_11() using this code
  spends 242 ticks on Broadwell and 228 on Ryzen.
 """
 
 g_sc_shift = 6
 
 g_code = '''
-!save w6
 movq dd[1], t0
 movq dd[2], t1
-!save w7
 movq dd[0], dd
 xor w0, w0
 movq rp, t2
 mulx up[0], w0, w1         | w1 w0
 mulx up[1], w2, w3         | w3 w1+w2 w0
-!save w8
 mulx up[2], w4, w5         | w5 w3+w4 w1+w2 w0
 mulx up[3], w6, w7         | w7 w5+w6 w3+w4 w1+w2 w0
-!save w9
 movq w0, sc[0]             | w7 w5+w6 w3+w4 w1+w2 [1]
 mulx up[4], w0, w8         | w8 w7+w0 w5+w6 w3+w4 w1+w2 [1]
-!save wA
 movq t0, w9                | w8 w7+w0 w5+w6 w3+w4 w1+w2 [1] w9=v[1]
 adcx w2, w1                | w8 w7+w0 w5+w6 w3+w4' w1 [1] w9=v[1]
 movq w1, sc[1]             | w8 w7+w0 w5+w6 w3+w4' [2] w9=v[1]
-!save wB
 mulx up[5], w1, w2         | w2 w8+w1 w7+w0 w5+w6 w3+w4' [2] w9=v[1]
 adcx w4, w3                | w2 w8+w1 w7+w0 w5+w6' w3 [2] w9=v[1]
 movq w3, sc[2]             | w2 w8+w1 w7+w0 w5+w6' [3] w9=v[1]
@@ -317,7 +311,7 @@ def evaluate_row(s):
                 'adox %s, %s' % (m.group(2), m.group(3)),
                 evaluate_row('movq %s, %s' % (m.group(3), m.group(1)))[0]
                ]
-
+    
     m = g_sc_patt.search(s)
     if m:
         s = s.replace(m.group(), ('st[%s]' % (int(m.group(1)) - g_sc_shift)))
@@ -336,7 +330,7 @@ def do_it(o, code, var_map):
     r = []
     for c in P.cutoff_comments(code):
         r += evaluate_row(c)
-    S.cook_asm(o, r, var_map)
+    P.cook_asm(o, r, var_map, True)
 
 if __name__ == '__main__':
     with open(sys.argv[1], 'wb') as g_o:

@@ -1,5 +1,5 @@
 '''
-8x8 multiplication targeting skylake. 120 ticks on Skylake, 114 ticks on Ryzen
+8x8 multiplication targeting skylake. ?120 ticks on Skylake, ?114 ticks on Ryzen
 '''
 
 """
@@ -17,21 +17,15 @@ w0  w1  w2  w3  w4  w7  up  rp  dd
 g_mul_01='''
 vzeroupper                       | removing vzeroupper slows code down by 4 ticks
 movdqu 8(dd), t0                 | t0=v[1..2]
-!save w9
 movdqu 24(dd), t1                | t1=v[3..4]
 movdqu 40(dd), t2                | t2=v[5..6]
 movq 56(dd), t3                  | t3=v[7]
 movq (dd), dd                    | ready v0
-!save w5
 mulx (up), w1, w2                | w2 w1
 mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
 mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
-!save w8
 mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save wA
 mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
 mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
 addq w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
 movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
@@ -212,12 +206,8 @@ def mul1_code(i, jj, p):
     return rr
 
 def cook_asm(name, o, code):
-    xmm_save = P.save_registers_in_xmm(code, 9)
-
-    P.insert_restore(code, xmm_save)
+    code = P.g_std_start + code + P.g_std_end
     code = '\n'.join(code)
-    for k,v in xmm_save.items():
-        code = code.replace('!restore ' + k, 'movq %s, %s' % (v, k))
 
     m = 'rp,rdi up,rsi w7,rcx wB,rbp wA,rbx w9,r12 w8,r13 w6,r14 w5,r15 '
     m += 'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 dd,rdx t0,xmm14 '

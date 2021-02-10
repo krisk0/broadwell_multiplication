@@ -18,21 +18,15 @@ if flag & 1 then replace vmovdqu with vmovdqa
 
 g_mul0='''
 vzeroupper
-!save w8
 movq dd, w0
 movq (dd), dd                    | ready v0
-!save w5
 vmovdqu 8(w0), v14               | ready v[1..4]
 mulx (up), w1, w2                | w2 w1
 mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
 mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
 mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
 vmovdqu 32(w0), v47              | ready v[4..7]
-!save wA
 mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
 mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
 addq w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
 movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
@@ -115,21 +109,15 @@ adcx wB, w9                      | w7' w9+w3 w5+wA" w0 w1 w4+w8 .. .. {3}
 '''
 
 g_mul0_only = '''
-| 19 ticks on Ryzen 7 3800X
+| ?19 ticks on Ryzen 7 3800X
 vzeroupper
-!save w8
 movq dd, w0
 movq (dd), dd                    | ready v0
-!save w5
 mulx (up), w1, w2                | w2 w1
 mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
 mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
 mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
-!save wA
 mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
 mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
 addq w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
 movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
@@ -155,21 +143,15 @@ movq w7, 64(rp)
 '''
 
 g_mul0_only_immediate_writes = '''
-| 19 tacts. Immediate writes ok
+| ?19 tacts. Immediate writes ok
 vzeroupper
-!save w8
 movq dd, w0
 movq (dd), dd                    | ready v0
-!save w5
 mulx (up), w1, w2                | w2 w1
 mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
 mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
 mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
-!save wA
 mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
 mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
 addq w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
 movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
@@ -195,22 +177,16 @@ movq w7, 64(rp)
 '''
 
 g_mul0_only_adcx = '''
-| 19 tacts. adcx ok
+| ?19 tacts. adcx ok
 vzeroupper
-!save w8
 movq dd, w0
 movq (dd), dd                    | ready v0
-!save w5
 mulx (up), w1, w2                | w2 w1
 mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
 mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
 mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
 xor %eax,%eax
-!save wA
 mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
 mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
 adcx w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
 movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
@@ -237,22 +213,16 @@ movq w7, 64(rp)
 
 g_mul01 = '''
 vzeroupper
-!save w8
 movq dd, w0
 movq (dd), dd                    | ready v0
-!save w5
 mulx (up), w1, w2                | w2 w1
 vmovdqu 8(w0), v14
 mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
 mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
 mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
 movq v14, 16(rp)                 | 16(rp)=v[1]
 xor %eax,%eax
-!save wA
 mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
 mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
 adcx w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
 movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
@@ -319,20 +289,14 @@ movq w7, 72(rp)
 
 g_mul0_only_adox_imm_writes = '''
 vzeroupper
-!save w8
 movq dd, w0
 movq (dd), dd                    | ready v0
-!save w5
 mulx (up), w1, w2                | w2 w1
 mulx 8(up), w3, w4               | w4 w2+w3 w1
-!save w6
 mulx 16(up), w5, w6              | w6 w4+w5 w2+w3 w1
 mulx 24(up), w7, w8              | w8 w6+w7 w4+w5 w2+w3 w1
-!save w9
 xor %eax, %eax
-!save wA
 mulx 32(up), w0, w9              | w9 w0+w8 w6+w7 w4+w5 w2+w3 w1
-!save wB
 mulx 40(up), wA, wB              | wB w9+wA w0+w8 w6+w7 w4+w5 w2+w3 w1
 adox w3, w2                      | wB w9+wA w0+w8 w6+w7 w4+w5' w2 w1
 movq w1, (rp)                    | wB w9+wA w0+w8 w6+w7 w4+w5' w2 --
@@ -586,25 +550,14 @@ def mul1_code(i, jj, p):
 
     return rr
 
+g_var_map = 'rp,rdi up,rsi w7,rcx wB,rbp wA,rbx w9,r12 w8,r13 w6,r14 w5,r15 ' + \
+        'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 dd,rdx v14,ymm14 v47,ymm13 ' + \
+        't0,ymm12 t1,ymm11'
+
 def cook_asm(o, code):
-    xmm_save = P.save_registers_in_xmm(code, 10)
-
-    P.insert_restore(code, xmm_save)
     code = '\n'.join(code)
-    for k,v in xmm_save.items():
-        code = code.replace('!restore ' + k, 'movq %s, %s' % (v, k))
-
-    m = 'rp,rdi up,rsi w7,rcx wB,rbp wA,rbx w9,r12 w8,r13 w6,r14 w5,r15 '
-    m += 'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 dd,rdx v14,ymm14 v47,ymm13 '
-    m += 't0,ymm12 t1,ymm11'
-    r = {}
-    for x in m.split(' '):
-        y = x.split(',')
-        r[y[0]] = '%' + y[1]
-    code = P.replace_symbolic_vars_name(code, r)
-
     # replace ymm with xmm in all movq and vpextrq
-    code = '\n'.join([replace_ymm_by_xmm(x) for x in code.split('\n')])
+    code = '\n'.join()
 
     if g_flag & 1:
         code = code.replace('vmovdqu', 'vmovdqa')
@@ -648,9 +601,24 @@ def do_it(o):
         #meat += P.cutoff_comments(g_tail_after_mul0_immediate_writes)
         pass
 
-    meat = P.cutoff_comments(g_mul01) + P.cutoff_comments(g_mul01_tail)
+    code = P.cutoff_comments(g_mul01) + P.cutoff_comments(g_mul01_tail)
+    code = '\n'.join(code)
+    code = P.replace_symbolic_names_wr(code, g_var_map)
+    code = code.split('\n')
+    code = [replace_ymm_by_xmm(x) for x in code]
 
-    cook_asm(o, meat)
+    cook_asm(o, code, 'mul8x2_zen')
+
+def cook_asm(o, cc, name):
+    cc = P.g_std_start + cc + P.g_std_end
+    
+    cc = '\n'.join(cc)
+    
+    comment = P.g_autogenerated_patt % os.path.basename(sys.argv[0])
+    o.write(comment.replace('//', '#'))
+    P.write_asm_procedure_header(o, name)
+    P.write_asm_inside(o, cc + '\nretq')
+    
 
 if len(sys.argv) == 2:
     g_o_name = sys.argv[1]

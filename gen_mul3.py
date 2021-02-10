@@ -9,21 +9,15 @@ g_var_map = 'rp,rdi up,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
 
 g_code = '''
 vzeroupper
-!save w6
 movq dd[1], w6
-!save w7
 movq dd[2], w7
 movq dd[0], dd
-!save w8
 movq up[0], w3               | w3=a[0] w6=b[1] w7=b[2]
 xor w0, w0                   | zero flags
 mulx w3, w0, w1              | w1 w0   w3=a[0] w6=b[1] w7=b[2]
-!save w9
 movq up[1], w4               | w1 w0   w3=a[0] w4=a[1]
 mulx w4, w2, w5              | w5 w1+w2 w0   w3=a[0] w4=a[1] w6=b[1] w7=b[2]
-!save wA
 movq up[2], w8               | w5 w1+w2 w0   w3=a[0] w4=a[1] w8=a[2] w6=b[1] w7=b[2]
-!save wB
 mulx w8, wA, wB        | wB w5+wA w1+w2 w0   w3=a[0] w4=a[1] w8=a[2] w6=b[1] w7=b[2]
 movq w6, dd            | wB w5+wA w1+w2 w0   w3=a[0] w4=a[1] w8=a[2] w7=b[2]
 mulx w3, w6, w9        | wB w5+wA+w9 w1+w2+w6 w0   w3=a[0] w4=a[1] w8=a[2] w7=b[2]
@@ -66,7 +60,6 @@ import re, sys
 sys.dont_write_bytecode = 1
 
 import gen_mul4 as P
-import gen_mul7_2arg as S
 
 g_array_patt = re.compile(r'\b(\S+)\b\[([0-9]+)\]')
 def chew_line(s):
@@ -82,7 +75,7 @@ def chew_line(s):
 
 def do_it(o, code, var_map):
     code = [chew_line(x) for x in P.cutoff_comments(code)]
-    S.cook_asm(o, code, var_map)
+    P.cook_asm(o, code, var_map, True)
 
 if __name__ == '__main__':
     with open(sys.argv[1], 'wb') as g_o:

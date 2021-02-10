@@ -9,13 +9,14 @@ equivalent to
 }
 
 Calls internal function mul7_hooligan which violates Sys5 calling convention.
+
+TODO: mul7_aligned() changed, hence mul7_trice may malfunction
 '''
 
 import os, re, sys
 sys.dont_write_bytecode = 1
 
 import gen_mul4 as P
-import gen_mul8_aligned as G
 
 g_hooligan = 'mul7_hooligan'
 g_forbidden_xmm_no = set(str(i) for i in range(4, 10))
@@ -79,7 +80,7 @@ def do_it(o, i_name):
 
     code = P.cutoff_comments(g_code)
     xmm_save = P.save_registers_in_xmm(code, 5)
-    G.save_in_xmm(code, xmm_save)
+    P.save_in_xmm(code, xmm_save)
 
     code = '\n'.join(code).replace('@call', 'call ' + g_hooligan)
     for k,v in xmm_save.items():

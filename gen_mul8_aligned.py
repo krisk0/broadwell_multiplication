@@ -25,7 +25,6 @@ g_var_map = 'rp,rdi up,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
 
 """
 xmm usage:
-A-F save w6..wB
 9 save up
 9 vp[9]     (extra result)
 8 vp[A]     (extra result)
@@ -38,7 +37,6 @@ vp[8..A] x9 x8 dd
 
 g_preamble = '''
 vzeroupper
-!save wB
 movq dd, w0
 and $0xF, dd
 if extra: movq w0, x9
@@ -62,21 +60,16 @@ movdqa w0[6], x3
 g_mul_01 = '''
 mulx up[0], w0, w1        | w1 w0
 mulx up[1], w2, w3        | w3 w1+w2 w0
-!save wA
 mulx up[2], w4, w5        | w5 w3+w4 w1+w2 w0
 mulx up[3], wA, wB        | wB w5+wA w3+w4 w1+w2 w0
-!save w9
 movq w0, rp[0]            | wB w5+wA w3+w4 w1+w2 ..
 mulx up[4], w0, w9        | w9 wB+w0 w5+wA w3+w4 w1+w2 ..
-!save w8
 adcx w2, w1               | w9 wB+w0 w5+wA w3+w4' w1 ..
 movq w1, rp[1]            | w9 wB+w0 w5+wA w3+w4' [2]
-!save w7
 w1:=v[1]
 mulx up[5], w2, w8        | w8 w9+w2 wB+w0 w5+wA w3+w4' [2] w1
 adcx w4, w3               | w8 w9+w2 wB+w0 w5+wA' [3] w1
 movq w3, rp[2]
-!save w6
 mulx up[6], w4, w6        | w6 w8+w4 w9+w2 wB+w0 w5+wA' [3] w1
 adcx wA, w5               | w6 w8+w4 w9+w2 wB+w0' w5 [3] w1
 mulx up[7], w7, wA        | wA w6+w7 w8+w4 w9+w2 wB+w0' w5 [3] w1
@@ -336,9 +329,7 @@ def do_it(o, extra):
     code = chew_code(g_preamble, 0, extra, None, None)
     code += alignment_code(8, extra)
     code += alignment_code(0, extra)
-    xmm_save = P.save_registers_in_xmm(code, 15)
-    P.insert_restore(code, xmm_save)
-    C.cook_asm(o, code, g_var_map)
+    P.cook_asm(o, code, g_var_map, True)
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:

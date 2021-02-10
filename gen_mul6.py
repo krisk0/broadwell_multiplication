@@ -1,4 +1,5 @@
 """
+TODO: see if push is faster than save to a xmm
       rdi -< rp
       rsi -< up
 w7 -< rcx -< vp

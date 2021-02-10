@@ -4,34 +4,27 @@
 
 g_preamble = '''
 vzeroupper
-!save w6
 movq dd, w0
 and $0xF, dd
 movq (w0), dd
 jz align0
 movdqa 8(w0), t0         | t0=v[1..2]
-!save w7
 movdqa 24(w0), t1        | t1=v[3..4]
 '''
 
 g_load0 = '''
 movq 8(w0), t0           | t0=v[1]
 movdqa 16(w0), t1        | t1=v[2..3]
-!save w7
 movq 32(w0), t2
 '''
 
 g_mul_01 = '''
 mulx (up), w0, w1        | w1 w0
-!save w8
 mulx 8(up), w2, w3       | w3 w1+w2 w0
-!save w9
 w6:=v[1]
 mulx 16(up), w4, w5      | w5 w3+w4 w1+w2 w0
-!save wA
 mulx 24(up), w8, w7      | w7 w5+w8 w3+w4 w1+w2 w0
 movq w0, rp[0]           | w7 w5+w8 w3+w4 w1+w2 [1]
-!save wB
 mulx 32(up), w0, w9      | w9 w7+w0 w5+w8 w3+w4 w1+w2 [1]
 movq w6, dd
 w6:=v[2]
@@ -234,14 +227,10 @@ def alignment_code(shift):
 
 def do_it(o):
     code = P.cutoff_comments(g_preamble) + alignment_code(8)
-    xmm_save = P.save_registers_in_xmm(code, 9)
-    P.insert_restore(code, xmm_save)
-    code += ['retq', 'align0:'] + P.cutoff_comments(g_load0)
+    code += P.g_std_end +  ['retq', 'align0:'] + P.cutoff_comments(g_load0)
     code += alignment_code(0)
 
-    P.save_in_xmm(code, xmm_save)
-    P.insert_restore(code, xmm_save)
-    S.cook_asm(o, code, xmm_save)
+    P.cook_asm(o, code, E.g_var_map, True)
     
 if __name__ == '__main__':
     with open(sys.argv[1], 'wb') as g_out:
