@@ -99,6 +99,10 @@ movq w6, rp[5]            | wA ^5 ^4 w2+w7 w0+wB+w4 w5+w8: w3+w9:" [2]
 mulx up[4], w1, w6        | wA ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8: w3+w9:" [2]
 adox w9, w3               | wA ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8:" w3: [2]
 w9:=v[2]                  | wA ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8:" w3: [2] w9
+|
+| Replacing rp[6] with a xmm makes no difference on Skylake, slows down the
+|  subroutine on Ryzen by 2 ticks
+|
 movq wA, rp[6]            | ^6 ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8:" w3: [2] w9
 adcx rp[2], w3            | ^6 ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8:"' w3 [2] w9
 movq w3, rp[2]            | ^6 ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8:"' [3] w9
@@ -317,26 +321,12 @@ def alignment_code(alignment, extra):
         code += chew_code(m7, 7, extra, None, p)
     return code
 
-g_save_patt = re.compile(r'\!save (.+)')
-def insert_save(cc, dd):
-    for i in range(len(cc)):
-        m = g_save_patt.match(cc[i])
-        if m:
-            m = m.group(1)
-            try:
-                r = dd[m]
-                cc[i] = 'movq %s, %s' % (m, r)
-            except:
-                pass
-
 def do_it(o, extra):
     code = chew_code(g_preamble, 0, extra, None, None)
     code += alignment_code(8, extra)
     code += alignment_code(0, extra)
     xmm_save = P.save_registers_in_xmm(code, 15)
     P.insert_restore(code, xmm_save)
-    # TODO: do without insert_save()
-    #insert_save(code, xmm_save)
     C.cook_asm(o, code, g_var_map)
 
 if __name__ == '__main__':
