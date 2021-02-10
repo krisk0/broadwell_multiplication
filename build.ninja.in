@@ -30,7 +30,7 @@ build more_benchmarks: phony $
     benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
     benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
     benchm{13,25}_toom22_1x_loud.exe  $
-    benchmark_8x2.exe benchm8_skylake.exe
+    benchmark_8x2.exe benchm8_skylake.exe benchm8_aligned.exe
 
 build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
     test_mpn_sub.exe test_mpn_sub_4k.exe test_mpn_add_4k.exe $
@@ -206,7 +206,7 @@ mpn_add_2_4arg.s: mpn_add_2_4arg
 subtract_lesser_from_bigger_%.h: subtract_lesser_from_bigger [+extra %]
 
 build $o/mul7_trice.s: create_c_code gen_mul7_trice.py gen_mul4.py $o/mul7_aligned.s
-    extra = $o/mul7_aligned.s
+    extra = $o/mul7_aligned`.s
 
 toom22_interpolate_@_raw.s: toom22_interpolate [16]
 
@@ -255,6 +255,9 @@ benchm8_zen.exe: benchmark8.cpp mul8_zen.s @int_h benchmark-internal.c $
 
 benchm8_skylake.exe: benchmark8.cpp mul8_skylake.s @int_h benchmark-internal.c $
     [+flags -DSKYLAKE=1]
+
+benchm8_aligned.exe: benchmark8.cpp mul8_aligned.s @int_h benchmark-internal.c $
+    [+flags -DTESTED=mul8_aligned]
 
 benchmark_8x2.exe: benchmark8.cpp mul8x2.s @int_h benchmark-internal.c $
     [+flags -D_8x2=1]

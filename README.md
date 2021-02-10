@@ -28,15 +28,15 @@ subroutine | tacts
 :---: | ---:
 mpn_mul_n 8 | 143
 gmpn_mul_basecase 8 | 133
-mul8_zen | 112
+mul8_aligned | 104
 mpn_mul_n 16 | 489
 gmpn_mul_basecase 16 | 478
-toom22_xx_broadwell 16 | 418
-toom22_broadwell_t 16 | 417
+toom22_xx_broadwell 16 | 402
+toom22_broadwell_t 16 | 392
 mpn_mul_n 24 | 1086
-toom22_broadwell_t 24 | 999
+toom22_broadwell_t 24 | 967
 mpn_mul_n 32 | 1678
-toom22_deg2_broadwell 32 | 1450
+toom22_deg2_broadwell 32 | 1344
 
 Left column contains subroutine name and size indicator. For instance, 
 `gmpn_mul_basecase 16` indicates that `gmpn_mul_basecase(target, operand_a, 16, operand_b, 16)` was called.

@@ -1,7 +1,7 @@
 '''
 8x8 multiplication targeting Ryzen. Uses aligned loads of v[] into xmm's.
 
-97-100 ticks on Ryzen, 107-108 on Skylake
+96 ticks on Ryzen, 104 on Skylake
 
 Ryzen seems to be ok with 'xchg s0, dd' when dd is not ready yet. Skylake seems to
  dislike it, but time loss is a fraction of tick (approximately 2/6).
