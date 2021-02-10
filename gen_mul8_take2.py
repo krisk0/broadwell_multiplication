@@ -1,7 +1,7 @@
 '''
 8x8 multiplication targeting Ryzen. Uses aligned loads of v[] into xmm's.
 
-97-100 ticks on Ryzen, 107 on Skylake
+97-100 ticks on Ryzen, 107-108 on Skylake
 
 Ryzen seems to be ok with 'xchg s0, dd' when dd is not ready yet. Skylake seems to
  dislike it, but time loss is a fraction of tick (approximately 2/6).
@@ -163,7 +163,7 @@ adox s5, s2              | sB s7+s9+s3" s2+s1 s8+s4' s6 sA [2] {i+1} s0=v[i+1]
 old s7 s2+sB+s5" s8+sA s6+s3' s1 s0
 new sB s7+s9+s3" s2+s1 s8+s4' s6 sA
           0 1 2 3 4 5 6 7 8 9 A B                    """
-g_perm = 'A 6 7 4 0 3 8 B 2 5 1 9'   # can swap
+g_perm = 'A 6 7 4 0 3 8 B 2 5 1 9'   # can swap 0 and 5
 
 g_tail_noextra = '''
                          | s7+s9 s2+s5+s1" s8+s4' s6 sA {i+3}
@@ -173,14 +173,14 @@ movq sA, rp[i+3]         | dd s7+s9+s3" s2+s1 s8+s4' s6 {i+4}
 adcx s4, s8              | dd s7+s9+s3" s2+s1' s8 s6 {i+4}
 movq s6, rp[i+4]         | dd s7+s9+s3" s2+s1' s8 {i+5}
 adox s9, s7              | dd" s7+s3 s2+s1' s8 {i+5}
-movq $0, s4              | dd" s7+s3 s2+s1' s8 {i+5} s4=0
 movq s8, rp[i+5]         | dd" s7+s3 s2+s1' {i+6}
+movq $0, s8
 adcx s1, s2              | dd" s7+s3' s2 {i+6}
-adox s4, dd              | dd s7+s3' s2 {i+6}
+adox s8, dd              | dd s7+s3' s2 {i+6}
 movq s2, rp[i+6]         | dd s7+s3' {i+7}
 adcx s3, s7              | dd' s7 {i+7}
 movq s7, rp[i+7]
-adcx s4, dd
+adcx s8, dd
 movq dd, rp[i+8]
 '''
 
@@ -332,11 +332,11 @@ def insert_save(cc, dd):
 def do_it(o, extra):
     code = chew_code(g_preamble, 0, extra, None, None)
     code += alignment_code(8, extra)
-    xmm_save = P.save_registers_in_xmm(code, 15)
     code += alignment_code(0, extra)
+    xmm_save = P.save_registers_in_xmm(code, 15)
     P.insert_restore(code, xmm_save)
     # TODO: do without insert_save()
-    insert_save(code, xmm_save)
+    #insert_save(code, xmm_save)
     C.cook_asm(o, code, g_var_map)
 
 if __name__ == '__main__':
