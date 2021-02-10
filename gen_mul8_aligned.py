@@ -58,6 +58,7 @@ movdqa w0[4], x2
 movdqa w0[6], x3
 '''
 
+# TODO: g_mul_01 should be different for Broadwell and Zen
 g_mul_01 = '''
 mulx up[0], w0, w1        | w1 w0
 mulx up[1], w2, w3        | w3 w1+w2 w0
@@ -116,6 +117,10 @@ adox w7, w2               | ^6+wB ^5+w8+wA ^4+w6+w3" w2+w1 w0+w4' [4] w9
 mulx up[7], w5, w7        | w7 ^6+wB+w5 ^5+w8+wA ^4+w6+w3" w2+w1 w0+w4' [4] w9
 movq w9, dd               | w7 ^6+wB+w5 ^5+w8+wA ^4+w6+w3" w2+w1 w0+w4' [4]
 adcx w4, w0               | w7 ^6+wB+w5 ^5+w8+wA ^4+w6+w3" w2+w1' w0 [4]
+|
+| Save sp into x8, use sp instead of up, use up instead of rp[4]. Result: no
+|  difference on Skylake, 3 ticks slowdown on Ryzen
+|
 adox rp[4], w6            | w7 ^6+wB+w5 ^5+w8+wA" w6+w3 w2+w1' w0 [4]
 adcx w2, w1               | w7 ^6+wB+w5 ^5+w8+wA" w6+w3' w1 w0 [4]
 adox rp[5], w8            | w7 ^6+wB+w5" w8+wA w6+w3' w1 w0 [4]
