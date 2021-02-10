@@ -1,5 +1,10 @@
 '''
-123 ticks on Broadwell, 112 on Ryzen
+8x8 multiplication targeting Ryzen. Uses aligned loads of v[] into xmm's.
+
+97-100 ticks on Ryzen, 107 on Skylake
+
+Ryzen seems to be ok with 'xchg s0, dd' when dd is not ready yet. Skylake seems to
+ dislike it, but time loss is a fraction of tick (approximately 2/6).
 '''
 
 """
@@ -37,7 +42,7 @@ vzeroupper
 movq dd, w0
 and $0xF, dd
 if extra: movq w0, x9
-movq (w0), dd
+movq w0[0], dd
 jz align0
 movdqa w0[1], x0
 movdqa w0[3], x1
@@ -108,92 +113,74 @@ mulx up[7], w5, w7        | w7 ^6+wB+w5 ^5+w8+wA ^4+w6+w3" w2+w1 w0+w4' [4] w9
 movq w9, dd               | w7 ^6+wB+w5 ^5+w8+wA ^4+w6+w3" w2+w1 w0+w4' [4]
 adcx w4, w0               | w7 ^6+wB+w5 ^5+w8+wA ^4+w6+w3" w2+w1' w0 [4]
 adox rp[4], w6            | w7 ^6+wB+w5 ^5+w8+wA" w6+w3 w2+w1' w0 [4]
+adcx w2, w1               | w7 ^6+wB+w5 ^5+w8+wA" w6+w3' w1 w0 [4]
+adox rp[5], w8            | w7 ^6+wB+w5" w8+wA w6+w3' w1 w0 [4]
+movq rp[6], w2            | w7 w2+wB+w5" w8+wA w6+w3' w1 w0 [4]
 '''
 
 '''
 i >= 2
 multiplied by v[0], .. v[i-1]
-data lies like that:   s7 ^4+sB+s5 ^3+s8+sA" s6+s3 s2+s1' s0 .. [i+1] dd=v[i]
-desired postcondition: -- ^5+--+-- ^4+--+--  --+-- --+--' .. .. [i+1] dd=v[i+1]
+data lies like that: s7 s2+sB+s5" s8+sA s6+s3' s1 s0 .. .. [i] dd=v[i]
 '''
 
 g_mul_2 = '''
-                          | s7 ^4+sB+s5 ^3+s8+sA" s6+s3 s2+s1' s0 .. .. [i]
-mulx up[0], s4, s9        | s7 ^4+sB+s5 ^3+s8+sA" s6+s3' s1 s0 s9: s4: [i]
-adcx s2, s1               | s7 ^4+sB+s5 ^3+s8+sA" s6+s3' s1 s0 s9: s4: [i]
-adox rp[i+3], s8          | s7 ^4+sB+s5" s8+sA s6+s3' s1 s0 s9: s4: [i]
-movq s8, rp[i+3]          | s7 ^4+sB+s5" ^3+sA s6+s3' s1 s0 s9: s4: [i]
-mulx up[1], s2, s8        | s7 ^4+sB+s5" ^3+sA s6+s3' s1 s0+s8 s9+s2: s4: [i]
-adcx s6, s3               | s7 ^4+sB+s5" ^3+sA' s3 s1 s0+s8 s9+s2: s4: [i]
-adox rp[i+4], sB          | s7" sB+s5 ^3+sA' s3 s1 s0+s8 s9+s2: s4: [i]
-movq sB, rp[i+4]          | s7" ^4+s5 ^3+sA' s3 s1 s0+s8 s9+s2: s4: [i]
-mulx up[2], s6, sB        | s7" ^4+s5 ^3+sA' s3 s1+sB s0+s8+s6 s9+s2: s4: [i]
-adcx rp[i+3], sA          | s7" ^4+s5' sA s3 s1+sB s0+s8+s6 s9+s2: s4: [i]
-movq sA, rp[i+3]          | s7" ^4+s5' ^3 s3 s1+sB s0+s8+s6 s9+s2: s4: [i]
+                         | s7 s2+sB+s5" s8+sA s6+s3' s1 s0 [2] {i}
+mulx up[0], s4, s9       | s7 s2+sB+s5" s8+sA s6+s3' s1 s0 s9: s4: {i}
+adcx s3, s6              | s7 s2+sB+s5" s8+sA' s6 s1 s0 s9: s4: {i}
+adox sB, s2              | s7" s2+s5 s8+sA' s6 s1 s0 s9: s4: {i}
+mulx up[1], s3, sB       | s7" s2+s5 s8+sA' s6 s1 s0+sB s9+s3: s4: {i}
+adcx sA, s8              | s7" s2+s5' s8 s6 s1 s0+sB s9+s3: s4: {i}
 movq $0, sA
-adox sA, s7               | s7 ^4+s5' ^3 s3 s1+sB s0+s8+s6 s9+s2: s4: [i]
-movq s3, rp[i+2]          | s7 ^4+s5' ^3 ^2 s1+sB s0+s8+s6 s9+s2: s4: [i]
-mulx up[3], s3, sA        | s7 ^4+s5' ^3 ^2+sA s1+sB+s3 s0+s8+s6 s9+s2: s4: [i]
-adcx rp[i+4], s5          | s7' s5 ^3 ^2+sA s1+sB+s3 s0+s8+s6 s9+s2: s4: [i]
-adox rp[i], s4            | s7' s5 ^3 ^2+sA s1+sB+s3 s0+s8+s6 s9+s2:" s4 [i]
-movq s4, rp[i]            | s7' s5 ^3 ^2+sA s1+sB+s3 s0+s8+s6 s9+s2:" [i+1]
-movq $0, s4
-adcx s4, s7               | s7 s5 ^3 ^2+sA s1+sB+s3 s0+s8+s6 s9+s2:" [i+1]
-movq s7, rp[i+5]          | ^5 s5 ^3 ^2+sA s1+sB+s3 s0+s8+s6 s9+s2:" [i+1]
-mulx up[4], s4, s7        | ^5 s5 ^3+s7 ^2+sA+s4 s1+sB+s3 s0+s8+s6 s9+s2:" [i+1]
-adox s9, s2               | ^5 s5 ^3+s7 ^2+sA+s4 s1+sB+s3 s0+s8+s6" s2: [i+1]
-movq s5, rp[i+4]
-s5:=v[i+1]
-adox s8, s0               | ^5 ^4 ^3+s7 ^2+sA+s4 s1+sB+s3" s0+s6 s2: [i+1] s5
-mulx up[5], s8, s9        | ^5 ^4+s9 ^3+s7+s8 ^2+sA+s4 s1+sB+s3" s0+s6 s2: [i+1] s5
-adcx rp[i+1], s2          | ^5 ^4+s9 ^3+s7+s8 ^2+sA+s4 s1+sB+s3" s0+s6' s2 [i+1] s5
-movq s2, rp[i+1]          | ^5 ^4+s9 ^3+s7+s8 ^2+sA+s4 s1+sB+s3" s0+s6' .. [i+1] s5
-adox sB, s1               | ^5 ^4+s9 ^3+s7+s8 ^2+sA+s4" s1+s3 s0+s6' .. [i+1] s5
-mulx up[6], s2, sB        | ^5+sB ^4+s9+s2 ^3+s7+s8 ^2+sA+s4" s1+s3 s0+s6' [i+2] s5
-adcx s6, s0               | ^5+sB ^4+s9+s2 ^3+s7+s8 ^2+sA+s4" s1+s3' s0 [i+2] s5
-adox rp[i+2], sA          | ^5+sB ^4+s9+s2 ^3+s7+s8" sA+s4 s1+s3' s0 [i+2] s5
-movq s0, rp[i+2]          | ^5+sB ^4+s9+s2 ^3+s7+s8" sA+s4 s1+s3' .. .. [i+1] s5
-mulx up[7], s0, s6        | s6 ^5+sB+s0 ^4+s9+s2 ^3+s7+s8" sA+s4 s1+s3' [i+3] s5
-movq s5, dd               | s6 ^5+sB+s0 ^4+s9+s2 ^3+s7+s8" sA+s4 s1+s3' .. .. [i+1]
-adcx s3, s1               | s6 ^5+sB+s0 ^4+s9+s2 ^3+s7+s8" sA+s4' s1 .. .. [i+1]
-adox rp[i+3], s7          | s6 ^5+sB+s0 ^4+s9+s2" s7+s8 sA+s4' s1 .. .. [i+1]
+adox sA, s7              | s7 s2+s5' s8 s6 s1 s0+sB s9+s3: s4: {i} sA=0
+adcx s5, s2              | s7' s2 s8 s6 s1 s0+sB s9+s3: s4: {i} sA=0
+adox rp[i], s4           | s7' s2 s8 s6 s1 s0+sB s9+s3:" s4 {i} sA=0
+movq s4, rp[i]           | s7' s2 s8 s6 s1 s0+sB s9+s3:" {i+1} sA=0
+mulx up[2], s4, s5       | s7' s2 s8 s6 s1+s5 s0+sB+s4 s9+s3:" {i+1} sA=0
+adcx sA, s7              | s7 s2 s8 s6 s1+s5 s0+sB+s4 s9+s3:" {i+1} sA=0
+adox s9, s3              | s7 s2 s8 s6 s1+s5 s0+sB+s4" s3: {i+1} sA=0
+mulx up[3], sA, s9       | s7 s2 s8 s6+s9 s1+s5+sA s0+sB+s4" s3: {i+1}
+adcx rp[i+1], s3         | s7 s2 s8 s6+s9 s1+s5+sA s0+sB+s4"' s3 {i+1}
+movq s3, rp[i+1]         | s7 s2 s8 s6+s9 s1+s5+sA s0+sB+s4"' .. {i+1}
+adox sB, s0              | s7 s2 s8 s6+s9 s1+s5+sA" s0+s4' .. {i+1}
+mulx up[4], s3, sB       | s7 s2 s8+sB s6+s9+s3 s1+s5+sA" s0+s4' .. {i+1}
+adcx s4, s0              | s7 s2 s8+sB s6+s9+s3 s1+s5+sA"' s0 .. {i+1}
+adox s5, s1              | s7 s2 s8+sB s6+s9+s3" s1+sA' s0 .. {i+1}
+mulx up[5], s4, s5       | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' s0 .. {i+1}
+movq s0, rp[i+2]         | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' [2] {i+1}
+s0:=v[i+1]               | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' [2] {i+1} s0=v[i+1]
+adcx s1, sA              | s7 s2+s5 s8+sB+s4 s6+s9+s3"' sA [2] {i+1} s0=v[i+1]
+adox s9, s6              | s7 s2+s5 s8+sB+s4" s6+s3' sA [2] {i+1} s0=v[i+1]
+mulx up[6], s1, s9       | s7+s9 s2+s5+s1 s8+sB+s4" s6+s3' sA [2] {i+1} s0=v[i+1]
+adcx s3, s6              | s7+s9 s2+s5+s1 s8+sB+s4"' s6 sA [2] {i+1} s0=v[i+1]
+adox sB, s8              | s7+s9 s2+s5+s1" s8+s4' s6 sA [2] {i+1} s0=v[i+1]
+mulx up[7], s3, sB       | sB s7+s9+s3 s2+s5+s1" s8+s4' s6 sA [2] {i+1} s0=v[i+1]
+movq s0, dd
+adox s5, s2              | sB s7+s9+s3" s2+s1 s8+s4' s6 sA [2] {i+1} s0=v[i+1]
 '''
 
 """
-old s7 ^4+sB+s5 ^3+s8+sA" s6+s3 s2+s1' s0 .. .. [i]
-new s6 ^5+sB+s0 ^4+s9+s2" s7+s8 sA+s4' s1 .. .. [i+1]
+old s7 s2+sB+s5" s8+sA s6+s3' s1 s0
+new sB s7+s9+s3" s2+s1 s8+s4' s6 sA
           0 1 2 3 4 5 6 7 8 9 A B                    """
-g_perm = '1 4 A 8 3 0 7 6 9 5 2 B'   # can swap 3 and 5
+g_perm = 'A 6 7 4 0 3 8 B 2 5 1 9'   # can swap
 
 g_tail_noextra = '''
-| adox s9, s2             | ^5 s5 ^3+s7 ^2+sA+s4 s1+sB+s3 s0+s8+s6" s2: [i+1]
-adox s8, s0               | ^5 s5 ^3+s7 ^2+sA+s4 s1+sB+s3" s0+s6 s2: [i+1]
-mulx up[5], s8, s9        | ^5 s5+s9 ^3+s7+s8 ^2+sA+s4 s1+sB+s3" s0+s6 s2: [i+1]
-adcx rp[i+1], s2          | ^5 s5+s9 ^3+s7+s8 ^2+sA+s4 s1+sB+s3" s0+s6' s2 [i+1]
-movq s2, rp[i+1]          | ^5 s5+s9 ^3+s7+s8 ^2+sA+s4 s1+sB+s3" s0+s6' [i+2]
-adox sB, s1               | ^5 s5+s9 ^3+s7+s8 ^2+sA+s4" s1+s3 s0+s6' [i+2]
-mulx up[6], s2, sB        | ^5+sB s5+s9+s2 ^3+s7+s8 ^2+sA+s4" s1+s3 s0+s6' [i+2]
-adcx s6, s0
-adox rp[i+2], sA          | ^5+sB s5+s9+s2 ^3+s7+s8" sA+s4 s1+s3' s0 [i+2]
-movq s0, rp[i+2]          | ^5+sB s5+s9+s2 ^3+s7+s8" sA+s4 s1+s3' [i+3]
-adcx s3, s1               | ^5+sB s5+s9+s2 ^3+s7+s8" sA+s4' s1 [i+3]
-movq sB, s3               | ^5+s3 s5+s9+s2 ^3+s7+s8" sA+s4' s1 [i+3]
-adox rp[i+3], s7          | ^5+s3 s5+s9+s2" s7+s8 sA+s4' s1 [i+3]
-movq s1, rp[i+3]          | ^5+s3 s5+s9+s2" s7+s8 sA+s4' [i+4]
-mulx up[7], s1, dd        | dd ^5+s3+s1 s5+s9+s2" s7+s8 sA+s4' [i+4]
-adcx sA, s4               | dd ^5+s3+s1 s5+s9+s2" s7+s8' s4 [i+4]
-movq s4, rp[i+4]          | dd ^5+s3+s1 s5+s9+s2" s7+s8' [i+5]
-adox s5, s9               | dd ^5+s3+s1" s9+s2 s7+s8' [i+5]
-adcx s8, s7               | dd ^5+s3+s1" s9+s2' s7 [i+5]
-adox rp[i+5], s3          | dd" s3+s1 s9+s2' s7 [i+5]
-movq s7, rp[i+5]          | dd" s3+s1 s9+s2' [i+6]
-adcx s2, s9               | dd" s3+s1' s9 [i+6]
-movq s9, rp[i+6]          | dd" s3+s1' [i+7]
-movq $0, sA
-adox sA, dd               | dd s3+s1' [i+7]
-adcx s3, s1               | dd' s3 [i+7]
-movq s1, rp[i+7]          | dd' [i+8]
-adcx sA, dd
+                         | s7+s9 s2+s5+s1" s8+s4' s6 sA {i+3}
+mulx up[7], s3, dd       | dd s7+s9+s3 s2+s5+s1" s8+s4' s6 sA {i+3}
+adox s5, s2              | dd s7+s9+s3" s2+s1 s8+s4' s6 sA {i+3}
+movq sA, rp[i+3]         | dd s7+s9+s3" s2+s1 s8+s4' s6 {i+4}
+adcx s4, s8              | dd s7+s9+s3" s2+s1' s8 s6 {i+4}
+movq s6, rp[i+4]         | dd s7+s9+s3" s2+s1' s8 {i+5}
+adox s9, s7              | dd" s7+s3 s2+s1' s8 {i+5}
+movq $0, s4              | dd" s7+s3 s2+s1' s8 {i+5} s4=0
+movq s8, rp[i+5]         | dd" s7+s3 s2+s1' {i+6}
+adcx s1, s2              | dd" s7+s3' s2 {i+6}
+adox s4, dd              | dd s7+s3' s2 {i+6}
+movq s2, rp[i+6]         | dd s7+s3' {i+7}
+adcx s3, s7              | dd' s7 {i+7}
+movq s7, rp[i+7]
+adcx s4, dd
 movq dd, rp[i+8]
 '''
 
@@ -258,7 +245,7 @@ def evaluate_row(s, i, extra, aligned):
     m = g_if_patt.match(s)
     if m:
         s = evaluate_if(s, {'extra': extra}, m.group(1), m.group(2))
-    
+
     m = g_iplus_patt.search(s)
     if m:
         s = s.replace(m.group(), '%s' % (int(m.group(1)) + i))
@@ -267,7 +254,7 @@ def evaluate_row(s, i, extra, aligned):
     m = g_v_patt.match(s)
     if m:
         return [extract_v(int(m.group(2)), aligned, m.group(1))]
-    
+
     m = g_array_patt.search(s)
     if m:
         j = int(m.group(2))
@@ -306,15 +293,14 @@ def form_tail(ss, extra):
     if extra:
         assert 0
     else:
-        i = ss.index('adox s9, s2') + 1
-        return ss[:i] + P.cutoff_comments(g_tail_noextra)
+        return ss[:-3] + P.cutoff_comments(g_tail_noextra)
 
 def alignment_code(alignment, extra):
     if alignment:
         code = []
     else:
         code = chew_code(g_load_0, None, extra, True, None)
-    
+
     code += chew_code(g_mul_01, 0, extra, not alignment, None)
     m2 = P.cutoff_comments(g_mul_2)
     m7 = form_tail(m2, extra)

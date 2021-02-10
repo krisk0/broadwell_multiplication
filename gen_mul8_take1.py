@@ -121,7 +121,7 @@ adcx s6, s1              | s3+sB s5+sA+s8 s2+s9+s4"' s1 s7 [2] {i+1} s0=v[i+1]
 adox s9, s2              | s3+sB s5+sA+s8" s2+s4' s1 s7 [2] {i+1} s0=v[i+1]
 mulx 56(up), s6, s9      | s9 s3+sB+s6 s5+sA+s8" s2+s4' s1 s7 [2] {i+1} s0=v[i+1]
 movq s0, dd
-adox sA, s5              | dd s3+sB+s6" s5+s8 s2+s4' s1 s7 [2] {i+1} s0=v[i+1]
+adox sA, s5              | s9 s3+sB+s6" s5+s8 s2+s4' s1 s7 [2] {i+1} s0=v[i+1]
 '''
 
 '''
