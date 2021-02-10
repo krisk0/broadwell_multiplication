@@ -155,6 +155,12 @@ adox sB, s0              | s7 s2 s8 s6+s9 s1+s5+sA" s0+s4' .. {i+1}
 mulx up[4], s3, sB       | s7 s2 s8+sB s6+s9+s3 s1+s5+sA" s0+s4' .. {i+1}
 adcx s4, s0              | s7 s2 s8+sB s6+s9+s3 s1+s5+sA"' s0 .. {i+1}
 adox s5, s1              | s7 s2 s8+sB s6+s9+s3" s1+sA' s0 .. {i+1}
+|
+| Save sp into a xmm, use sp instead of up, use up to extract v[i+1]. Result: no
+|  difference on Skylake, loss of 4 ticks on Ryzen.
+|
+| Ryzen has problems with mulx sp[]? Ryzen has problems with movq rsp, xmm?
+|
 mulx up[5], s4, s5       | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' s0 .. {i+1}
 movq s0, rp[i+2]         | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' [2] {i+1}
 s0:=v[i+1]               | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' [2] {i+1} s0=v[i+1]
