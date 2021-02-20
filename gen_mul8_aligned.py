@@ -287,15 +287,15 @@ def chew_code(src, i, extra, aligned, p):
         if k and (k != [None]) and (k != ['']):
             rr += k
 
-    if p:
-        re = []
-        for x in rr:
-            if x[0] == '#':
-                re.append(x)
-            else:
-                re.append(E.apply_s_permutation(x, p))
-        return re
-    return rr
+    if not p:
+        return rr
+    re = []
+    for x in rr:
+        if x[0] == '#':
+            re.append(x)
+        else:
+            re.append(E.apply_s_permutation(x, p))
+    return re
 
 def form_tail(ss, extra):
     if extra:

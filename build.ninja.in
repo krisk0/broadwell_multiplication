@@ -77,6 +77,9 @@ test8_zen.exe: test8.cpp mul8_zen.s @int_h [+flags -DZEN=1]
 test%_aligned.exe: test_twice.cpp mul%_aligned.s @int_h $
     [+flags -DTESTED=mul%_aligned -DSIZE=%]
 
+test11_zen.exe: test_twice.cpp mul11_ryzen.s @int_h $
+    [+flags -DTESTED=mul11_ryzen -DSIZE=11]
+
 test7_2arg.exe: test_2arg.cpp mul7_2arg.s @int_h $
     [+flags -DTESTED=mul7_2arg -DSIZE=7]
 
@@ -123,7 +126,6 @@ test_mul11_bwl.exe: test_mul_8shifts.cpp mul11_bwl.s @int_h $
 
 test_mul11_zen.exe: test_mul_8shifts.cpp mul11_zen.s @int_h $
     [+flags -DSIZE=11 -DTESTED=mul11_zen]
-
 
 test_addmul_8x3.exe: test_addmul_8x3.cpp $toom22_o @int_h $toom22_h
 
