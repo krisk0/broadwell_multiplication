@@ -1,22 +1,17 @@
 '''
-11x11 multiplication targeting Ryzen. Uses aligned loads of v[] into xmm's.
+11x11 multiplication targeting Zen. Uses aligned loads of v[] into xmm's.
+
+208 ticks on Skylake, 191 ticks on Ryzen
+
+22x22 multiplication benchmarks:
+                          Skylake Ryzen
+without this subroutine     879     807
+with this subroutine        769     774
 '''
-
-"""
-      rdi -< rp
-      rsi -< sp
-      rdx -< vp
-
-rbp rbx r12 r13 r14 r15
-wB  wA  w9  w8  w7  w6    -- saved
-
-rax r8  r9  r10 r11 rcx rsi rdi rdx
-w0  w1  w2  w3  w4  w5  sp  rp  dd
-"""
 
 g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
     'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 w5,rcx dd,rdx sp,rsp ' + \
-    ' '.join(['x%X,xmm%s' % (i,i) for i in range(16)])
+    ' '.join(['x%X,xmm%s' % (i, i) for i in range(16)])
 
 """
 xmm usage:
@@ -71,11 +66,11 @@ mulx sp[4], w7, dd  | w4+dd wC+w1+w7 w9+w2+w5 w8+wB+w0" w3+wA' [2] ==
 xchg dd, w6         | w4+w6 wC+w1+w7 w9+w2+w5 w8+wB+w0" w3+wA' [2] == dd=v[0]
 adox wB, w8         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0 w3+wA' [2] == dd=v[0]
 adcx wA, w3         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' w3 [2] == dd=v[0]
-movq w3, rp[2]      | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' [3] == dd=v[0] 
-mulx sp[6], w3, wA  | wA w4+w6+w3 wC+w1+w7 w9+w2+w5" w8+w0' [3] == dd=v[0] 
-adox w9, w2         | wA w4+w6+w3 wC+w1+w7" w2+w5 w8+w0' [3] == dd=v[0] 
-mulx sp[7], w9, wB  | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5 w8+w0' [3] == dd=v[0] 
-adcx w8, w0         | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' w0 [3] == dd=v[0] 
+movq w3, rp[2]      | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' [3] == dd=v[0]
+mulx sp[6], w3, wA  | wA w4+w6+w3 wC+w1+w7 w9+w2+w5" w8+w0' [3] == dd=v[0]
+adox w9, w2         | wA w4+w6+w3 wC+w1+w7" w2+w5 w8+w0' [3] == dd=v[0]
+mulx sp[7], w9, wB  | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5 w8+w0' [3] == dd=v[0]
+adcx w8, w0         | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' w0 [3] == dd=v[0]
 movq rp[3], w8      | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' w0 [3] == dd=v[0] w8=v[1]
 movq w0, rp[3]      | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' [4] == dd=v[0] w8=v[1]
 adox w1, wC         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == dd=v[0] w8=v[1]
@@ -293,9 +288,7 @@ def extract_v(i, alignment, tgt):
         return 'movq x%s, %s' % (j, tgt)
 
 def cook_tail(m3, alignment, p):
-    rr = chew_code(g_tail, 10, alignment, p)
-    rr = [r for r in rr if r.find('#') == -1]
-    rr = chew_code(m3, 10, alignment, p) + rr
+    rr = chew_code(m3, 10, alignment, p) + chew_code(g_tail, 10, alignment, p)[1:]
     # omit everything after jmp
     j = [j for j in range(len(rr)) if rr[j].find('jmp ') != -1]
     if j:

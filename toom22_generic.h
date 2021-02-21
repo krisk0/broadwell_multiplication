@@ -36,14 +36,16 @@ void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
 #if AMD_ZEN
     void mul6_zen(mp_ptr, mp_srcptr, mp_srcptr);
     #define MUL6_SUBR mul6_zen
-    void mul11_zen(mp_ptr, mp_srcptr, mp_srcptr);
-    #define MUL11_SUBR mul11_zen
+    //void mul11_zen(mp_ptr, mp_srcptr, mp_srcptr);
+    //#define MUL11_SUBR mul11_zen
 #else
     void mul6_aligned(mp_ptr, mp_srcptr, mp_srcptr);
     #define MUL6_SUBR mul6_aligned
-    void mul11_bwl(mp_ptr, mp_srcptr, mp_srcptr);
-    #define MUL11_SUBR mul11_bwl
+    //void mul11_bwl(mp_ptr, mp_srcptr, mp_srcptr);
+    //#define MUL11_SUBR mul11_bwl
 #endif
+void mul11_ryzen(mp_ptr, mp_srcptr, mp_srcptr);
+#define MUL11_SUBR mul11_ryzen
 void mpn_add_4k_plus2_4arg(mp_ptr, mp_limb_t, mp_srcptr, uint16_t);
 mp_limb_t mpn_sub_2k_plus2_inplace(mp_ptr, mp_srcptr, uint16_t);
 void mul7_2arg(mp_ptr, mp_srcptr);
@@ -1390,11 +1392,8 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         mp_limb_t scratch[itch::toom22_forced_t<13>()];
         toom22_1x_broadwell_t<N>(rp, scratch, ap, bp);
         // use hand-optimized subroutine if possible
-    #if 0
-    // MUL11_SUBR() is too slow
     } else if constexpr (N == 11) {
         MUL11_SUBR(rp, ap, bp);
-    #endif
     } else if constexpr (N == 8) {
         if constexpr(fear_of_page_break) {
             // 2 ticks slower than mul8_zen on Ryzen, same time on Skylake
