@@ -1,12 +1,12 @@
 '''
 11x11 multiplication targeting Zen. Uses aligned loads of v[] into xmm's.
 
-208-210 ticks on Skylake, 189 ticks on Ryzen
+203 ticks on Skylake, 189 ticks on Ryzen
 
 22x22 multiplication benchmarks:
                           Skylake Ryzen
 without this subroutine     879     807
-with this subroutine      767-770   770
+with this subroutine        754     769
 '''
 
 g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
@@ -89,7 +89,7 @@ mulx sp[9], w7, wC  | wC w5+w7 wB+w8+w2 wA+w9+w1" w4+w3' [6] == dd=v[0] w0=v[1]
 adox w9, wA         | wC w5+w7 wB+w8+w2" wA+w1 w4+w3' [6] == dd=v[0] w0=v[1]
 adcx w4, w3         | wC w5+w7 wB+w8+w2" wA+w1' w3 [6] == dd=v[0] w0=v[1]
 mulx sp[10], w4, w9 | w9 wC+w4 w5+w7 wB+w8+w2" wA+w1' w3 [6] == dd=v[0] w0=v[1]
-xchg w0, dd         | w9 wC+w4 w5+w7 wB+w8+w2" wA+w1' w3 [6] == dd=v[1]
+movq w0, dd         | w9 wC+w4 w5+w7 wB+w8+w2" wA+w1' w3 [6] == dd=v[1]
 mulx sp[1], w0, w6  | w9 wC+w4 w5+w7 wB+w8+w2" wA+w1' w3 .. .. w6: w0: [2]
 adox wB, w8         | w9 wC+w4 w5+w7" w8+w2 wA+w1' w3 .. .. w6: w0: [2]
 adcx wA, w1         | w9 wC+w4 w5+w7" w8+w2' w1 w3 .. .. w6: w0: [2]
@@ -231,8 +231,7 @@ mulx sp[9], s5, sC | ^6+sC s2+s8+s5 s0+sA+s7 s3+sB+s6' s1+s4" [i+6] s9
 adcx sB, s3        | ^6+sC s2+s8+s5 s0+sA+s7' s3+s6 s1+s4" [i+6] s9
 adox s4, s1        | ^6+sC s2+s8+s5 s0+sA+s7' s3+s6" s1 [i+6] s9
 mulx sp[10], s4, sB | sB ^6+sC+s4 s2+s8+s5 s0+sA+s7' s3+s6" s1 [i+6] s9
-| TODO: movq instead of xchg below?
-if i<10: xchg s9, dd | sB ^6+sC+s4 s2+s8+s5 s0+sA+s7' s3+s6" s1 [i+6]
+if i<10: movq s9, dd | sB ^6+sC+s4 s2+s8+s5 s0+sA+s7' s3+s6" s1 [i+6]
 movq rp[i+6], s9   | sB s9+sC+s4 s2+s8+s5 s0+sA+s7' s3+s6" s1 [i+6]
 adcx sA, s0        | sB s9+sC+s4 s2+s8+s5' s0+s7 s3+s6" s1 [i+6]
 movq s1, rp[i+6]   | sB s9+sC+s4 s2+s8+s5' s0+s7 s3+s6" [i+7]
