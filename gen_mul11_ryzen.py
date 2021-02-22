@@ -1,12 +1,12 @@
 '''
 11x11 multiplication targeting Zen. Uses aligned loads of v[] into xmm's.
 
-208 ticks on Skylake, 191 ticks on Ryzen
+208-210 ticks on Skylake, 189 ticks on Ryzen
 
 22x22 multiplication benchmarks:
                           Skylake Ryzen
 without this subroutine     879     807
-with this subroutine        769     774
+with this subroutine      767-770   770
 '''
 
 g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
@@ -20,6 +20,8 @@ xmm usage:
 
 g_preamble = '''
 vzeroupper
+movq sp, rp[17]
+movq wC, sp
 movq dd, w5
 and $0xF, dd
 movq w5[0], dd
@@ -43,8 +45,6 @@ movq w5[10], x4
 
 g_mul_01 = '''
 | TODO: move theese to preamble?
-movq sp, rp[17]
-movq wC, sp
 mulx sp[0], w0, w1    | w1 w0 == w6=v[1]
 mulx sp[1], w2, w3    | w3 w1+w2 w0 == w6=v[1]
 xchg dd, w6           | w3 w1+w2 w0 == dd=v[1] w6=v[0]
@@ -62,11 +62,12 @@ movq w1, rp[1]        | wC w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[1] dd=v[0]
 movq w6, rp[3]        | rp[3]=v[1]
 mulx sp[5], w1, w4    | w4 wC+w1 w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[1] dd=v[0]
 xchg w6, dd           | w4 wC+w1 w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[0] dd=v[1]
-mulx sp[4], w7, dd  | w4+dd wC+w1+w7 w9+w2+w5 w8+wB+w0" w3+wA' [2] ==
-xchg dd, w6         | w4+w6 wC+w1+w7 w9+w2+w5 w8+wB+w0" w3+wA' [2] == dd=v[0]
-adox wB, w8         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0 w3+wA' [2] == dd=v[0]
-adcx wA, w3         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' w3 [2] == dd=v[0]
-movq w3, rp[2]      | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' [3] == dd=v[0]
+movq w6, rp[4]       | rp[4]=v[0]
+mulx sp[4], w7, w6  | w4+dd wC+w1+w7 w9+w2+w5 w8+wB+w0" w3+wA' [2] ==
+adox wB, w8         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0 w3+wA' [2] ==
+adcx wA, w3         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' w3 [2] ==
+movq w3, rp[2]      | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' [3] ==
+movq rp[4], dd      | dd=v[0]
 mulx sp[6], w3, wA  | wA w4+w6+w3 wC+w1+w7 w9+w2+w5" w8+w0' [3] == dd=v[0]
 adox w9, w2         | wA w4+w6+w3 wC+w1+w7" w2+w5 w8+w0' [3] == dd=v[0]
 mulx sp[7], w9, wB  | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5 w8+w0' [3] == dd=v[0]
