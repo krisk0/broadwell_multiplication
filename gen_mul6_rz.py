@@ -314,7 +314,7 @@ def do_it(o):
     code += mul_code(5, tail, p)
 
     if not g_writing_macro:
-        G.save_in_xmm(code, xmm_save)
+        P.save_in_xmm(code, xmm_save)
         P.insert_restore(code, xmm_save)
     cook_asm(o, code, xmm_save, g_var_map)
 
