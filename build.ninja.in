@@ -2,7 +2,7 @@ o = ./automagic
 toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,8}_zen.o $
     $o/mul{5..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o $
     $o/mpn_sub_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul3.o $o/addmul_8x3.o $
-    $o/mul11_bwl.o $o/mul11_zen.o $o/mul11_ryzen.o
+    $o/mul11_ryzen.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
 build some_benchmarks: phony $

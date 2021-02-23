@@ -1,12 +1,8 @@
 '''
-11x11 multiplication targeting Zen. Uses aligned loads of v[] into xmm's.
+11x11 multiplication targeting Broadwell. Uses aligned loads of v[] into xmm's.
 
-203-205 ticks on Skylake, 189 ticks on Ryzen
-
-22x22 multiplication benchmarks:
-                          Skylake Ryzen
-without this subroutine     879     807
-with this subroutine        754     769
+Execution time on Skylake: 205 ticks (same as mul11_ryzen). Time of 22x22
+ multiplication using this subroutine: 755 ticks (1 tick more)
 '''
 
 g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
@@ -15,63 +11,66 @@ g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
 
 """
 xmm usage:
-0-4 v[]
+0-5 v[]
+12 rsp
+13,6 scratch
 """
 
 g_preamble = '''
 vzeroupper
-movq sp, rp[17]
-movq wC, sp
 movq dd, w5
 and $0xF, dd
 movq w5[0], dd
 movq w5[1], w6        | w6=v[1]
+movq sp, xC
+movq wC, sp
 jz align0
-movq w5[2], x0
-movdqa w5[3], x1
-movdqa w5[5], x2
-movdqa w5[7], x3
-movdqa w5[9], x4
 '''
 
 g_load_0 = '''
 align0:
-movdqa w5[2], x0
-movdqa w5[4], x1
-movdqa w5[6], x2
-movdqa w5[8], x3
-movq w5[10], x4
 '''
 
 g_mul_01 = '''
+if aligned: movdqa w5[2], x1
+if !aligned: movdqa w5[1], x0
 mulx sp[0], w0, w1    | w1 w0 == w6=v[1]
 mulx sp[1], w2, w3    | w3 w1+w2 w0 == w6=v[1]
+if aligned: movdqa w5[4], x2
+if !aligned: movdqa w5[3], x1
 xchg dd, w6           | w3 w1+w2 w0 == dd=v[1] w6=v[0]
 mulx sp[0], w4, w7    | w3+w7 w1+w2+w4 w0 == dd=v[1] w6=v[0]
+if aligned: movdqa w5[6], x3
+if !aligned: movdqa w5[5], x2
 mulx sp[2], w8, w9    | w9 w8 w3+w7 w1+w2+w4 w0 == dd=v[1] w6=v[0]
 xchg w6, dd           | w9 w8 w3+w7 w1+w2+w4 w0 == w6=v[1] dd=v[0]
+if aligned: movdqa w5[8], x4
+if !aligned: movdqa w5[7], x3
 mulx sp[2], wA, wB    | w9 w8+wB w3+w7+wA w1+w2+w4 w0 == w6=v[1] dd=v[0]
+if aligned: movq w5[10], x5
+if !aligned: movdqa w5[9], x4
 movq w0, rp[0]        | w9 w8+wB w3+w7+wA w1+w2+w4 .. == w6=v[1] dd=v[0]
 adox w2, w1           | w9 w8+wB w3+w7+wA" w1+w4 .. == w6=v[1] dd=v[0]
 mulx sp[3], w0, w2    | w9+w2 w8+wB+w0 w3+w7+wA" w1+w4 .. == w6=v[1] dd=v[0]
 mulx sp[4], w5, wC    | wC w9+w2+w5 w8+wB+w0 w3+w7+wA" w1+w4 .. == w6=v[1] dd=v[0]
+if aligned: movq w6, x0
 adox w7, w3           | wC w9+w2+w5 w8+wB+w0" w3+wA w1+w4 .. == w6=v[1] dd=v[0]
 adcx w4, w1           | wC w9+w2+w5 w8+wB+w0" w3+wA' w1 .. == w6=v[1] dd=v[0]
 movq w1, rp[1]        | wC w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[1] dd=v[0]
-movq w6, rp[3]        | rp[3]=v[1]
+movq dd, xD           | xD=v[0]
 mulx sp[5], w1, w4    | w4 wC+w1 w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[1] dd=v[0]
 xchg w6, dd           | w4 wC+w1 w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[0] dd=v[1]
-movq w6, rp[4]       | rp[4]=v[0]
 mulx sp[4], w7, w6  | w4+dd wC+w1+w7 w9+w2+w5 w8+wB+w0" w3+wA' [2] ==
 adox wB, w8         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0 w3+wA' [2] ==
-adcx wA, w3         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' w3 [2] ==
-movq w3, rp[2]      | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' [3] ==
-movq rp[4], dd      | dd=v[0]
+movq xD, wB
+adcx wA, w3         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' w3 [2] == wB=v[0]
+movq w3, rp[2]      | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' [3] == wB=v[0]
+movq wB, dd         | dd=v[0]
 mulx sp[6], w3, wA  | wA w4+w6+w3 wC+w1+w7 w9+w2+w5" w8+w0' [3] == dd=v[0]
 adox w9, w2         | wA w4+w6+w3 wC+w1+w7" w2+w5 w8+w0' [3] == dd=v[0]
 mulx sp[7], w9, wB  | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5 w8+w0' [3] == dd=v[0]
 adcx w8, w0         | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' w0 [3] == dd=v[0]
-movq rp[3], w8      | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' w0 [3] == dd=v[0] w8=v[1]
+w8:=v[1]            | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' w0 [3] == dd=v[0] w8=v[1]
 movq w0, rp[3]      | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' [4] == dd=v[0] w8=v[1]
 adox w1, wC         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == dd=v[0] w8=v[1]
 xchg dd, w0         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == w0=v[0] w8=v[1]
@@ -213,7 +212,7 @@ mulx sp[6], s4, sB | sA s2 s0 s3+sB s1+sC+s4 s9+s5: s7+s8:' s6:" [i+3]
 adcx rp[i+4], s7   | sA s2 s0 s3+sB s1+sC+s4 s9+s5:' s7+s8: s6:" [i+3]
 adox rp[i+3], s6
 movq s6, rp[i+3]   | sA s2 s0 s3+sB s1+sC+s4 s9+s5:' s7+s8" [i+4]
-movq sA, rp[i+6]   | ^6 s2 s0 s3+sB s1+sC+s4 s9+s5:' s7+s8" [i+4]
+movq sA, x6        | ^6 s2 s0 s3+sB s1+sC+s4 s9+s5:' s7+s8" [i+4]
 |rp[i+7]:=v[i+7]
 mulx sp[7], s6, sA | ^6 s2 s0+sA s3+sB+s6 s1+sC+s4 s9+s5:' s7+s8" [i+4]
 adcx s9, s5        | ^6 s2 s0+sA s3+sB+s6 s1+sC+s4' s5: s7+s8" [i+4]
@@ -231,7 +230,7 @@ adcx sB, s3        | ^6+sC s2+s8+s5 s0+sA+s7' s3+s6 s1+s4" [i+6] s9
 adox s4, s1        | ^6+sC s2+s8+s5 s0+sA+s7' s3+s6" s1 [i+6] s9
 mulx sp[10], s4, sB | sB ^6+sC+s4 s2+s8+s5 s0+sA+s7' s3+s6" s1 [i+6] s9
 if i<10: movq s9, dd | sB ^6+sC+s4 s2+s8+s5 s0+sA+s7' s3+s6" s1 [i+6]
-movq rp[i+6], s9   | sB s9+sC+s4 s2+s8+s5 s0+sA+s7' s3+s6" s1 [i+6]
+movq x6, s9        | sB s9+sC+s4 s2+s8+s5 s0+sA+s7' s3+s6" s1 [i+6]
 adcx sA, s0        | sB s9+sC+s4 s2+s8+s5' s0+s7 s3+s6" s1 [i+6]
 movq s1, rp[i+6]   | sB s9+sC+s4 s2+s8+s5' s0+s7 s3+s6" [i+7]
 '''
@@ -243,7 +242,7 @@ new   sB s9+sC+s4 s2+s8+s5' s0+s7 s3+s6"
 g_perm = '5 3 C 7 0 6 A 2 4 1 B 9 8'   # can swap A and 1
 
 g_tail = '''
-movq rp[i+7], sp
+movq xC, sp
 adox s6, s3        | sB s9+sC+s4 s2+s8+s5' s0+s7" s3 [i+7]
 movq s3, rp[i+7]   | sB s9+sC+s4 s2+s8+s5' s0+s7" [i+8]
 adcx s8, s2        | sB s9+sC+s4' s2+s5 s0+s7" [i+8]
@@ -268,19 +267,18 @@ import gen_mul7_t03 as A
 import gen_mul8_aligned as E
 
 def extract_v(i, alignment, tgt):
-    if (i < 2) or (i > 11) or (alignment == None):
+    if (i < 1) or (i > 11) or (alignment == None):
         return ''
-    i -= 2
+    i -= 1
     if alignment:
-        # 0 1_2 3_4 ... 7_8
+        # 0_1 2_3 ...
+        j = i / 2
+    else:
         if i == 0:
             return 'movq x0, ' + tgt
         i -= 1
-        # 0_1-<x1 2_3-<x2 ...
+        # 0_1:x1 2_3:x2 4_5 ...
         j = i / 2 + 1
-    else:
-        # 0_1 2_3 4_5 ...
-        j = i / 2
     if i & 1:
         return 'pextrq $0x1, x%s, %s' % (j, tgt)
     else:
@@ -319,6 +317,7 @@ def evaluate_row(s, i, alignment):
                'i<10' : i < 10,
                'tail_jump' : (i == 10) and (alignment != 0),
                'tail_here' : (i == 10) and (alignment == 0),
+               'aligned'   : alignment == 0,
             }
         s = E.evaluate_if(s, d, m.group(1), m.group(2))
 
