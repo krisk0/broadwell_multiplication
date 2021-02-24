@@ -301,6 +301,9 @@ benchm%_toom22_gmp.exe: benchmark-toom22.cpp $toom22_o @int_h $toom22_h $
 benchm%_toom22_1x_loud.exe: benchmark-toom22_1x_loud.cpp $toom22_o @int_h $toom22_h $
     benchmark-internal.c [+flags -DSIZE=%]
 
+benchm22_toom22_2x_loud.exe: benchmark-toom22_2x_loud.cpp $toom22_o @int_h $
+    $toom22_h benchmark-internal.c [+flags -DSIZE=22]
+
 benchm_xx_official.exe: benchmark_toom22_xx.cpp $toom22_o @int_h $toom22_h $
     benchmark-internal.c [+flags -DSUBR=0]
 

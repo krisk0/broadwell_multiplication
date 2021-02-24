@@ -646,6 +646,10 @@ toom22_2x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
     #endif
 }
 
+#if defined(TOOM22_2X_BROADWELL_BENCHMARK)
+unsigned long long g_t_subt, g_t_mult, g_t_intt;
+#endif
+
 /*
 N even, 10 <= N
 
@@ -661,8 +665,20 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     } else {
         // N not 12 and does not divide by 8
         constexpr auto h = N / 2;
+        #if defined(TOOM22_2X_BROADWELL_BENCHMARK)
+        unsigned long long t0, t1;
+        if constexpr (N == (uint16_t)TOOM22_2X_BROADWELL_BENCHMARK) {
+            t0 = __rdtsc();
+        }
+        #endif
         auto sign = subtract_lesser_from_bigger_1x_t<h>(rp, ap);
         sign ^= subtract_lesser_from_bigger_1x_t<h>(rp + h, bp);
+        #if defined(TOOM22_2X_BROADWELL_BENCHMARK)
+        if constexpr (N == (uint16_t)TOOM22_2X_BROADWELL_BENCHMARK) {
+            t1 = __rdtsc();
+            g_t_subt += t1 - t0;
+        }
+        #endif
         auto slave_scratch = scratch + N;
         // tried mul7_trice() here, got slight slow-down
         if constexpr (h == 7) {
@@ -673,6 +689,12 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         }
         toom22_broadwell_t<h>(rp, slave_scratch, ap, bp);
         toom22_broadwell_t<h>(rp + N, slave_scratch, ap + h, bp + h);
+        #if defined(TOOM22_2X_BROADWELL_BENCHMARK)
+        if constexpr (N == (uint16_t)TOOM22_2X_BROADWELL_BENCHMARK) {
+            t0 = __rdtsc();
+            g_t_mult += t0 - t1;
+        }
+        #endif
         if constexpr (N & 3) {
             /*
             Line below gives no gain on Broadwell or Ryzen
@@ -683,6 +705,15 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         } else {
             toom22_interpolate_4k_t<N>(rp, scratch, sign);
         }
+        /*
+        TODO: toom22_interpolate(,,,22) takes 102 ticks on Skylake and 130 ticks
+         on Ryzen. Must speed-up on Ryzen.
+        */
+        #if defined(TOOM22_2X_BROADWELL_BENCHMARK)
+        if constexpr (N == TOOM22_2X_BROADWELL_BENCHMARK) {
+            g_t_intt += __rdtsc() - t0;
+        }
+        #endif
     }
 }
 
