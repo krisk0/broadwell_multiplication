@@ -62,7 +62,7 @@ movq w6, rp[3]        | rp[3]=v[1]
 mulx sp[5], w1, w4    | w4 wC+w1 w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[1] dd=v[0]
 xchg w6, dd           | w4 wC+w1 w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[0] dd=v[1]
 movq w6, rp[4]       | rp[4]=v[0]
-mulx sp[4], w7, w6  | w4+dd wC+w1+w7 w9+w2+w5 w8+wB+w0" w3+wA' [2] ==
+mulx sp[4], w7, w6  | w4+w6 wC+w1+w7 w9+w2+w5 w8+wB+w0" w3+wA' [2] ==
 adox wB, w8         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0 w3+wA' [2] ==
 adcx wA, w3         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' w3 [2] ==
 movq w3, rp[2]      | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' [3] ==
@@ -74,6 +74,8 @@ adcx w8, w0         | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' w0 [3] == dd=v[0]
 movq rp[3], w8      | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' w0 [3] == dd=v[0] w8=v[1]
 movq w0, rp[3]      | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' [4] == dd=v[0] w8=v[1]
 adox w1, wC         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == dd=v[0] w8=v[1]
+                    | xchg appears to be slightly better on Ryzen than movq
+                    | Skylake seems to prefer movq
 xchg dd, w0         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == w0=v[0] w8=v[1]
 xchg w8, dd         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == w0=v[0] dd=v[1]
 mulx sp[6], w1, w8  | wB+w8 wA+w9+w1 w4+w6+w3" wC+w7 w2+w5' [4] == w0=v[0] dd=v[1]
