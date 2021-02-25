@@ -6,7 +6,7 @@
 22x22 multiplication benchmarks:
                           Skylake Ryzen
 without this subroutine     879     807
-with this subroutine      759-761   769
+with this subroutine      759-761   755
 '''
 
 g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
