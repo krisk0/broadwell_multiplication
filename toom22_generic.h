@@ -694,18 +694,13 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         }
         #endif
         if constexpr (N & 3) {
-            /*
-            Line below gives no gain on Broadwell or Ryzen
-
             toom22_interpolate_t<N>(rp, scratch, sign);
-            */
-            toom22_interpolate(rp, scratch, sign, N);
         } else {
             toom22_interpolate_4k_t<N>(rp, scratch, sign);
         }
         /*
-        TODO: toom22_interpolate(,,,22) takes 102 ticks on Skylake and 130 ticks
-         on Ryzen. Must speed-up on Ryzen.
+        TODO: toom22_interpolate(,,,22) takes 97 ticks on Skylake and 113-117 ticks
+         on Ryzen. Most other subroutines are faster on Ryzen. What's the matter?
         */
         #if defined(TOOM22_2X_BROADWELL_BENCHMARK)
         if constexpr (N == TOOM22_2X_BROADWELL_BENCHMARK) {
