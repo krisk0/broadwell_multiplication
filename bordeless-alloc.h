@@ -15,7 +15,7 @@
     {                                                                                    \
         auto bordeless_alloc_temp_ = (mp_limb_t)tgt;                                     \
         if (((bordeless_alloc_temp_ + size) & unmask) != (bordeless_alloc_temp_ & unmask)) { \
-            bordeless_alloc_temp_ = (bordeless_alloc_temp_ + mask) & mask;               \
+            bordeless_alloc_temp_ = (bordeless_alloc_temp_ + mask) & unmask;             \
             tgt = (T*)bordeless_alloc_temp_;                                             \
         }                                                                                \
     }
