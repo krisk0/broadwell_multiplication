@@ -841,7 +841,18 @@ sum_progression_t() {
     return alpha * (two_power<l>() - 1);
 }
 
-template<int16_t, int16_t> struct toom22_broadwell_t;
+template<int16_t N, int16_t K>
+struct toom22_broadwell_t {
+    static constexpr uint64_t v() {
+        constexpr int16_t h = (N + 1) / 2;
+        if constexpr ((N & 1) == 0) {
+            return 2 * h + toom22_broadwell_t<h, K - 1>::v();
+        }
+        constexpr auto r0 = toom22_broadwell_t<h, K - 1>::v();
+        constexpr auto r1 = toom22_broadwell_t<h - 1, K - 1>::v();
+        return r0 > r1 ? 2 * h + r0 : 2 * h + r1;
+    };
+};
 
 template<int16_t N>
 struct toom22_broadwell_t<N, 0> {
@@ -857,34 +868,6 @@ struct toom22_broadwell_t<N, 0> {
         // ... or exactly TOOM_2X_BOUND
         return N < TOOM_2X_BOUND ? 0 : (N + 1) / 2 * 2;
     }
-};
-
-/*
-Due to stupidity of GCC compiler (or C++ standart), have to avoid recursion,
- will use macro instead
-*/
-#define toom22_broadwell_t_macro(N, K)                   \
-    constexpr int16_t h = (N + 1) / 2;                    \
-    if constexpr ((N & 1) == 0) {                          \
-        return 2 * h + toom22_broadwell_t<h, K - 1>::v();   \
-    }                                                        \
-    constexpr auto r0 = toom22_broadwell_t<h, K - 1>::v();    \
-    constexpr auto r1 = toom22_broadwell_t<h - 1, K - 1>::v(); \
-    return r0 > r1 ? 2 * h + r0 : 2 * h + r1;
-
-template<int16_t N>
-struct toom22_broadwell_t<N, 1> {
-    static constexpr uint64_t v() { toom22_broadwell_t_macro(N, 1) };
-};
-
-template<int16_t N>
-struct toom22_broadwell_t<N, 2> {
-    static constexpr uint64_t v() { toom22_broadwell_t_macro(N, 2) };
-};
-
-template<int16_t N>
-struct toom22_broadwell_t<N, 3> {
-    static constexpr uint64_t v() { toom22_broadwell_t_macro(N, 3) };
 };
 
 #undef toom22_broadwell_t_macro
