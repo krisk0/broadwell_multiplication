@@ -75,12 +75,15 @@ do_test() {
             test_uv(g_v + 0, g_u + 0);
         }
     }
-    
+
     for(unsigned i = 0; i < SIZE; i++) {
         g_u[i] = ((INT)0x3) << 62;
     }
-    memset(g_v, 0, sizeof(g_v));
-    g_v[1] = g_v[0] = g_u[0];
+    memset(g_v + 0, 0, SIZE * sizeof(mp_limb_t));
+    #if SIZE > 1
+    g_v[1] =
+    #endif
+            g_v[0] = g_u[0];
     test_uv(g_u + 0, g_v + 0);
 
     for(unsigned a = 0; a <= SIZE; a++) {

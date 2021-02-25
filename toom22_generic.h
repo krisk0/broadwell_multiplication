@@ -299,8 +299,7 @@ mp_limb_t
 subtract_in_place_then_add_t(mp_ptr tgt, mp_srcptr ab_p) {
     auto n = (mp_limb_t)N;
     mp_limb_t result;
-    if constexpr ((N & 3 == 2) && (N >= 6)) {
-        // zero gain from this optimization on Broadwell and Ryzen
+    if constexpr (((N & 3) == 2) && (N >= 6)) {
         result = mpn_sub_2k_plus2_inplace(tgt, ab_p, N / 4);
     } else {
         result = mpn_sub_n(tgt, ab_p, tgt, n);
@@ -408,8 +407,7 @@ toom22_interpolate_t(mp_ptr ab_p, mp_ptr g_p, uint8_t sign) {
     } else {
         t_senior = subtract_in_place_then_add_t<N>(g_p, ab_p);
     }
-    if constexpr (N & 3 == 2) {
-        // no gain no loss on Broadwell and Ryzen for N=14
+    if constexpr ((N & 3) == 2) {
         mpn_add_4k_plus2_4arg(ab_p + (N / 2), t_senior, g_p, N / 4);
     } else {
         mpn_add_n_plus_1(ab_p + (N / 2), t_senior, g_p, N);
@@ -848,16 +846,17 @@ sum_progression_t() {
     return alpha * (two_power<l>() - 1);
 }
 
-template<uint16_t, uint16_t> struct toom22_broadwell_t;
+template<int16_t, int16_t> struct toom22_broadwell_t;
 
-template<uint16_t N>
+template<int16_t N>
 struct toom22_broadwell_t<N, 0> {
     static constexpr uint64_t v() {
         // return zero, unless degree of two or good multiple of 12,
-        if constexpr ((N / 12 * 12 == N) && (is_power_of_2_t<N / 12>())) {
+        constexpr uint16_t M = N / 12;
+        if constexpr ((M * 12 == N) && (is_power_of_2_t<M>())) {
             return sum_progression_t<12, N>();
         }
-        if constexpr (is_power_of_2_t<N>() && (N >= 16)) {
+        if constexpr (is_power_of_2_t<(uint16_t)N>() && (N >= 16)) {
             return sum_progression_t<16, N>();
         }
         // ... or exactly TOOM_2X_BOUND
@@ -870,7 +869,7 @@ Due to stupidity of GCC compiler (or C++ standart), have to avoid recursion,
  will use macro instead
 */
 #define toom22_broadwell_t_macro(N, K)                   \
-    constexpr uint16_t h = (N + 1) / 2;                   \
+    constexpr int16_t h = (N + 1) / 2;                    \
     if constexpr ((N & 1) == 0) {                          \
         return 2 * h + toom22_broadwell_t<h, K - 1>::v();   \
     }                                                        \
@@ -878,17 +877,17 @@ Due to stupidity of GCC compiler (or C++ standart), have to avoid recursion,
     constexpr auto r1 = toom22_broadwell_t<h - 1, K - 1>::v(); \
     return r0 > r1 ? 2 * h + r0 : 2 * h + r1;
 
-template<uint16_t N>
+template<int16_t N>
 struct toom22_broadwell_t<N, 1> {
     static constexpr uint64_t v() { toom22_broadwell_t_macro(N, 1) };
 };
 
-template<uint16_t N>
+template<int16_t N>
 struct toom22_broadwell_t<N, 2> {
     static constexpr uint64_t v() { toom22_broadwell_t_macro(N, 2) };
 };
 
-template<uint16_t N>
+template<int16_t N>
 struct toom22_broadwell_t<N, 3> {
     static constexpr uint64_t v() { toom22_broadwell_t_macro(N, 3) };
 };
@@ -1161,7 +1160,7 @@ h >= TOOM_2X_BOUND / 2
 template <uint16_t N>
 void
 mpn_sub_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
-    if constexpr ((N > 4) && (0 == N & 3)) {
+    if constexpr ((N > 4) && (0 == (N & 3))) {
         uint16_t l = (N / 4) - 1;
         mpn_sub_4k(rp, ap, bp, l);
     } else {
@@ -1245,7 +1244,7 @@ v1(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
 template<uint16_t N>
 mp_limb_t
 mpn_add_inplace_t(mp_ptr rp, mp_ptr ap) {
-    if constexpr ((N & 3 == 0) && (N >= 8)) {
+    if constexpr (((N & 3) == 0) && (N >= 8)) {
         mp_limb_t carry = 0;
         auto loop_count = N / 4 - 1;
         mpn_add_4k_inplace(carry, rp, ap, loop_count);
@@ -1411,7 +1410,7 @@ mul_11(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     addmul_8x3(rp, bp, ap + 8);
 }
 
-template <uint16_t N, bool fear_of_page_break = true>
+template <uint16_t N, bool fear_of_page_break>
 void
 mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     if constexpr (N == 13) {
