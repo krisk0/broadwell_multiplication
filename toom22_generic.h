@@ -810,7 +810,7 @@ toom22_broadwell_inexact_t() {
 template<uint16_t n>
 constexpr uint16_t
 log2() {
-    return (n <= 1) ? 0 : 1 + log2<n/2>();
+    return (n <= 1) ? 0 : 1 + log2<n / 2>();
 }
 
 template<uint16_t n>
@@ -867,8 +867,6 @@ struct toom22_broadwell_t<N, 0> {
         return N < TOOM_2X_BOUND ? 0 : (N + 1) / 2 * 2;
     }
 };
-
-#undef toom22_broadwell_t_macro
 
 template<uint16_t> constexpr uint64_t toom22_forced_t();
 
@@ -1420,7 +1418,9 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     } else if constexpr (N == 6) {
         MUL6_SUBR(rp, ap, bp);
     } else if constexpr (N == 5) {
-        // gain 20 ticks on Broadwell, 11 ticks on Ryzen for 11x11 multiplication
+        /*
+        gain 20 ticks on Broadwell, 11 ticks on Ryzen for 11x11 Toom22 multiplication
+        */
         mul5_aligned(rp, ap, bp);
     } else if constexpr (N == 3) {
         mul3(rp, ap, bp);
