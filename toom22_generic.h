@@ -36,16 +36,14 @@ void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
 #if AMD_ZEN
     void mul6_zen(mp_ptr, mp_srcptr, mp_srcptr);
     #define MUL6_SUBR mul6_zen
-    //void mul11_zen(mp_ptr, mp_srcptr, mp_srcptr);
-    //#define MUL11_SUBR mul11_zen
+    void mul11_ryzen(mp_ptr, mp_srcptr, mp_srcptr);
+    #define MUL11_SUBR mul11_ryzen
 #else
     void mul6_aligned(mp_ptr, mp_srcptr, mp_srcptr);
     #define MUL6_SUBR mul6_aligned
-    //void mul11_bwl(mp_ptr, mp_srcptr, mp_srcptr);
-    //#define MUL11_SUBR mul11_bwl
+    void mul11_bwl(mp_ptr, mp_srcptr, mp_srcptr);
+    #define MUL11_SUBR mul11_bwl
 #endif
-void mul11_ryzen(mp_ptr, mp_srcptr, mp_srcptr);
-#define MUL11_SUBR mul11_ryzen
 void mpn_add_4k_plus2_4arg(mp_ptr, mp_limb_t, mp_srcptr, uint16_t);
 mp_limb_t mpn_sub_2k_plus2_inplace(mp_ptr, mp_srcptr, uint16_t);
 void mul7_2arg(mp_ptr, mp_srcptr);

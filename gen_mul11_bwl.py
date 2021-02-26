@@ -1,8 +1,8 @@
 '''
 11x11 multiplication targeting Broadwell. Uses aligned loads of v[] into xmm's.
 
-Execution time on Skylake: 205 ticks (same as mul11_ryzen). Time of 22x22
- multiplication using this subroutine: 755 ticks (1 tick more)
+Execution time on Skylake: 200 ticks. Time of 22x22 multiplication using this
+ subroutine: 748 ticks.
 '''
 
 g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
@@ -59,13 +59,12 @@ adcx w4, w1           | wC w9+w2+w5 w8+wB+w0" w3+wA' w1 .. == w6=v[1] dd=v[0]
 movq w1, rp[1]        | wC w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[1] dd=v[0]
 movq dd, xD           | xD=v[0]
 mulx sp[5], w1, w4    | w4 wC+w1 w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[1] dd=v[0]
-xchg w6, dd           | w4 wC+w1 w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[0] dd=v[1]
+movq w6, dd           | w4 wC+w1 w9+w2+w5 w8+wB+w0" w3+wA' [2] == w6=v[0] dd=v[1]
 mulx sp[4], w7, w6  | w4+dd wC+w1+w7 w9+w2+w5 w8+wB+w0" w3+wA' [2] ==
+movq xD, dd
 adox wB, w8         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0 w3+wA' [2] ==
-movq xD, wB
 adcx wA, w3         | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' w3 [2] == wB=v[0]
 movq w3, rp[2]      | w4+w6 wC+w1+w7 w9+w2+w5" w8+w0' [3] == wB=v[0]
-movq wB, dd         | dd=v[0]
 mulx sp[6], w3, wA  | wA w4+w6+w3 wC+w1+w7 w9+w2+w5" w8+w0' [3] == dd=v[0]
 adox w9, w2         | wA w4+w6+w3 wC+w1+w7" w2+w5 w8+w0' [3] == dd=v[0]
 mulx sp[7], w9, wB  | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5 w8+w0' [3] == dd=v[0]
@@ -73,8 +72,8 @@ adcx w8, w0         | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' w0 [3] == dd=v[0]
 w8:=v[1]            | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' w0 [3] == dd=v[0] w8=v[1]
 movq w0, rp[3]      | wB wA+w9 w4+w6+w3 wC+w1+w7" w2+w5' [4] == dd=v[0] w8=v[1]
 adox w1, wC         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == dd=v[0] w8=v[1]
-xchg dd, w0         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == w0=v[0] w8=v[1]
-xchg w8, dd         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == w0=v[0] dd=v[1]
+movq dd, w0         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == w0=v[0] w8=v[1]
+movq w8, dd         | wB wA+w9 w4+w6+w3" wC+w7 w2+w5' [4] == w0=v[0] dd=v[1]
 mulx sp[6], w1, w8  | wB+w8 wA+w9+w1 w4+w6+w3" wC+w7 w2+w5' [4] == w0=v[0] dd=v[1]
 xchg dd, w0         | wB+w8 wA+w9+w1 w4+w6+w3" wC+w7 w2+w5' [4] == dd=v[0] w0=v[1]
 adcx w5, w2         | wB+w8 wA+w9+w1 w4+w6+w3" wC+w7' w2 [4] == dd=v[0] w0=v[1]
@@ -98,7 +97,7 @@ mulx sp[3], w7, w8  | w9 wC+w4+wB" w5+wA' w2 w1 w3 w8: w7: w6: w0: [2]
 adox wC, w4         | w9" w4+wB w5+wA' w2 w1 w3 w8: w7: w6: w0: [2]
 movq w3, rp[6]
 movq w1, rp[7]
-rp[8]:=v[2]
+if !aligned: rp[8]:=v[2]
 movq $0, wC
 adox wC, w9         | w9 w4+wB w5+wA' w2 .. .. w8: w7: w6: w0: [2]
 mulx sp[5], wC, w3  | w9 w4+wB w5+wA' w2 w3: wC: w8: w7: w6: w0: [2]
@@ -113,7 +112,8 @@ adcx wB, w4         | w9+wA' w4+w6 w5+w1 w2+w0 w3: wC: w8: w7:" [4]
 adox rp[4], w7
 movq w7, rp[4]      | w9+wA' w4+w6 w5+w1 w2+w0 w3: wC: w8:" [5]
 mulx sp[10], w7, wB | wB w9+wA+w7' w4+w6 w5+w1 w2+w0 w3: wC: w8:" [5]
-movq rp[8], dd
+if aligned: dd:=v[2]
+if !aligned: movq rp[8], dd
 adox rp[5], w8
 movq w8, rp[5]      | wB w9+wA+w7' w4+w6 w5+w1 w2+w0 w3: wC:" [6]
 movq w2, rp[8]      | wB w9+wA+w7' w4+w6 w5+w1 w0: w3: wC:" [6]

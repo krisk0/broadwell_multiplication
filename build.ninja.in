@@ -2,7 +2,7 @@ o = ./automagic
 toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,8}_zen.o $
     $o/mul{5..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o $
     $o/mpn_sub_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul3.o $o/addmul_8x3.o $
-    $o/mul11_ryzen.o
+    $o/mul11_{bwl,ryzen}.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
 build some_benchmarks: phony $
@@ -98,9 +98,8 @@ test7_broadwell.exe: test8.cpp mul7_broadwell.s @int_h $
 benchm7_broadwell.exe: benchmark8.cpp mul7_broadwell.s @int_h benchmark-internal.c $
     [+flags -DSIZE=7 -DTESTED=mul7_broadwell]
 
-benchm11_broadwell.exe: benchmark8.cpp $toom22_o @int_h $toom22_h $
-    benchmark-internal.c [+flags -DSIZE=11 -DTESTED=mul_11 $
-    -DEXTRA_INCLUDE='"toom22_generic.h"']
+benchm11_broadwell.exe: benchmark8.cpp mul11_bwl.s @int_h $
+    benchmark-internal.c [+flags -DSIZE=11 -DTESTED=mul11_bwl]
 
 benchm11_ryzen.exe: benchmark8.cpp mul11_ryzen.s @int_h $toom22_h $
     benchmark-internal.c [+flags -DSIZE=11 -DTESTED=mul11_ryzen]
@@ -177,8 +176,8 @@ test_mpn_sub_2k_plus2_inplace.exe: test_mpn_sub_2k_plus2_inplace.cpp $toom22_o $
 mul4_broadwell.s: mul4
 mul4_broadwell.h: mul4
 
-mul11_bwl.s: mul11
-mul11_zen.s: mul11
+#mul11_bwl.s: mul11
+#mul11_zen.s: mul11
 
 mpn_le_%.h: mpn_le [+extra %]
 
