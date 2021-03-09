@@ -265,6 +265,7 @@ sys.dont_write_bytecode = 1
 import gen_mul4 as P
 import gen_mul7_t03 as A
 import gen_mul8_aligned as E
+import gen_mul11_ryzen as F
 
 def extract_v(i, alignment, tgt):
     if (i < 1) or (i > 11) or (alignment == None):
@@ -284,15 +285,6 @@ def extract_v(i, alignment, tgt):
     else:
         return 'movq x%s, %s' % (j, tgt)
 
-def cook_tail(m3, alignment, p):
-    rr = chew_code(m3, 10, alignment, p) + chew_code(g_tail, 10, alignment, p)[1:]
-    # omit everything after jmp
-    j = [j for j in range(len(rr)) if rr[j].find('jmp ') != -1]
-    if j:
-        j = j[0] + 1
-        rr = rr[:j]
-    return rr
-
 def alignment_code(alignment):
     if alignment:
         code = []
@@ -304,10 +296,19 @@ def alignment_code(alignment):
     p = list(range(0xC + 1))
     q = [int(x, 16) for x in g_perm.split(' ')]
     m3 = P.cutoff_comments(g_mul_3)
-    for i in range(3, 10):
-        code += chew_code(m3, i, alignment, p)
+    for i in range(3, 11):
+        if alignment and (i == 10):
+            break
+        fresh = chew_code(m3, i, alignment, p)
+        if i == 9:
+            fresh = F.remove_after_jmp(fresh)
+        code += fresh
+        if i == 10:
+            break
         p = P.composition(p, q)
-    code += cook_tail(m3, alignment, p)
+    if not alignment:
+        code.append('# tail')
+        code += chew_code(g_tail, 10, alignment, p)[1:]
     return code
 
 def evaluate_row(s, i, alignment):
@@ -315,8 +316,8 @@ def evaluate_row(s, i, alignment):
     if m:
         d = {\
                'i<10' : i < 10,
-               'tail_jump' : (i == 10) and (alignment != 0),
-               'tail_here' : (i == 10) and (alignment == 0),
+               'tail_jump' : (i == 9) and (alignment != 0),
+               'tail_here' : (i == 9) and (alignment == 0),
                'aligned'   : alignment == 0,
             }
         s = E.evaluate_if(s, d, m.group(1), m.group(2))
