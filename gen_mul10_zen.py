@@ -1,7 +1,10 @@
 '''
 10x10 multiplication targeting Zen. Uses aligned loads of v[] into xmm's.
 
-174 ticks on Ryzen, 194 ticks on Broadwell.
+171 ticks on Ryzen, 189 ticks on Broadwell.
+
+TODO: mul11_ryzen is 12.6% faster than GMP basecase while this subroutine is only
+ 5.8% faster. Why?
 '''
 
 g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
@@ -471,7 +474,14 @@ adcx s3, s0        | s6 s4 s8 sA s7 sB s1' s0 [i+3]
 movq s0, rp[i+3]   | s6 s4 s8 sA s7 sB s1' [i+4]
 adcx s5, s1        | s6 s4 s8 sA s7 sB' s1 [i+4]
 movq s1, rp[i+4]   | s6 s4 s8 sA s7 sB' [i+5]
-| TODO: branch on carry here
+jc got_carry
+movq sB, rp[i+5]
+movq s7, rp[i+6]
+movq sA, rp[i+7]
+movq s8, rp[i+8]
+movq s4, rp[i+9]
+movq s6, rp[i+10]
+jmp end
 got_carry:
 adcx s5, sB
 movq sB, rp[i+5]   | s6 s4 s8 sA s7' [i+6]
@@ -485,6 +495,7 @@ adcx s5, s4
 movq s4, rp[i+9]   | s6' [i+10]
 adcx s5, s6
 movq s6, rp[i+10]
+end:
 '''
 
 import os, re, sys
@@ -501,7 +512,6 @@ def extract_v(i, alignment, tgt):
     return L.extract_v(i, alignment, tgt)
 
 g_iplus_minus_patt = re.compile(r'\bi([\+\-])\b([0-9]+)\b')
-g_ad2_patt = re.compile(r'(ad[co])2 (.+), (.+)')
 def evaluate_row(s, i, alignment):
     m = E.g_if_patt.match(s)
     if m:
@@ -535,7 +545,7 @@ def evaluate_row(s, i, alignment):
         else:
             s = s.replace(m.group(), '%s(%s)' % (j * 8, m.group(1)))
 
-    m = g_ad2_patt.match(s)
+    m = L.g_ad2_patt.match(s)
     if m:
         return \
                 [
