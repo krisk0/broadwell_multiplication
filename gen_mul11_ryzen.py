@@ -106,20 +106,16 @@ rp[8]:=v[2]
 movq $0, wC
 adox wC, w9         | w9 w4+wB w5+wA' w2 .. .. w8: w7: w6: w0: [2]
 mulx sp[5], wC, w3  | w9 w4+wB w5+wA' w2 w3: wC: w8: w7: w6: w0: [2]
-adox rp[2], w0
-movq w0, rp[2]      | w9 w4+wB w5+wA' w2 w3: wC: w8: w7: w6:" [3]
+ado2 rp[2], w0      | w9 w4+wB w5+wA' w2 w3: wC: w8: w7: w6:" [3]
 mulx sp[7], w0, w1  | w9 w4+wB w5+wA+w1' w2+w0 w3: wC: w8: w7: w6:" [3]
 adcx wA, w5         | w9 w4+wB' w5+w1 w2+w0 w3: wC: w8: w7: w6:" [3]
-adox rp[3], w6
-movq w6, rp[3]      | w9 w4+wB' w5+w1 w2+w0 w3: wC: w8: w7:" [4]
+ado2 rp[3], w6      | w9 w4+wB' w5+w1 w2+w0 w3: wC: w8: w7:" [4]
 mulx sp[9], w6, wA  | w9+wA w4+wB+w6' w5+w1 w2+w0 w3: wC: w8: w7:" [4]
 adcx wB, w4         | w9+wA' w4+w6 w5+w1 w2+w0 w3: wC: w8: w7:" [4]
-adox rp[4], w7
-movq w7, rp[4]      | w9+wA' w4+w6 w5+w1 w2+w0 w3: wC: w8:" [5]
+ado2 rp[4], w7      | w9+wA' w4+w6 w5+w1 w2+w0 w3: wC: w8:" [5]
 mulx sp[10], w7, wB | wB w9+wA+w7' w4+w6 w5+w1 w2+w0 w3: wC: w8:" [5]
 movq rp[8], dd
-adox rp[5], w8
-movq w8, rp[5]      | wB w9+wA+w7' w4+w6 w5+w1 w2+w0 w3: wC:" [6]
+ado2 rp[5], w8      | wB w9+wA+w7' w4+w6 w5+w1 w2+w0 w3: wC:" [6]
 movq w2, rp[8]      | wB w9+wA+w7' w4+w6 w5+w1 w0: w3: wC:" [6]
 '''
 
@@ -322,6 +318,7 @@ def alignment_code(alignment):
         code += chew_code(g_tail, 10, alignment, p)[1:]
     return code
 
+g_ad2_patt = re.compile(r'(ad[co])2 (.+), (.+)')
 def evaluate_row(s, i, alignment):
     m = E.g_if_patt.match(s)
     if m:
@@ -350,7 +347,15 @@ def evaluate_row(s, i, alignment):
         else:
             s = s.replace(m.group(), '%s(%s)' % (j * 8, m.group(1)))
 
-    return s
+    m = g_ad2_patt.match(s)
+    if m:
+        return \
+                [
+                    '%sx %s, %s' % (m.group(1), m.group(2), m.group(3)),
+                    'movq %s, %s' % (m.group(3), m.group(2))
+                ]
+
+    return [s]
 
 def chew_code(src, i, alignment, p):
     if not isinstance(src, list):
@@ -362,9 +367,9 @@ def chew_code(src, i, alignment, p):
         rr = []
 
     for j in src:
-        k = evaluate_row(j, i, alignment)
-        if k:
-            rr.append(k)
+        for k in evaluate_row(j, i, alignment):
+            if k:
+                rr.append(k)
 
     if not p:
         return rr
