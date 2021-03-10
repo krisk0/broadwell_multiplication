@@ -325,11 +325,12 @@ def alignment_code(alignment):
 def evaluate_row(s, i, alignment):
     m = E.g_if_patt.match(s)
     if m:
-        d = {\
-               'i<10' : i < 10,
-               'tail_jump' : (i == 9) and (alignment != 0),
-               'tail_here' : (i == 9) and (alignment == 0),
-            }
+        d = \
+                {\
+                    'i<10' : i < 10,
+                    'tail_jump' : (i == 9) and (alignment != 0),
+                    'tail_here' : (i == 9) and (alignment == 0),
+                }
         s = E.evaluate_if(s, d, m.group(1), m.group(2))
 
     m = E.g_iplus_patt.search(s)
