@@ -23,9 +23,9 @@ build some_benchmarks: phony $
     benchm{6,7,11}_broadwell.exe
 
 build more_benchmarks: phony $
-    benchm{6..16,24,25}_basecase.exe $
+    benchm{6..16,20,22,24,25}_basecase.exe $
     benchm8_broadwell_125.exe $
-    benchm{6..16,22,24,25,28,32,48,55,64,72,96,111}_toom22_t.exe $
+    benchm{6..16,20,22,24,25,28,32,48,55,64,72,96,111}_toom22_t.exe $
     benchm{6..16,24,25,28,32,55,64,96,111}_toom22_w.exe $
     benchmark_mul_4x_zen_5arg_{4,8,12,16,24}.exe $
     benchmark_mul_n_zen_4arg_{2,3,4,5,6,7,8,10,12,14,16,20,24}.exe $
@@ -80,6 +80,9 @@ test%_aligned.exe: test_twice.cpp mul%_aligned.s @int_h $
 test11_zen.exe: test_twice.cpp mul11_ryzen.s @int_h $
     [+flags -DTESTED=mul11_ryzen -DSIZE=11]
 
+test10_zen.exe: test_twice.cpp mul10_zen.s @int_h $
+    [+flags -DTESTED=mul10_zen -DSIZE=10]
+
 test7_2arg.exe: test_2arg.cpp mul7_2arg.s @int_h $
     [+flags -DTESTED=mul7_2arg -DSIZE=7]
 
@@ -103,6 +106,9 @@ benchm11_broadwell.exe: benchmark8.cpp mul11_bwl.s @int_h $
 
 benchm11_ryzen.exe: benchmark8.cpp mul11_ryzen.s @int_h $toom22_h $
     benchmark-internal.c [+flags -DSIZE=11 -DTESTED=mul11_ryzen]
+
+benchm10_zen.exe: benchmark8.cpp mul10_zen.s @int_h $toom22_h $
+    benchmark-internal.c [+flags -DSIZE=10 -DTESTED=mul10_zen]
 
 test_mul_4x_zen_5arg_%.exe: test_mul_4x_zen_5arg.c mul_4x_zen_5arg.s @int_h $
     [+flags -DSIZE=%]
