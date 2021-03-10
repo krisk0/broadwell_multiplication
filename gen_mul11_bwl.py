@@ -2,7 +2,7 @@
 11x11 multiplication targeting Broadwell. Uses aligned loads of v[] into xmm's.
 
 Execution time on Skylake: 200 ticks. Time of 22x22 multiplication using this
- subroutine: 748 ticks.
+ subroutine: 733 ticks.
 '''
 
 g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
