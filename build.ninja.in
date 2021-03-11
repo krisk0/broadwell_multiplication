@@ -1,5 +1,5 @@
 o = ./automagic
-toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,8}_zen.o $
+toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul6_zen.o $
     $o/mul{5..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o $
     $o/mpn_sub_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul3.o $o/addmul_8x3.o $
     $o/mul11_{bwl,ryzen}.o
@@ -19,7 +19,7 @@ build some_benchmarks: phony $
     benchm_sub.exe $
     benchm_toom22_broadwell_t.exe benchm_toom22_broadwell_t_c.exe $
     benchm_bdiv_dbm1c_4k.exe benchm_bdiv_dbm1c_4k_inplace.exe $
-    benchm6_official.exe benchm6_basecase.exe benchm{6,8}_zen.exe $
+    benchm6_official.exe benchm6_basecase.exe benchm6_zen.exe $
     benchm{6,7,11}_broadwell.exe
 
 build more_benchmarks: phony $
@@ -32,7 +32,7 @@ build more_benchmarks: phony $
     benchm{13,25}_toom22_1x_loud.exe  $
     benchmark_8x2.exe benchm8_skylake.exe benchm8_aligned.exe
 
-build tests: phony test4.exe test8_zen.exe test16.exe test_mpn_less.exe $
+build tests: phony test4.exe test16.exe test_mpn_less.exe $
     test_mpn_sub.exe test_mpn_sub_4k.exe test_mpn_add_4k.exe $
     test_toom22_generic.exe test_toom22_generic_n.exe test6.exe $
     test_mpn_sub_inplace.exe test_toom22_xx.exe test_toom22_broadwell_t.exe $
@@ -72,7 +72,7 @@ test8_broadwell_125.exe: test8.cpp mul8_broadwell_125.s @int_h
 
 test8_skylake.exe: test8.cpp mul8_skylake.s @int_h [+flags -DSKYLAKE=1]
 
-test8_zen.exe: test8.cpp mul8_zen.s @int_h [+flags -DZEN=1]
+#test8_zen.exe: test8.cpp mul8_zen.s @int_h [+flags -DZEN=1]
 
 test%_aligned.exe: test_twice.cpp mul%_aligned.s @int_h $
     [+flags -DTESTED=mul%_aligned -DSIZE=%]
@@ -258,10 +258,8 @@ benchm6_zen.exe: benchmark6.cpp mul6_zen.s @int_h benchmark-internal.c $
 benchm6_broadwell.exe: benchmark6.cpp @int_h benchmark-internal.c $
     $o/mul6.h [+flags -DSUBR=C_BROADWELL]
 
-#benchm11_broadwell.exe: 
-
-benchm8_zen.exe: benchmark8.cpp mul8_zen.s @int_h benchmark-internal.c $
-    [+flags -DZEN=1]
+#benchm8_zen.exe: benchmark8.cpp mul8_zen.s @int_h benchmark-internal.c $
+#    [+flags -DZEN=1]
 
 benchm8_skylake.exe: benchmark8.cpp mul8_skylake.s @int_h benchmark-internal.c $
     [+flags -DSKYLAKE=1]
