@@ -1399,12 +1399,7 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     } else if constexpr (N == 11) {
         MUL11_SUBR(rp, ap, bp);
     } else if constexpr (N == 8) {
-        if constexpr(fear_of_page_break) {
-            // 2 ticks slower than mul8_zen on Ryzen, same time on Skylake
-            mul8_aligned(rp, ap, bp);
-        } else {
-            mul8_zen(rp, ap, bp);
-        }
+        mul8_aligned(rp, ap, bp);
     } else if constexpr (N == 7) {
         if constexpr(fear_of_page_break) {
             mul7_aligned(rp, ap, bp);
