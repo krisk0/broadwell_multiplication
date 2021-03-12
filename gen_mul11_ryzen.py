@@ -191,8 +191,7 @@ movq $0, sB
 adcx sB, sA        | sA s2+s8 s7+s0" s3 s1 [3] sC: s9+s5: s6: [i]
 mulx sp[2], s4, sB | sA s2+s8 s7+s0" s3 s1 [2] sB: sC+s4: s9+s5: s6: [i]
 adox s7, s0        | sA s2+s8" s0 s3 s1 [2] sB: sC+s4: s9+s5: s6: [i]
-adcx rp[i], s6
-movq s6, rp[i]     | sA s2+s8" s0 s3 s1 [2] sB: sC+s4: s9+s5:' [i+1]
+adc2 rp[i], s6     | sA s2+s8" s0 s3 s1 [2] sB: sC+s4: s9+s5:' [i+1]
 mulx sp[3], s6, s7 | sA s2+s8" s0 s3 s1 .. s7: sB+s6: sC+s4: s9+s5:' [i+1]
 adox s8, s2        | sA" s2 s0 s3 s1 .. s7: sB+s6: sC+s4: s9+s5:' [i+1]
 | s5 might be not ready
@@ -201,17 +200,14 @@ movq $0, s9
 adox s9, sA        | sA s2 s0 s3 s1 .. s7: sB+s6: sC+s4:' s5: [i+1]
 mulx sp[4], s8, s9 | sA s2 s0 s3 s1 s9: s7+s8: sB+s6: sC+s4:' s5: [i+1]
 adcx sC, s4        | sA s2 s0 s3 s1 s9: s7+s8: sB+s6:' s4: s5: [i+1]
-adox rp[i+1], s5
-movq s5, rp[i+1]   | sA s2 s0 s3 s1 s9: s7+s8: sB+s6:' s4:" [i+2]
+ado2 rp[i+1], s5   | sA s2 s0 s3 s1 s9: s7+s8: sB+s6:' s4:" [i+2]
 mulx sp[5], s5, sC | sA s2 s0 s3 s1+sC s9+s5: s7+s8: sB+s6:' s4:" [i+2]
 | s6 might be not ready
 adcx sB, s6        | sA s2 s0 s3 s1+sC s9+s5: s7+s8:' s6: s4:" [i+2]
-adox rp[i+2], s4
-movq s4, rp[i+2]   | sA s2 s0 s3 s1+sC s9+s5: s7+s8:' s6:" [i+3]
+ado2 rp[i+2], s4   | sA s2 s0 s3 s1+sC s9+s5: s7+s8:' s6:" [i+3]
 mulx sp[6], s4, sB | sA s2 s0 s3+sB s1+sC+s4 s9+s5: s7+s8:' s6:" [i+3]
 adcx rp[i+4], s7   | sA s2 s0 s3+sB s1+sC+s4 s9+s5:' s7+s8: s6:" [i+3]
-adox rp[i+3], s6
-movq s6, rp[i+3]   | sA s2 s0 s3+sB s1+sC+s4 s9+s5:' s7+s8" [i+4]
+ado2 rp[i+3], s6   | sA s2 s0 s3+sB s1+sC+s4 s9+s5:' s7+s8" [i+4]
 movq sA, rp[i+6]   | ^6 s2 s0 s3+sB s1+sC+s4 s9+s5:' s7+s8" [i+4]
 |rp[i+7]:=v[i+7]
 mulx sp[7], s6, sA | ^6 s2 s0+sA s3+sB+s6 s1+sC+s4 s9+s5:' s7+s8" [i+4]
