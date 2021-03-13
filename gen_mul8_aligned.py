@@ -127,7 +127,7 @@ data lies like that: s7 s2+sB+s5" s8+sA s6+s3' s1 s0 .. .. [i] dd=v[i]
 '''
 
 g_mul_2 = '''
-                         | 9 ticks on Ryzen
+                         | 9-10 ticks on Ryzen
                          | s7 s2+sB+s5" s8+sA s6+s3' s1 s0 [2] {i}
 mulx up[0], s4, s9       | s7 s2+sB+s5" s8+sA s6+s3' s1 s0 s9: s4: {i}
 adcx s3, s6              | s7 s2+sB+s5" s8+sA' s6 s1 s0 s9: s4: {i}
@@ -152,8 +152,10 @@ adox s5, s1              | s7 s2 s8+sB s6+s9+s3" s1+sA' s0 .. {i+1}
 |
 | Save sp into a xmm, use sp instead of up, use up to extract v[i+1]. Result: no
 |  difference on Skylake, loss of 4 ticks on Ryzen.
+| Save sp into rp[], use sp instead of up, use up to extract v[i+1]. Result: 
+|  loss of 2 ticks on Ryzen (when only muliplying by v[0..3]).
 |
-| Ryzen has problems with mulx sp[]? Ryzen has problems with movq rsp, xmm?
+| Ryzen has problems with mulx sp[]? with saving/restoring sp?
 |
 mulx up[5], s4, s5       | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' s0 .. {i+1}
 movq s0, rp[i+2]         | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' [2] {i+1}
