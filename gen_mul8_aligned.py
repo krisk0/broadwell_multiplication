@@ -3,6 +3,8 @@
 
 96 ticks on Ryzen, 104 on Skylake
 
+TODO: speed-up for Skylake using rsp as pointer to u[]
+
 Ryzen seems to be ok with 'xchg s0, dd' when dd is not ready yet. Skylake seems to
  dislike it, but time loss is a fraction of tick (approximately 2/6).
 '''
