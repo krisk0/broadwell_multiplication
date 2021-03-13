@@ -596,7 +596,6 @@ def alignment_code(alignment):
         code += L.remove_after_jmp(fresh)
     else:
         code += chew_code(g_mul_8, 8, alignment, p)
-    if not alignment:
         code += chew_code(g_mul_9, 9, alignment, p)
     return code
 
