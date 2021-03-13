@@ -127,6 +127,7 @@ data lies like that: s7 s2+sB+s5" s8+sA s6+s3' s1 s0 .. .. [i] dd=v[i]
 '''
 
 g_mul_2 = '''
+                         | 9 ticks on Ryzen
                          | s7 s2+sB+s5" s8+sA s6+s3' s1 s0 [2] {i}
 mulx up[0], s4, s9       | s7 s2+sB+s5" s8+sA s6+s3' s1 s0 s9: s4: {i}
 adcx s3, s6              | s7 s2+sB+s5" s8+sA' s6 s1 s0 s9: s4: {i}
