@@ -72,7 +72,8 @@ test8_broadwell_125.exe: test8.cpp mul8_broadwell_125.s @int_h
 
 test8_skylake.exe: test8.cpp mul8_skylake.s @int_h [+flags -DSKYLAKE=1]
 
-#test8_zen.exe: test8.cpp mul8_zen.s @int_h [+flags -DZEN=1]
+test8_zen.exe: test_twice.cpp mul8_zen.s @int_h $
+    [+flags -DTESTED=mul8_zen -DSIZE=8]
 
 test%_aligned.exe: test_twice.cpp mul%_aligned.s @int_h $
     [+flags -DTESTED=mul%_aligned -DSIZE=%]
@@ -258,8 +259,8 @@ benchm6_zen.exe: benchmark6.cpp mul6_zen.s @int_h benchmark-internal.c $
 benchm6_broadwell.exe: benchmark6.cpp @int_h benchmark-internal.c $
     $o/mul6.h [+flags -DSUBR=C_BROADWELL]
 
-#benchm8_zen.exe: benchmark8.cpp mul8_zen.s @int_h benchmark-internal.c $
-#    [+flags -DZEN=1]
+benchm8_zen.exe: benchmark8.cpp mul8_zen.s @int_h benchmark-internal.c $
+    [+flags -DTESTED=mul8_zen]
 
 benchm8_skylake.exe: benchmark8.cpp mul8_skylake.s @int_h benchmark-internal.c $
     [+flags -DSKYLAKE=1]

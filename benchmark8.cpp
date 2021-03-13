@@ -36,10 +36,6 @@ void mul8x2_zen(mp_ptr, mp_srcptr, mp_srcptr);
 #define GOODBYE
 
 #ifndef SUBR
-    #if ZEN==1 && SIZE == 8
-        #define SUBR(x, y, z) mul8_zen(x, y, z)
-    #endif
-
     #if SKYLAKE==1 && SIZE == 8
         #define SUBR(x, y, z) mul8_skylake(x, y, z)
     #endif

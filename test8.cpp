@@ -19,9 +19,7 @@ void mul8_skylake(mp_ptr, mp_srcptr, mp_srcptr);
 #define GOOD(r, u, v) __gmpn_mul_basecase(r, u, SIZE, v, SIZE)
 #define RAND_SEED 20190610
 
-#if ZEN
-    #define BAAD(r, u, v) mul8_zen(r, u, v)
-#elif STORE1
+#if STORE1
     #include "automagic/mul8_store_once.h"
     #define BAAD(r, u, v) mul8_broadwell_store_once_wr(r, u, v)
 #elif SKYLAKE
