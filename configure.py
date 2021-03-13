@@ -291,7 +291,9 @@ def implicit_sh_rule(o, orphans):
         if (i[:3] == '$o/'):
             j = i[-2:]
             if (j == '.s') or (j == '.h'):
-                k = 'gen_' + os.path.basename(i)[:-2] + '.py'
+                n = os.path.basename(i)[:-2]
+                n = n.lstrip('_')
+                k = 'gen_' + n + '.py'
                 o.write('build %s: create_c_code %s\n' % (i, k))
 
 g_o_pattern = re.compile(r'\$o/(\S+)\.o')
