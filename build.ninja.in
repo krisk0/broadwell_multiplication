@@ -268,6 +268,9 @@ benchm8_skylake.exe: benchmark8.cpp mul8_skylake.s @int_h benchmark-internal.c $
 benchm8_aligned.exe: benchmark8.cpp mul8_aligned.s @int_h benchmark-internal.c $
     [+flags -DTESTED=mul8_aligned]
 
+benchm8_al.exe: benchmark8.cpp _8x2_al.s @int_h benchmark-internal.c $
+    [+flags -DTESTED=_8x2_al]
+
 benchmark_8x2.exe: benchmark8.cpp mul8x2.s @int_h benchmark-internal.c $
     [+flags -D_8x2=1]
 
