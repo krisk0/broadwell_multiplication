@@ -86,8 +86,7 @@ mulx up[2], w8, wB        | wA w6+w7' w4 w2 w0+wB w5+w8: w3+w9: w1: ..
 adcx w7, w6               | wA' w6 w4 w2 w0+wB w5+w8: w3+w9: w1: ..
 movq w4, rp[4]            | wA' w6 ^4 w2 w0+wB w5+w8: w3+w9: w1: ..
 mulx up[3], w4, w7        | wA' w6 ^4 w2+w7 w0+wB+w4 w5+w8: w3+w9: w1: ..
-adox rp[1], w1            | wA' w6 ^4 w2+w7 w0+wB+w4 w5+w8: w3+w9:" w1 ..
-movq w1, rp[1]            | wA' w6 ^4 w2+w7 w0+wB+w4 w5+w8: w3+w9:" [2]
+ado2 rp[1], w1            | wA' w6 ^4 w2+w7 w0+wB+w4 w5+w8: w3+w9:" [2]
 movq $0, w1
 adcx w1, wA               | wA w6 ^4 w2+w7 w0+wB+w4 w5+w8: w3+w9:" [2]
 | TODO: maybe sum w3+w9 right now?
@@ -100,14 +99,12 @@ w9:=v[2]                  | wA ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8:" w3: [2] w9
 |  subroutine on Ryzen by 2 ticks
 |
 movq wA, rp[6]            | ^6 ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8:" w3: [2] w9
-adcx rp[2], w3            | ^6 ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8:"' w3 [2] w9
-movq w3, rp[2]            | ^6 ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8:"' [3] w9
+adc2 rp[2], w3            | ^6 ^5 ^4+w6 w2+w7+w1 w0+wB+w4 w5+w8:"' [3] w9
 adox w8, w5               | ^6 ^5 ^4+w6 w2+w7+w1 w0+wB+w4" w5:' [3] w9
 mulx up[5], w3, w8        | ^6 ^5+w8 ^4+w6+w3 w2+w7+w1 w0+wB+w4" w5:' [3] w9
 adox wB, w0               | ^6 ^5+w8 ^4+w6+w3 w2+w7+w1" w0+w4 w5:' [3] w9
 mulx up[6], wA, wB        | ^6+wB ^5+w8+wA ^4+w6+w3 w2+w7+w1" w0+w4 w5:' [3] w9
-adcx rp[3], w5            | ^6+wB ^5+w8+wA ^4+w6+w3 w2+w7+w1" w0+w4' w5 [3] w9
-movq w5, rp[3]            | ^6+wB ^5+w8+wA ^4+w6+w3 w2+w7+w1" w0+w4' [4] w9
+adc2 rp[3], w5            | ^6+wB ^5+w8+wA ^4+w6+w3 w2+w7+w1" w0+w4' [4] w9
 adox w7, w2               | ^6+wB ^5+w8+wA ^4+w6+w3" w2+w1 w0+w4' [4] w9
 mulx up[7], w5, w7        | w7 ^6+wB+w5 ^5+w8+wA ^4+w6+w3" w2+w1 w0+w4' [4] w9
 movq w9, dd               | w7 ^6+wB+w5 ^5+w8+wA ^4+w6+w3" w2+w1 w0+w4' [4]
@@ -139,14 +136,12 @@ adcx sA, s8              | s7" s2+s5' s8 s6 s1 s0+sB s9+s3: s4: {i}
 movq $0, sA
 adox sA, s7              | s7 s2+s5' s8 s6 s1 s0+sB s9+s3: s4: {i} sA=0
 adcx s5, s2              | s7' s2 s8 s6 s1 s0+sB s9+s3: s4: {i} sA=0
-adox rp[i], s4           | s7' s2 s8 s6 s1 s0+sB s9+s3:" s4 {i} sA=0
-movq s4, rp[i]           | s7' s2 s8 s6 s1 s0+sB s9+s3:" {i+1} sA=0
+ado2 rp[i], s4           | s7' s2 s8 s6 s1 s0+sB s9+s3:" {i+1} sA=0
 mulx up[2], s4, s5       | s7' s2 s8 s6 s1+s5 s0+sB+s4 s9+s3:" {i+1} sA=0
 adcx sA, s7              | s7 s2 s8 s6 s1+s5 s0+sB+s4 s9+s3:" {i+1} sA=0
 adox s9, s3              | s7 s2 s8 s6 s1+s5 s0+sB+s4" s3: {i+1} sA=0
 mulx up[3], sA, s9       | s7 s2 s8 s6+s9 s1+s5+sA s0+sB+s4" s3: {i+1}
-adcx rp[i+1], s3         | s7 s2 s8 s6+s9 s1+s5+sA s0+sB+s4"' s3 {i+1}
-movq s3, rp[i+1]         | s7 s2 s8 s6+s9 s1+s5+sA s0+sB+s4"' .. {i+1}
+adc2 rp[i+1], s3         | s7 s2 s8 s6+s9 s1+s5+sA s0+sB+s4"' .. {i+1}
 adox sB, s0              | s7 s2 s8 s6+s9 s1+s5+sA" s0+s4' .. {i+1}
 mulx up[4], s3, sB       | s7 s2 s8+sB s6+s9+s3 s1+s5+sA" s0+s4' .. {i+1}
 adcx s4, s0              | s7 s2 s8+sB s6+s9+s3 s1+s5+sA"' s0 .. {i+1}
@@ -254,6 +249,7 @@ g_array_patt = re.compile(r'\b([a-zA-Z0-9]+)\b\[(.+?)\]')
 g_v_patt = re.compile(r'(.+):=v\[(.+)\]')
 g_iplus_patt = re.compile(r'i\+(.+?)\b')
 g_if_patt = re.compile(r'if (.+): (.+)')
+g_ad2_patt = re.compile(r'(ad[co])2 (.+), (.+)')
 def evaluate_row(s, i, extra, aligned):
     m = g_if_patt.match(s)
     if m:
@@ -276,6 +272,14 @@ def evaluate_row(s, i, extra, aligned):
         else:
             s = s.replace(m.group(), '%s(%s)' % (j * 8, m.group(1)))
 
+    m = g_ad2_patt.match(s)
+    if m:
+        return \
+                [
+                    '%sx %s, %s' % (m.group(1), m.group(2), m.group(3)),
+                    'movq %s, %s' % (m.group(3), m.group(2))
+                ]
+
     return [s]
 
 def chew_code(src, i, extra, aligned, p):
@@ -288,9 +292,11 @@ def chew_code(src, i, extra, aligned, p):
         rr = []
 
     for j in src:
-        k = evaluate_row(j, i, extra, aligned)
-        if k and (k != [None]) and (k != ['']):
-            rr += k
+        kk = evaluate_row(j, i, extra, aligned)
+        if kk:
+            for k in kk:
+                if k:
+                    rr.append(k)
 
     if not p:
         return rr
