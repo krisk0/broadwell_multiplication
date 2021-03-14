@@ -1,7 +1,7 @@
 '''
 8x8 multiplication targeting Ryzen. Uses aligned loads of v[] into xmm's.
 
-96 ticks on Ryzen, 104 on Skylake
+96 ticks on Ryzen, 104-105 on Skylake
 
 TODO: speed-up for Skylake using rsp as pointer to u[]
 
@@ -155,6 +155,7 @@ adox s5, s1              | s7 s2 s8+sB s6+s9+s3" s1+sA' s0 .. {i+1}
 | Ryzen has problems with mulx sp[]? with saving/restoring sp?
 |
 mulx up[5], s4, s5       | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' s0 .. {i+1}
+| moving line below up brings no gain
 movq s0, rp[i+2]         | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' [2] {i+1}
 s0:=v[i+1]               | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' [2] {i+1} s0=v[i+1]
 adcx s1, sA              | s7 s2+s5 s8+sB+s4 s6+s9+s3"' sA [2] {i+1} s0=v[i+1]
@@ -292,11 +293,9 @@ def chew_code(src, i, extra, aligned, p):
         rr = []
 
     for j in src:
-        kk = evaluate_row(j, i, extra, aligned)
-        if kk:
-            for k in kk:
-                if k:
-                    rr.append(k)
+        for k in evaluate_row(j, i, extra, aligned):
+            if k:
+                rr.append(k)
 
     if not p:
         return rr
