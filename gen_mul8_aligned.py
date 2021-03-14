@@ -3,7 +3,8 @@
 
 96 ticks on Ryzen, 104-105 on Skylake
 
-TODO: speed-up for Skylake using rsp as pointer to u[]
+Saving/restoring rsp onto rp[] and copying rsi to rsp costs 2 ticks on Skylake and
+ 3 ticks on Ryzen
 
 Ryzen seems to be ok with 'xchg s0, dd' when dd is not ready yet. Skylake seems to
  dislike it, but time loss is a fraction of tick (approximately 2/6).
