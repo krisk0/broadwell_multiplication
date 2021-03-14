@@ -316,7 +316,7 @@ def form_tail(ss, extra):
 
 def alignment_code(alignment, extra):
     if alignment:
-        code = []
+        code = chew_code(g_preamble, 0, extra, None, None)
     else:
         code = chew_code(g_load_0, None, extra, True, None)
 
@@ -337,9 +337,7 @@ def alignment_code(alignment, extra):
     return code
 
 def do_it(o, extra):
-    code = chew_code(g_preamble, 0, extra, None, None)
-    code += alignment_code(8, extra)
-    code += alignment_code(0, extra)
+    code = alignment_code(8, extra) + alignment_code(0, extra)
     P.cook_asm(o, code, g_var_map, True)
 
 if __name__ == '__main__':
