@@ -159,6 +159,8 @@ mulx up[5], s4, s5       | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' s0 .. {i+1}
 | moving line below up brings no gain
 movq s0, rp[i+2]         | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' [2] {i+1}
 s0:=v[i+1]               | s7 s2+s5 s8+sB+s4 s6+s9+s3" s1+sA' [2] {i+1} s0=v[i+1]
+if tail_jump: jmp tail
+if tail_here: tail:
 adcx s1, sA              | s7 s2+s5 s8+sB+s4 s6+s9+s3"' sA [2] {i+1} s0=v[i+1]
 adox s9, s6              | s7 s2+s5 s8+sB+s4" s6+s3' sA [2] {i+1} s0=v[i+1]
 mulx up[6], s1, s9       | s7+s9 s2+s5+s1 s8+sB+s4" s6+s3' sA [2] {i+1} s0=v[i+1]
@@ -255,7 +257,13 @@ g_ad2_patt = re.compile(r'(ad[co])2 (.+), (.+)')
 def evaluate_row(s, i, extra, aligned):
     m = g_if_patt.match(s)
     if m:
-        s = evaluate_if(s, {'extra': extra}, m.group(1), m.group(2))
+        d = \
+                {\
+                    'extra': extra,
+                    'tail_jump' : (i == 6) and (not aligned),
+                    'tail_here' : (i == 6) and aligned,
+                }
+        s = evaluate_if(s, d, m.group(1), m.group(2))
 
     m = g_iplus_patt.search(s)
     if m:
@@ -325,14 +333,10 @@ def alignment_code(alignment, extra):
     m7 = form_tail(m2, extra)
     p = list(range(0xB + 1))
     q = [int(i, 16) for i in g_perm.split(' ')]
-    # TODO: jump to tail earlier, to reduce code size
     for i in range(2, 7):
         code += chew_code(m2, i, extra, not alignment, p)
         p = P.composition(p, q)
-    if alignment:
-        code.append('jmp tail')
-    else:
-        code.append('tail:')
+    if not alignment:
         code += chew_code(m7, 7, extra, None, p)
     return code
 
