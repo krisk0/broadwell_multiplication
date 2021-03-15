@@ -238,19 +238,6 @@ def extract_v(i, aligned, tgt):
     else:
         return 'movq x%s, %s' % (j, tgt)
 
-def evaluate_if(s, dd, cond, stmt):
-    yes = True
-    if cond[0] == '!':
-        yes = False
-        cond = cond[1:]
-    try:
-        how = dd[cond]
-    except:
-        return s
-    if how == yes:
-        return stmt
-    return ''
-
 g_array_patt = re.compile(r'\b([a-zA-Z0-9]+)\b\[(.+?)\]')
 g_v_patt = re.compile(r'(.+):=v\[(.+)\]')
 g_iplus_patt = re.compile(r'i\+(.+?)\b')
@@ -265,7 +252,7 @@ def evaluate_row(s, i, extra, aligned):
                     'tail_jump' : (i == 6) and (not aligned),
                     'tail_here' : (i == 6) and aligned,
                 }
-        s = evaluate_if(s, d, m.group(1), m.group(2))
+        s = P.evaluate_if(s, d, m.group(1), m.group(2))
 
     m = g_iplus_patt.search(s)
     if m:

@@ -324,7 +324,7 @@ def evaluate_row(s, i, alignment):
                     'tail_jump' : (i == 9) and (alignment != 0),
                     'tail_here' : (i == 9) and (alignment == 0),
                 }
-        s = E.evaluate_if(s, d, m.group(1), m.group(2))
+        s = P.evaluate_if(s, d, m.group(1), m.group(2))
 
     m = E.g_iplus_patt.search(s)
     if m:
