@@ -2,6 +2,9 @@
 9x9 multiplication targeting Ryzen. Uses aligned loads of v[] into xmm's.
 
 126 ticks on Ryzen, 137 on Skylake.
+
+18x18 multiplication without this subroutine on Ryzen: 578 ticks, using this
+ subroutine: 525. On Skylake: 646 / 535.
 '''
 
 """

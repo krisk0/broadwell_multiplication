@@ -29,6 +29,7 @@ extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 mp_limb_t __gmpn_addmul_1_adox(mp_ptr, mp_srcptr, mp_size_t, mp_limb_t);
 void mul_11(mp_ptr, mp_srcptr, mp_srcptr);
+void mul9_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul7_aligned(mp_ptr, mp_srcptr, mp_srcptr);
@@ -1398,6 +1399,8 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         // use hand-optimized subroutine if possible
     } else if constexpr (N == 11) {
         MUL11_SUBR(rp, ap, bp);
+    } else if constexpr (N == 9) {
+        mul9_zen(rp, ap, bp);
     } else if constexpr (N == 8) {
         mul8_aligned(rp, ap, bp);
     } else if constexpr (N == 7) {
