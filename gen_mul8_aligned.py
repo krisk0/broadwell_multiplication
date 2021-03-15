@@ -39,6 +39,8 @@ vp[8..A] x9 x8 dd
 """
 
 g_preamble = '''
+                          | preamble and load_0 take 9 ticks on Ryzen and 12
+                          |  on Skylake
 vzeroupper
 movq dd, w0
 and $0xF, dd
@@ -61,6 +63,7 @@ movdqa w0[6], x3
 
 # TODO: g_mul_01 should be different for Broadwell and Zen
 g_mul_01 = '''
+                          | 18 ticks on Ryzen
 mulx up[0], w0, w1        | w1 w0
 mulx up[1], w2, w3        | w3 w1+w2 w0
 mulx up[2], w4, w5        | w5 w3+w4 w1+w2 w0
@@ -201,7 +204,6 @@ sys.dont_write_bytecode = 1
 
 import gen_mul4 as P
 import gen_mul7_t03 as E
-import gen_mul11 as C
 
 def show_postcondition():
     p = list(range(0xB + 1))
