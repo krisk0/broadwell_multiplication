@@ -78,8 +78,8 @@ test8_zen.exe: test_twice.cpp mul8_zen.s @int_h $
 test%_aligned.exe: test_twice.cpp mul%_aligned.s @int_h $
     [+flags -DTESTED=mul%_aligned -DSIZE=%]
 
-test9_sp.exe: test_twice.cpp mul9_sp.s @int_h $
-    [+flags -DTESTED=mul9_sp -DSIZE=9]
+test9_zen.exe: test_twice.cpp mul9_zen.s @int_h $
+    [+flags -DTESTED=mul9_zen -DSIZE=9]
 
 test11_zen.exe: test_twice.cpp mul11_ryzen.s @int_h $
     [+flags -DTESTED=mul11_ryzen -DSIZE=11]
@@ -111,8 +111,8 @@ benchm11_broadwell.exe: benchmark8.cpp mul11_bwl.s @int_h $
 benchm11_ryzen.exe: benchmark8.cpp mul11_ryzen.s @int_h $toom22_h $
     benchmark-internal.c [+flags -DSIZE=11 -DTESTED=mul11_ryzen]
 
-benchm9_sp.exe: benchmark8.cpp mul9_sp.s @int_h $toom22_h $
-    benchmark-internal.c [+flags -DSIZE=9 -DTESTED=mul9_sp]
+benchm9_zen.exe: benchmark8.cpp mul9_zen.s @int_h $toom22_h $
+    benchmark-internal.c [+flags -DSIZE=9 -DTESTED=mul9_zen]
 
 benchm10_zen.exe: benchmark8.cpp mul10_zen.s @int_h $toom22_h $
     benchmark-internal.c [+flags -DSIZE=10 -DTESTED=mul10_zen]
