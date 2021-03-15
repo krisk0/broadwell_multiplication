@@ -573,6 +573,19 @@ def cook_asm(o, cc, var_map, save_6_abi_regs):
     write_asm_procedure_header(o, guess_subroutine_name(sys.argv[1]))
     write_asm_inside(o, cc + '\nretq')
 
+def evaluate_if(s, dd, cond, stmt):
+    yes = True
+    if cond[0] == '!':
+        yes = False
+        cond = cond[1:]
+    try:
+        how = dd[cond]
+    except:
+        return s
+    if how == yes:
+        return stmt
+    return ''
+
 if __name__ == '__main__':
     g_out = sys.argv[1]
 
