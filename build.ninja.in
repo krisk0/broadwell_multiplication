@@ -23,7 +23,7 @@ build some_benchmarks: phony $
     benchm{6,7,11}_broadwell.exe
 
 build more_benchmarks: phony $
-    benchm{6..16,20,22,24,25}_basecase.exe $
+    benchm{6..16,18,20,22,24,25}_basecase.exe $
     benchm8_broadwell_125.exe $
     benchm{6..16,18,20,22,24,25,28,32,48,55,64,72,96,111}_toom22_t.exe $
     benchm{6..16,24,25,28,32,55,64,96,111}_toom22_w.exe $
