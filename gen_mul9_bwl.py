@@ -1,5 +1,5 @@
 '''
-9x9 multiplication targeting Ryzen. Uses aligned loads of v[] into xmm's.
+9x9 multiplication targeting Broadwell. Uses aligned loads of v[] into xmm's.
 '''
 
 """
