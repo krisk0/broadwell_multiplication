@@ -1,15 +1,11 @@
 '''
 9x9 multiplication targeting Ryzen. Uses aligned loads of v[] into xmm's.
-
-126 ticks on Ryzen, 135-137 on Skylake.
-
-18x18 multiplication without this subroutine on Ryzen: 578 ticks, using this
- subroutine: 525. On Skylake: 646 / 535.
 '''
 
 """
 xmm usage:
 0-4 v[]
+xE sp
 """
 
 g_preamble = '''
@@ -33,7 +29,7 @@ movq w0[8], x4
 '''
 
 g_mul_01 = '''
-movq sp, rp[13]
+movq sp, xE
 movq wC, sp
 mulx sp[0], w0, w1        | w1 w0
 mulx sp[1], w2, w3        | w3 w1+w2 w0
@@ -61,26 +57,26 @@ adcx w7, w6               | w3 wA+w1' w6 w8 w9 w0 w5+w4 wC+w2: wB: [1]
 movq w5, rp[3]            | w3 wA+w1' w6 w8 w9 w0 w4: wC+w2: wB: [1]
 mulx sp[2], w5, w7        | w3 wA+w1' w6 w8 w9 w0+w7 w4+w5: wC+w2: wB: [1]
 adcx w1, wA               | w3' wA w6 w8 w9 w0+w7 w4+w5: wC+w2: wB: [1]
-movq wA, rp[4]            | w3' ^4 w6 w8 w9 w0+w7 w4+w5: wC+w2: wB: [1]
-mulx sp[3], w1, wA        | w3' ^4 w6 w8 w9+wA w0+w7+w1 w4+w5: wC+w2: wB: [1]
-ado2 rp[1], wB            | w3' ^4 w6 w8 w9+wA w0+w7+w1 w4+w5: wC+w2:" [2]
+movq wA, xF               | w3' xF w6 w8 w9 w0+w7 w4+w5: wC+w2: wB: [1]
+mulx sp[3], w1, wA        | w3' xF w6 w8 w9+wA w0+w7+w1 w4+w5: wC+w2: wB: [1]
+ado2 rp[1], wB            | w3' xF w6 w8 w9+wA w0+w7+w1 w4+w5: wC+w2:" [2]
 movq $0, wB
-adcx wB, w3               | w3 ^4 w6 w8 w9+wA w0+w7+w1 w4+w5: wC+w2:" [2]
-movq w3, rp[5]            | ^5 ^4 w6 w8 w9+wA w0+w7+w1 w4+w5: wC+w2:" [2]
-mulx sp[4], w3, wB        | ^5 ^4 w6 w8+wB w9+wA+w3 w0+w7+w1 w4+w5: wC+w2:" [2]
-adox w2, wC               | ^5 ^4 w6 w8+wB w9+wA+w3 w0+w7+w1 w4+w5:" wC: [2]
-movq w6, rp[6]            | ^5 ^4 ^6 w8+wB w9+wA+w3 w0+w7+w1 w4+w5:" wC: [2]
-mulx sp[5], w2, w6        | ^5 ^4 ^6+w6 w8+wB+w2 w9+wA+w3 w0+w7+w1 w4+w5:" wC: [2]
-ado2 rp[3], w4            | ^5 ^4 ^6+w6 w8+wB+w2 w9+wA+w3 w0+w7+w1" w5: wC: [2]
+adcx wB, w3               | w3 xF w6 w8 w9+wA w0+w7+w1 w4+w5: wC+w2:" [2]
+movq w3, rp[5]            | ^5 xF w6 w8 w9+wA w0+w7+w1 w4+w5: wC+w2:" [2]
+mulx sp[4], w3, wB        | ^5 xF w6 w8+wB w9+wA+w3 w0+w7+w1 w4+w5: wC+w2:" [2]
+adox w2, wC               | ^5 xF w6 w8+wB w9+wA+w3 w0+w7+w1 w4+w5:" wC: [2]
+movq w6, rp[6]            | ^5 xF ^6 w8+wB w9+wA+w3 w0+w7+w1 w4+w5:" wC: [2]
+mulx sp[5], w2, w6        | ^5 xF ^6+w6 w8+wB+w2 w9+wA+w3 w0+w7+w1 w4+w5:" wC: [2]
+ado2 rp[3], w4            | ^5 xF ^6+w6 w8+wB+w2 w9+wA+w3 w0+w7+w1" w5: wC: [2]
 w4:=v[2]
-adc2 rp[2], wC            | ^5 ^4 ^6+w6 w8+wB+w2 w9+wA+w3 w0+w7+w1" w5:' [3] w4
-adox w7, w0               | ^5 ^4 ^6+w6 w8+wB+w2 w9+wA+w3" w0+w1 w5:' [3] w4
-mulx sp[6], w7, wC        | ^5 ^4+wC ^6+w6+w7 w8+wB+w2 w9+wA+w3" w0+w1 w5:' [3] w4
-adc2 rp[3], w5            | ^5 ^4+wC ^6+w6+w7 w8+wB+w2 w9+wA+w3" w0+w1' [4] w4
-adox wA, w9               | ^5 ^4+wC ^6+w6+w7 w8+wB+w2" w9+w3 w0+w1' [4] w4
-mulx sp[7], w5, wA        | ^5+wA ^4+wC+w5 ^6+w6+w7 w8+wB+w2" w9+w3 w0+w1' [4] w4
-adcx w1, w0               | ^5+wA ^4+wC+w5 ^6+w6+w7 w8+wB+w2" w9+w3' w0 [4] w4
-movq rp[4], w1            | ^5+wA w1+wC+w5 ^6+w6+w7 w8+wB+w2" w9+w3' w0 [4] w4
+adc2 rp[2], wC            | ^5 xF ^6+w6 w8+wB+w2 w9+wA+w3 w0+w7+w1" w5:' [3] w4
+adox w7, w0               | ^5 xF ^6+w6 w8+wB+w2 w9+wA+w3" w0+w1 w5:' [3] w4
+mulx sp[6], w7, wC        | ^5 xF+wC ^6+w6+w7 w8+wB+w2 w9+wA+w3" w0+w1 w5:' [3] w4
+adc2 rp[3], w5            | ^5 xF+wC ^6+w6+w7 w8+wB+w2 w9+wA+w3" w0+w1' [4] w4
+adox wA, w9               | ^5 xF+wC ^6+w6+w7 w8+wB+w2" w9+w3 w0+w1' [4] w4
+mulx sp[7], w5, wA        | ^5+wA xF+wC+w5 ^6+w6+w7 w8+wB+w2" w9+w3 w0+w1' [4] w4
+adcx w1, w0               | ^5+wA xF+wC+w5 ^6+w6+w7 w8+wB+w2" w9+w3' w0 [4] w4
+movq xF, w1               | ^5+wA w1+wC+w5 ^6+w6+w7 w8+wB+w2" w9+w3' w0 [4] w4
 movq w0, rp[4]            | ^5+wA w1+wC+w5 ^6+w6+w7 w8+wB+w2" w9+w3' [5] w4
 adox wB, w8               | ^5+wA w1+wC+w5 ^6+w6+w7" w8+w2 w9+w3' [5] w4
 mulx sp[8], w0, wB        | wB ^5+wA+w0 w1+wC+w5 ^6+w6+w7" w8+w2 w9+w3' [5] w4
@@ -146,7 +142,7 @@ adox s3, s6               | sB+s9 sA+sC+s5 s1+s7+s0" s6+s4 s8+s2' [i+4]
 adcx s2, s8
 movq s8, rp[i+4]          | sB+s9 sA+sC+s5 s1+s7+s0" s6+s4' [i+5]
 mulx sp[8], s2, s3        | s3 sB+s9+s2 sA+sC+s5 s1+s7+s0" s6+s4' [i+5]
-movq rp[i+5], sp
+movq xE, sp
 adox s7, s1               | s3 sB+s9+s2 sA+sC+s5" s1+s0 s6+s4' [i+5]
 adcx s4, s6
 movq s6, rp[i+5]          | s3 sB+s9+s2 sA+sC+s5" s1+s0' [i+6]
