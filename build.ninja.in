@@ -1,5 +1,5 @@
 o = ./automagic
-toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,9}_zen.o $
+toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,9,10}_zen.o $
     $o/mul{5..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o $
     $o/mpn_sub_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul3.o $o/addmul_8x3.o $
     $o/mul11_{bwl,ryzen}.o
