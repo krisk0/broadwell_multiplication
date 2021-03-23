@@ -1,7 +1,7 @@
 '''
 9x9 multiplication targeting Ryzen. Uses aligned loads of v[] into xmm's.
 
-126 ticks on Ryzen, 135-137 on Skylake.
+126-127 ticks on Ryzen, 134-137 on Skylake.
 
 18x18 multiplication without this subroutine on Ryzen: 578 ticks, using this
  subroutine: 525. On Skylake: 646 / 528-535.
@@ -17,18 +17,18 @@ movq dd, w0
 and $0xF, dd
 movq w0[0], dd
 jz align0
-movdqa w0[1], x0
-movdqa w0[3], x1
-movdqa w0[5], x2
-movdqa w0[7], x3
+vmovdqa w0[1], x0
+vmovdqa w0[3], x1
+vmovdqa w0[5], x2
+vmovdqa w0[7], x3
 '''
 
 g_load_0 = '''
 align0:
 movq w0[1], x0
-movdqa w0[2], x1
-movdqa w0[4], x2
-movdqa w0[6], x3
+vmovdqa w0[2], x1
+vmovdqa w0[4], x2
+vmovdqa w0[6], x3
 movq w0[8], x4
 '''
 
@@ -47,11 +47,11 @@ mulx sp[5], w2, w8        | w8 w9+w2 wB+w0 w5+wA w3+w4' [2]
 wC:=v[1]
 adcx w4, w3
 movq w3, rp[2]            | w8 w9+w2 wB+w0 w5+wA' [3]
-mulx sp[6], w4, w6        | w6 w8+w4 w9+w2 wB+w0 w5+wA' [3] w1
+mulx sp[6], w4, w6        | w6 w8+w4 w9+w2 wB+w0 w5+wA' [3] wC
 adcx wA, w5               | w6 w8+w4 w9+w2 wB+w0' w5 [3] w1
-mulx sp[7], w7, wA        | wA w6+w7 w8+w4 w9+w2 wB+w0' w5 [3] w1
-adcx wB, w0               | wA w6+w7 w8+w4 w9+w2' w0 w5 [3] w1
-mulx sp[8], w1, w3        | w3 wA+w1 w6+w7 w8+w4 w9+w2' w0 w5 [3] w1
+mulx sp[7], w7, wA        | wA w6+w7 w8+w4 w9+w2 wB+w0' w5 [3] wC
+adcx wB, w0               | wA w6+w7 w8+w4 w9+w2' w0 w5 [3] wC
+mulx sp[8], w1, w3        | w3 wA+w1 w6+w7 w8+w4 w9+w2' w0 w5 [3] wC
 movq wC, dd               | w3 wA+w1 w6+w7 w8+w4 w9+w2' w0 w5 [3]
 adcx w2, w9               | w3 wA+w1 w6+w7 w8+w4' w9 w0 w5 [3]
 mulx sp[0], wB, wC        | w3 wA+w1 w6+w7 w8+w4' w9 w0 w5 wC: wB: [1]
@@ -246,6 +246,8 @@ def chew_code(src, i, aligned, p):
         for k in evaluate_row(j, i, aligned):
             if k:
                 rr.append(k)
+                if k == 'jmp tail':
+                    break
 
     if not p:
         return rr
