@@ -1400,6 +1400,8 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         // use hand-optimized subroutine if possible
     } else if constexpr (N == 11) {
         MUL11_SUBR(rp, ap, bp);
+    } else if constexpr (N == 10) {
+        mul10_zen(rp, ap, bp);
     } else if constexpr (N == 9) {
         mul9_zen(rp, ap, bp);
     } else if constexpr (N == 8) {
