@@ -4,7 +4,7 @@
 126-127 ticks on Ryzen, 134-137 on Skylake.
 
 18x18 multiplication without this subroutine on Ryzen: 578 ticks, using this
- subroutine: 525. On Skylake: 646 / 528-535.
+ subroutine: 508. On Skylake: 646 / 528-535.
 '''
 
 """

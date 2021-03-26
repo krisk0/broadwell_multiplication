@@ -1,7 +1,13 @@
 '''
 8x8 multiplication targeting Ryzen. Uses aligned loads of v[] into xmm's.
 
-96 ticks on Ryzen, 104-105 on Skylake
+96-97 ticks on Ryzen, 104-105 on Skylake.
+
+16x16 multiplication time using this subroutine: 359 ticks on Ryzen, 388 ticks on
+ Skylake.
+
+Removing vzeroupper instruction gave 6 ticks on Ryzen and 4 ticks on Skylake for
+ 16x16 multiplication.
 
 Saving/restoring rsp onto rp[] and copying rsi to rsp costs 2 ticks on Skylake and
  3 ticks on Ryzen
@@ -41,24 +47,23 @@ vp[8..A] x9 x8 dd
 g_preamble = '''
                           | preamble and load_0 take 9 ticks on Ryzen and 12
                           |  on Skylake
-vzeroupper
 movq dd, w0
 and $0xF, dd
 if extra: movq w0, x9
 movq w0[0], dd
 jz align0
-movdqa w0[1], x0
-movdqa w0[3], x1
-movdqa w0[5], x2
+vmovdqa w0[1], x0
+vmovdqa w0[3], x1
+vmovdqa w0[5], x2
 movq w0[7], x3
 '''
 
 g_load_0 = '''
 align0:
 movq w0[1], x0
-movdqa w0[2], x1
-movdqa w0[4], x2
-movdqa w0[6], x3
+vmovdqa w0[2], x1
+vmovdqa w0[4], x2
+vmovdqa w0[6], x3
 '''
 
 # TODO: g_mul_01 should be different for Broadwell and Zen
@@ -153,7 +158,7 @@ adox s5, s1              | s7 s2 s8+sB s6+s9+s3" s1+sA' s0 .. {i+1}
 |
 | Save sp into a xmm, use sp instead of up, use up to extract v[i+1]. Result: no
 |  difference on Skylake, loss of 4 ticks on Ryzen.
-| Save sp into rp[], use sp instead of up, use up to extract v[i+1]. Result: 
+| Save sp into rp[], use sp instead of up, use up to extract v[i+1]. Result:
 |  loss of 2 ticks on Ryzen (when only muliplying by v[0..3]).
 |
 | Ryzen has problems with mulx sp[]? with saving/restoring sp?
