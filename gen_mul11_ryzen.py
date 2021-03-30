@@ -6,7 +6,7 @@
 22x22 multiplication benchmarks:
                           Skylake Ryzen
 without this subroutine     879     807
-with this subroutine      759-761   755
+with this subroutine      738-761   763
 '''
 
 g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
@@ -19,6 +19,7 @@ xmm usage:
 """
 
 g_preamble = '''
+| removing vzeroupper slows down 22x22 multiplication on Ryzen by 3 ticks
 vzeroupper
 movq sp, rp[17]
 movq wC, sp
