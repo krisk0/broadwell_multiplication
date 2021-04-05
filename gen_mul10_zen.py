@@ -1,7 +1,7 @@
 '''
 10x10 multiplication targeting Zen. Uses aligned loads of v[] into xmm's.
 
-161 ticks on Ryzen, 167 ticks on Broadwell.
+161 ticks on Ryzen, 167 ticks on Skylake.
 '''
 
 """
