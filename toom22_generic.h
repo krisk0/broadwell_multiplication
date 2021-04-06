@@ -487,7 +487,7 @@ toom22_12_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
 
 /*
 N = 3 * 2**k, k >= 2
-Size 24 time (Broadwell/Ryzen): 974/843
+Size 24 time (Skylake/Ryzen): 974/843
 Size 48 time: 3204/2772
 */
 template <uint16_t N>
@@ -680,7 +680,7 @@ toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         auto slave_scratch = scratch + N;
         // tried mul7_trice() here, got slight slow-down
         if constexpr (h == 7) {
-            // this optimization gave 7 ticks on Broadwell, 12 ticks on Ryzen
+            // this optimization gave 7 ticks on Skylake, 12 ticks on Ryzen
             mul7_2arg(scratch, rp);
         } else {
             toom22_broadwell_t<h>(scratch, slave_scratch, rp, rp + h);
@@ -1153,7 +1153,7 @@ template<uint16_t h, uint16_t q>
 void
 subtract_longer_from_shorter(mp_ptr tgt, mp_srcptr a_p) {
     if constexpr (h == 6) {
-        // gain 7 ticks on Broadwell, 3 ticks on Ryzen for toom22_broadwell_t<11>
+        // gain 7 ticks on Skylake, 3 ticks on Ryzen for toom22_broadwell_t<11>
         subtract_longer_from_shorter_6(tgt, a_p);
     } else if constexpr (h == 7) {
         /*
@@ -1162,7 +1162,7 @@ subtract_longer_from_shorter(mp_ptr tgt, mp_srcptr a_p) {
         */
         subtract_longer_from_shorter_7(tgt, a_p);
     } else if constexpr (h == 8) {
-        // 1 tick on Broadwell, 4 ticks on Ryzen for toom22_broadwell_t<15>()
+        // 1 tick on Skylake, 4 ticks on Ryzen for toom22_broadwell_t<15>()
         subtract_longer_from_shorter_8(tgt, a_p);
     } else {
         auto borrow = mpn_sub_n(tgt, a_p, a_p + h, q);
@@ -1209,7 +1209,7 @@ v1(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     // place another subtraction result at rp
     sign ^= subtract_lesser_from_bigger<h, q>(rp, bp);
     if constexpr (h == 7) {
-        // gain 7 ticks on Broadwell, 2 on Ryzen
+        // gain 7 ticks on Skylake, 2 on Ryzen
         mul7_2arg(scratch, rp);
     } else {
         toom22_broadwell_t<h>(scratch, scratch + 2*h, rp + h, rp);
@@ -1374,7 +1374,7 @@ addmul_8x3_slow(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
 }
 
 /*
-239 ticks on Broadwell, 4 ticks faster than __gmpn_mul_basecase(11)
+239 ticks on Skylake, 4 ticks faster than __gmpn_mul_basecase(11)
 215 ticks on Ryzen, 2 ticks slower than __gmpn_mul_basecase(11)
 */
 void
@@ -1420,7 +1420,7 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         MUL6_SUBR(rp, ap, bp);
     } else if constexpr (N == 5) {
         /*
-        gain 20 ticks on Broadwell, 11 ticks on Ryzen for 11x11 Toom22 multiplication
+        gain 20 ticks on Skylake, 11 ticks on Ryzen for 11x11 Toom22 multiplication
         */
         mul5_aligned(rp, ap, bp);
     } else if constexpr (N == 3) {
