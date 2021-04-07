@@ -10,8 +10,8 @@
     #define AMD_ZEN 1
 #endif
 
-// TODO: decrease to 12 and test/benchmark
-constexpr uint16_t TOOM_2X_BOUND = 28;
+constexpr uint16_t TOOM_2W_BOUND = 28;
+constexpr uint16_t TOOM_2T_BOUND = 12;
 
 #define LOUD_6_LINES 0
 #define SHOW_SUBROUTINE_NAME 0
@@ -609,7 +609,7 @@ toom22_2x_broadwell(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp, uint1
         printf("|b0-b1| = ");
         dump_number(rp + h, h);
     #endif
-    if (h < TOOM_2X_BOUND) {
+    if (h < TOOM_2W_BOUND) {
         MUL_BASECASE_SYMMETRIC(scratch, rp, h, rp + h);
         MUL_BASECASE_SYMMETRIC(rp, ap, h, bp);
         MUL_BASECASE_SYMMETRIC(rp + n, ap + h, h, bp + h);
@@ -853,6 +853,36 @@ is_special_n_for_toom22_t() {
     return false;
 }
 
+template<uint16_t n, int16_t b, uint16_t k>
+struct toom22_t_aux {
+    static constexpr uint64_t v() {
+        constexpr int16_t h = (n + 1) / 2;
+        constexpr int16_t q = (k + 1) / 2;
+        if constexpr ((n & 1) == 0) {
+            return 2 * h + toom22_t_aux<n, b, q>::v();
+        }
+        constexpr auto r0 = toom22_t_aux<h, b, q>::v();
+        constexpr auto r1 = toom22_t_aux<h - 1, b, q>::v();
+        return r0 > r1 ? 2 * h + r0 : 2 * h + r1;
+    };
+};
+
+template<uint16_t n, int16_t b>
+struct toom22_t_aux<n, b, 1> {
+    static constexpr uint64_t v() {
+        // return zero, unless degree of two or good multiple of 12,
+        constexpr uint16_t m = n / 12;
+        if constexpr ((m * 12 == n) && (is_power_of_2_t<m>())) {
+            return sum_progression_t<12, n>();
+        }
+        if constexpr (is_power_of_2_t<n>() && (n >= 16)) {
+            return sum_progression_t<16, n>();
+        }
+        // ... or exactly b
+        return n < b ? 0 : (n + 1) / 2 * 2;
+    };
+};
+
 template<int16_t N, int16_t K>
 struct toom22_broadwell_t {
     static constexpr uint64_t v() {
@@ -877,8 +907,8 @@ struct toom22_broadwell_t<N, 0> {
         if constexpr (is_power_of_2_t<(uint16_t)N>() && (N >= 16)) {
             return sum_progression_t<16, N>();
         }
-        // ... or exactly TOOM_2X_BOUND
-        return N < TOOM_2X_BOUND ? 0 : (N + 1) / 2 * 2;
+        // ... or exactly TOOM_2T_BOUND
+        return N < TOOM_2T_BOUND ? 0 : (N + 1) / 2 * 2;
     }
 };
 
@@ -949,6 +979,14 @@ toom22_whatever_t() {
     return x > y ? x : y;
 }
 
+// scratch size for toom22_broadwell_t<N>(,scratch,,)
+template<uint16_t n, uint16_t b = TOOM_2T_BOUND>
+constexpr uint64_t
+toom22_t() {
+    constexpr uint16_t k = (n + b - 1) / b;
+    return toom22_t_aux<n, b, k>::v();
+}
+
 } // namespace itch
 
 // n: multiple of 8, 16 <= n <= 2**15; zeroes = count of junior zeroes in n
@@ -959,7 +997,7 @@ toom22_8x_broadwell_6arg(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
     uint16_t l = (h >> 2) - 1;                  // count of loops inside mpn_sub_4k()
     auto sign = subtract_lesser_from_bigger_n(rp, ap, h, l);                // a0-a1
     sign ^= subtract_lesser_from_bigger_n(rp + h, bp, h, l);                // b0-b1
-    if (h < TOOM_2X_BOUND) {
+    if (h < TOOM_2W_BOUND) {
         MUL_BASECASE_SYMMETRIC(scratch, rp, h, rp + h);               // at -1
         MUL_BASECASE_SYMMETRIC(rp, ap, h, bp);                        // at 0
         MUL_BASECASE_SYMMETRIC(rp + n, ap + h, h, bp + h);            // at infinity
@@ -1142,7 +1180,7 @@ memory layout: u+0 u+1 ... u+h-1 w+0 w+1 ... w+q-1
 count abs(u-w), place it at tgt
 return sign: 0 if u-w >= 0, else 1
 
-h >= TOOM_2X_BOUND / 2
+h >= TOOM_2._BOUND / 2
 */
 
 template <uint16_t N>
@@ -1299,17 +1337,17 @@ interpolate(mp_ptr rp, mp_ptr scratch, uint8_t v1_sign) {
 template<uint16_t N>
 constexpr uint64_t
 toom22_itch_broadwell_t() {
-    static_assert(TOOM_2X_BOUND >= 12);
-    if constexpr (N < 1 * TOOM_2X_BOUND) {
+    static_assert(TOOM_2T_BOUND >= 12);
+    if constexpr (N < 1 * TOOM_2T_BOUND) {
         return itch::toom22_broadwell_t<N, 0>::v();
     }
-    if constexpr (N < 2 * TOOM_2X_BOUND) {
+    if constexpr (N < 2 * TOOM_2T_BOUND) {
         return itch::toom22_broadwell_t<N, 1>::v();
     }
-    if constexpr (N < 4 * TOOM_2X_BOUND) {
+    if constexpr (N < 4 * TOOM_2T_BOUND) {
         return itch::toom22_broadwell_t<N, 2>::v();
     }
-    if constexpr (N < 8 * TOOM_2X_BOUND) {
+    if constexpr (N < 8 * TOOM_2T_BOUND) {
         return itch::toom22_broadwell_t<N, 3>::v();
     }
     return itch::toom22_broadwell_inexact_t<N>();
@@ -1317,28 +1355,27 @@ toom22_itch_broadwell_t() {
 
 // Good bound on itch size, non-constexpr form
 uint64_t
-toom22_itch_broadwell(uint16_t N) {
-    if (N < 12) {
-        return 0;
-    }
+toom22_itch_broadwell(uint16_t n, int16_t b) {
     // special care for proper multiple of 12, and degree of two
-    if ((N / 12 * 12 == N) && (itch::is_power_of_2(N / 12))) {
-        return itch::sum_progression(12, N);
+    if ((n / 12 * 12 == n) && (itch::is_power_of_2(n / 12))) {
+        return itch::sum_progression(12, n);
     }
-    if (itch::is_power_of_2(N) && (N >= 16)) {
-        return itch::sum_progression(16, N);
+    if (itch::is_power_of_2(n) && (n >= 16)) {
+        return itch::sum_progression(16, n);
     }
-    if (N < TOOM_2X_BOUND) {
+    if (n < b) {
         return 0;
     }
-    if (!(N & 1)) {
-        return N + toom22_itch_broadwell(N / 2);
+    if (!(n & 1)) {
+        return n + toom22_itch_broadwell(n / 2, b);
     }
-    auto h = (N + 1)/ 2;
-    return 2 * h + std::max(toom22_itch_broadwell(h), toom22_itch_broadwell(h - 1));
+    auto h = (n + 1)/ 2;
+    auto r0 = toom22_itch_broadwell(h, b);
+    auto r1 = toom22_itch_broadwell(h - 1, b);
+    return 2 * h + std::max(r0, r1);
 }
 
-// N: odd, >= TOOM_2X_BOUND
+// N: odd, big enough
 template <uint16_t N>
 void
 toom22_1x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
@@ -1403,7 +1440,7 @@ void
 mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     if constexpr (N == 13) {
         /*
-        TODO: reduce TOOM_2X_BOUND to 12, then remove toom22_1x_broadwell_t<13>()
+        TODO: reduce bound to 12, then remove toom22_1x_broadwell_t<13>()
          call below
         */
         // toom22_1x_broadwell_t<13>() is slightly faster than __gmpn_mul_basecase()
@@ -1454,14 +1491,18 @@ force_call_toom22_broadwell(mp_ptr rp, mp_ptr scr, mp_srcptr ap, mp_srcptr bp) {
     }
 }
 
-// N: integer, not very big
+/*
+N: integer, not very big
+scratch: area of byte-length itch::toom22_t<N>() * sizeof(uint64_t); the number can
+ be zero, so the pointer is not used
+*/
 template<uint16_t N>
 void
 toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     #if SHOW_SUBROUTINE_NAME
         printf("toom22_broadwell_t<%u>\n", N);
     #endif
-    if constexpr (N < TOOM_2X_BOUND) {
+    if constexpr (N < TOOM_2T_BOUND) {
         if constexpr (itch::is_special_n_for_toom22_t<N>()) {
             force_call_toom22_broadwell<N>(rp, scratch, ap, bp);
         } else {
