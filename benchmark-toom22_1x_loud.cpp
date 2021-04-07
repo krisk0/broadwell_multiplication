@@ -15,7 +15,7 @@ long long int g_1 = 0, g_2 = 0;
     #endif
 #endif
 
-constexpr auto g_itch = toom22_itch_broadwell_t<SIZE>() * sizeof(mp_limb_t);
+constexpr auto g_itch = itch::toom22_t<SIZE>() * sizeof(mp_limb_t);
 #define HELLO bordeless_alloc(INT, scratch, g_itch, g_page_mask, g_page_unmask);
 
 #define GOODBYE printf("t0,1 = %lld,%lld\n", g_1 / VOLUME, g_2 / VOLUME);

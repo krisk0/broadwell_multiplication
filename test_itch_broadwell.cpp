@@ -1,9 +1,9 @@
-// Test toom22_itch_broadwell_t against toom22_itch_broadwell
+// Test itch::toom22_t against toom22_itch_broadwell
 
 #include <toom22_generic.h>
 
 /*
-g++ version 9.3.0 has problem unrolling do_test<i> for i in 1..128: code does not
+g++ version 9.3.0 has problem unrolling do_test<i, b> for i in 1..128: code does not
  compile in reasonable time. Therefore unrolling code via python
 */
 

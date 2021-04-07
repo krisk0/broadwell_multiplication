@@ -91,13 +91,13 @@ NS_12(96)
 
 int
 main() {
-    g_scratch = (INT*)malloc(sizeof(INT) * toom22_itch_broadwell_t<128>());
+    g_scratch = (INT*)malloc(sizeof(INT) * itch::toom22_t<128>());
     _32::test();
     _64::test();
     _128::test();
     free(g_scratch);
 
-    g_scratch = (INT*)malloc(sizeof(INT) * toom22_itch_broadwell_t<96>());
+    g_scratch = (INT*)malloc(sizeof(INT) * itch::toom22_t<96>());
     _12::test();
     _24::test();
     _48::test();
