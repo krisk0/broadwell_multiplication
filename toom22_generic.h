@@ -859,7 +859,7 @@ struct toom22_t_aux {
         constexpr int16_t h = (n + 1) / 2;
         constexpr int16_t q = (k + 1) / 2;
         if constexpr ((n & 1) == 0) {
-            return 2 * h + toom22_t_aux<n, b, q>::v();
+            return 2 * h + toom22_t_aux<h, b, q>::v();
         }
         constexpr auto r0 = toom22_t_aux<h, b, q>::v();
         constexpr auto r1 = toom22_t_aux<h - 1, b, q>::v();

@@ -3,40 +3,26 @@
 #include <toom22_generic.h>
 
 /*
-g++ version 9.3.0 has problem unrolling do_test<1,128>: code does not compile
- in reasonable time. Therefore unrolling code via python
-
-bool
-do_test() {
-    auto g = toom22_itch_broadwell(alpha);
-    auto b = toom22_itch_broadwell_t<alpha>();
-    if (g != b) {
-        printf("Problem for i=%d\n: %lud/%lud\n", alpha, g, b);
-        return false;
-    }
-    if (alpha < betta) {
-        return do_test<alpha + 1, betta>();
-    }
-    return true;
-}
+g++ version 9.3.0 has problem unrolling do_test<i> for i in 1..128: code does not
+ compile in reasonable time. Therefore unrolling code via python
 */
 
 bool g_failed = false;
 
-template<uint16_t N>
+template<uint16_t N, uint16_t B>
 void
 do_test() {
-    auto g = toom22_itch_broadwell(N);
-    auto b = toom22_itch_broadwell_t<N>();
-    if (g != b) {
-        printf("Problem for i=%d: %lu/%lu\n", N, g, b);
+    auto good = toom22_itch_broadwell(N, B);
+    auto baad = itch::toom22_t<N, B>();
+    if (good != baad) {
+        printf("Problem for N=%d, B=%d: %lu/%lu\n", N, B, good, baad);
         g_failed = true;
     }
 }
 
 int
 main() {
-    // Due to bug in g++ code unrolled via python
+    // code unrolled via python
     #include "automagic/test_itch_broadwell.h"
     if (!g_failed) {
         printf("Test passed\n");
