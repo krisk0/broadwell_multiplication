@@ -872,35 +872,6 @@ struct toom22_t_aux<n, b, 1> {
     }
 };
 
-template<int16_t N, int16_t K>
-struct toom22_broadwell_t {
-    static constexpr uint64_t v() {
-        constexpr int16_t h = (N + 1) / 2;
-        if constexpr ((N & 1) == 0) {
-            return 2 * h + toom22_broadwell_t<h, K - 1>::v();
-        }
-        constexpr auto r0 = toom22_broadwell_t<h, K - 1>::v();
-        constexpr auto r1 = toom22_broadwell_t<h - 1, K - 1>::v();
-        return r0 > r1 ? 2 * h + r0 : 2 * h + r1;
-    };
-};
-
-template<int16_t N>
-struct toom22_broadwell_t<N, 0> {
-    static constexpr uint64_t v() {
-        // return zero, unless degree of two or good multiple of 12,
-        constexpr uint16_t M = N / 12;
-        if constexpr ((M * 12 == N) && (is_power_of_2_t<M>())) {
-            return sum_progression_t<12, N>();
-        }
-        if constexpr (is_power_of_2_t<(uint16_t)N>() && (N >= 16)) {
-            return sum_progression_t<16, N>();
-        }
-        // ... or exactly TOOM_2T_BOUND
-        return N < TOOM_2T_BOUND ? 0 : (N + 1) / 2 * 2;
-    }
-};
-
 // scratch size for toom22_broadwell_t<N>(,scratch,,)
 template<uint16_t n, uint16_t b = TOOM_2T_BOUND>
 constexpr uint64_t
@@ -1405,16 +1376,7 @@ mul_11(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
 template <uint16_t N, bool fear_of_page_break>
 void
 mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
-    if constexpr (N == 13) {
-        /*
-        TODO: reduce bound to 12, then remove toom22_1x_broadwell_t<13>()
-         call below
-        */
-        // toom22_1x_broadwell_t<13>() is slightly faster than __gmpn_mul_basecase()
-        mp_limb_t scratch[itch::toom22_forced_t<13>()];
-        toom22_1x_broadwell_t<N>(rp, scratch, ap, bp);
-        // use hand-optimized subroutine if possible
-    } else if constexpr (N == 11) {
+    if constexpr (N == 11) {
         MUL11_SUBR(rp, ap, bp);
     } else if constexpr (N == 10) {
         mul10_zen(rp, ap, bp);
