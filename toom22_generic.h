@@ -841,6 +841,18 @@ sum_progression_t() {
     return alpha * (two_power<l>() - 1);
 }
 
+template<uint16_t n>
+constexpr bool
+is_special_n_for_toom22_t() {
+    if constexpr ((n / 12 * 12 == n) && (is_power_of_2_t<n / 12>())) {
+        return true;
+    }
+    if constexpr (is_power_of_2_t<n>() && (n >= 16)) {
+        return true;
+    }
+    return false;
+}
+
 template<int16_t N, int16_t K>
 struct toom22_broadwell_t {
     static constexpr uint64_t v() {
@@ -1450,12 +1462,8 @@ toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         printf("toom22_broadwell_t<%u>\n", N);
     #endif
     if constexpr (N < TOOM_2X_BOUND) {
-        // for some N, call Toom-22 subroutine even though N is small
-        if constexpr ((N / 12 * 12 == N) && (itch::is_power_of_2_t<N / 12>())) {
-            // toom22_2x_broadwell_t is smart enough
-            toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
-        } else if constexpr (itch::is_power_of_2_t<N>() && (N >= 16)) {
-            toom22_2x_broadwell_t<N>(rp, scratch, ap, bp);
+        if constexpr (itch::is_special_n_for_toom22_t<N>()) {
+            force_call_toom22_broadwell<N>(rp, scratch, ap, bp);
         } else {
             mul_basecase_t<N>(rp, ap, bp);
         }
