@@ -1,5 +1,5 @@
 """
-4x4 targeting Broadwell.
+4x4 multiplication targeting Broadwell.
 
 32 ticks on Ryzen, 33-34 ticks on Skylake.
 
