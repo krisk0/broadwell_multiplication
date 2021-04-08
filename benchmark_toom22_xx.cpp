@@ -38,7 +38,8 @@ INT g_page_unmask;
 #endif
 
 #if !defined(ITCH_SIZE)
-static constexpr auto ITCH_SIZE = itch::toom22_broadwell_inexact_t<MAX_N>();
+static constexpr auto ITCH_SIZE = itch::toom22_t_max_over_range<TOOM_2T_BOUND,
+        MAX_N>();
 #endif
 
 void

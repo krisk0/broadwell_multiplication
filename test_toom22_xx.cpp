@@ -116,9 +116,9 @@ int
 main() {
     srand(RAND_SEED);
     g_scratch = (INT*)malloc(sizeof(INT) *
-            itch::toom22_broadwell_inexact_t<MAX_N>());
+            itch::toom22_t_max_over_range<TOOM_2T_BOUND, MAX_N>());
 
-    for (g_size = TOOM_2X_BOUND; g_size <= MAX_N; g_size++) {
+    for (g_size = TOOM_2T_BOUND; g_size <= MAX_N; g_size++) {
         #if LOUD
             printf("size=%lu\n", g_size);
         #endif
