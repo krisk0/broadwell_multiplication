@@ -3,16 +3,16 @@
 #include <cassert>
 
 #include "automagic/mpn_le_4.h"
-#include "automagic/mul4_broadwell.h"
 
 #define GOOD(r, u, v) __gmpn_mul_basecase(r, u, 4, v, 4)
-#define BAAD(r, u, v) mul4_broadwell_macro_wr(r, u, v)
+#define BAAD(r, u, v) mul4_broadwell(r, u, v)
 #define SIZE 4
 #define INT uint64_t
 #define RAND_SEED 20190605
 
 extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
+void mul4_broadwell(mp_ptr, mp_srcptr up, mp_srcptr);
 }
 
 #include "test-internal.h"

@@ -1,113 +1,102 @@
 """
-mulx p1 p6 p23
-vmovq xmm0, rbx               p0
-vmovq mem, xmm0               p23
-vmovq rbx, xmm0               p5
-pinsrq $1, rbx, xmm0          p23 p5
-vpextrq $0x1,%%xmm0,tgt       p0 p5
-push rbx                      p237 p4
-pop rbx                       p23
-movq mem, rbx                 p23
-movq rbx, mem                 p237 p4
-psrldq p5
-vperm2i128 $imm,ymm0,ymm0,ymm0 p5
-xorq p0156
-vperm2i128 p5
-add!sub                       p0156 p23
-adc!sbb                       p06 p23
-adox ?p06
-adcx ?p06
-vmovdqu mem, ymm0             p23
-vmovdqu ymm0, mem             p237 p4
-vpxor xmm0, xmm0              p015
+4x4 targeting Broadwell.
 
-parameters: rdi, rsi, rdx, rcx, r8, r9
-general purpose registers: rax, rbx, rcx, rdx, rbp, rsi, rdi, rsp and r8-r15
-scratch registers: rax, rcx, rdx, rsi, rdi, r8-r11, ymm0-ymm15
+32 ticks on Ryzen, 33-34 ticks on Skylake.
 
-a rax
-b rbx
-c rcx
-d rdx
-S rsi
-D rdi
+TODO: modify for Ryzen.
+
+xmm usage:
+ x2,x3 : v[2..3]
+ x4: sp
 """
 
-#TODO: vmovdqu should not be the first command, load v0 directly
+g_var_map = 'rp,rdi wC,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
+    'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 w5,rcx dd,rdx sp,rsp ' + \
+    ' '.join(['x%X,xmm%s' % (i, i) for i in range(16)])
+
 g_code = '''
-vmovdqu (dd), vC
-||save w8
-vmovq 128_vC, dd               |                                        dd:=v[0]
-mulx (up), w1, w2              |          w2 w1
-xorq w8, w8                    |                                        cf:=0  of:=0
-mulx 8(up), w3, w4             |          w4 w2+w3 w1
-movq w1, (rp)                  |          w4 w2+w3
-vpextrq $0x1,128_vC,w1         |                                        w1:=v[1]
-mulx 16(up), w5, w6            |          w6 w4+w5 w2+w3
-||save w7
-adcx w3, w2                    |          w6 w4+w5' w2
-mulx 24(up), w7, w8            |          w8 w6+w7 w4+w5' w2
-movq w1, dd                    |                          dd:=v[1]
-adcx w5, w4                    |          w8 w7+w6' w4 w2
-
-mulx (up), w1, w3              |          w8 w7+w6' w3+w4 w1+w2
-vperm2i128 $0x81,vC,vC,vC      |                                        ready v[3] v[2]
-adcx w7, w6                    |          w8' w6 w3+w4 w1+w2
-adox w2, w1                    |          w8' w6 w3+w4" w1
-mulx 16(up), w2, w7            |          w7+w8' w2+w6 w3+w4" w1
-vpxor vZ, vZ, vZ
-adox w4, w3                    |          w7+w8' w2+w6" w3 w1
-movq w1, 8(rp)                 |          w7+w8' w2+w6" w3
-mulx 24(up), w1, w4            |          w4 w1+w7+w8' w2+w6" w3
-vmovq vZ, w5                   |                                        w5:=0
-adcx w8, w7                    |          w4' w1+w7 w2+w6" w3
-adox w6, w2                    |          w4' w1+w7" w2 w3
-mulx 8(up), w6, w8             |          w4' w1+w7" w2+w8 w3+w6
-adcx w5, w4                    |          w4 w1+w7" w2+w8 w3+w6         cf==0
-adox w7, w1                    |          w4" w1 w2+w8 w3+w6
-vmovq 128_vC, dd               |                                        dd:=v[2]
-adcx w6, w3                    |          w4" w1 w2+w8' w3
-adox w5, w4                    |          w4 w1 w2+w8' w3               of==0
-
-mulx (up), w5, w6              |          w4 w1 w2+w6+w8' w3+w5
-adcx w8, w2                    |          w4 w1' w2+w6 w3+w5
-adox w5, w3                    |          w4 w1' w2+w6" w3
-mulx 16(up), w5, w8            |          w4+w8 w1+w5' w2+w6" w3
-movq w3, 16(rp)                |          w4+w8 w1+w5' w2+w6"
-adox w6, w2                    |          w4+w8 w1+w5'" w2
-adcx w5, w1                    |          w4+w8' w1" w2
-mulx 8(up), w3, w5             |          w4+w8' w1+w5" w2+w3
-adcx w8, w4                    |          ' w4 w1+w5" w2+w3
-mulx 24(up), w6, w8            |          w8' w4+w6 w1+w5" w2+w3
-vmovq vZ, w7                   |                                        w7:=0
-adox w5, w1                    |          w8' w4+w6" w1 w2+w3
-vpextrq $0x1,128_vC,dd         |                                        dd:=v[3]
-adcx w7, w8                    |          w8 w4+w6" w1 w2+w3            cf==0
-adox w6, w4                    |          w8" w4 w1 w2+w3
-adcx w3, w2                    |          w8" w4 w1' w2
-
-mulx (up), w3, w5              |          w8" w4 w1+w5' w2+w3
-adox w7, w8                    |          w8 w4 w1+w5' w2+w3
-mulx 16(up), w6, w7            |          w7+w8 w4+w6 w1+w5' w2+w3
-adox w3, w2                    |          w7+w8 w4+w6 w1+w5'" w2
-adcx w5, w1                    |          w7+w8 w4+w6' w1" w2
-mulx 8(up), w3, w5             |          w7+w8 w4+w6+w5' w1+w3" w2
-movq w2, 24(rp)                |          w7+w8 w4+w6+w5' w1+w3"
-adcx w6, w4                    |          w7+w8' w4+w5 w1+w3"
-adox w3, w1                    |          w7+w8' w4+w5" w1
-vmovq vZ, w2                   |                                        w2:=0
-mulx 24(up), w3, w6            |          w6 w3+w7+w8' w4+w5" w1
-adcx w8, w7                    |          w6' w3+w7 w4+w5" w1
-adox w5, w4                    |          w6' w3+w7" w4 w1
-movq w1, 32(rp)                |          w6' w3+w7" w4
-adcx w2, w6                    |          w6 w3+w7" w4
-adox w7, w3                    |          w6" w3 w4
-movq w4, 40(rp)                |          w6" w3
-||restore w7
-adox w2, w6                    |          w6 w3
-movq w3, 48(rp)                |          w6
-||restore w8
-movq w6, 56(rp)                |
+movq dd, w0
+movq w0[0], dd
+movq w0[1], w1           | w1=v[1]
+movq w0[2], x2           | x2=v[2]
+movq w0[3], x3           | x3=v[3]
+movq wC[0], w9           | w9=u[0]
+mulx w9, w0, w2          | w2 w0
+movq wC[1], wA           | wA=u[1]
+mulx wA, w3, w4          | w4 w2+w3 w0
+movq wC[2], wB           | wB=u[2]
+mulx wB, w5, w6          | w6 w4+w5 w2+w3 w0
+movq sp, x4
+movq wC[3], wC           | wC=u[3]
+mulx wC, w7, w8          | w8 w6+w7 w4+w5 w2+w3 w0
+movq w1, dd
+movq w0, rp[0]           | w8 w6+w7 w4+w5 w2+w3 [1]
+xor w0, w0
+movq x2, sp
+mulx w9, w0, w1          | w8 w6+w7 w4+w5+w1 w2+w3+w0 [1]
+movq w9, rp[4]           | rp[4]=u[0]
+adcx w3, w2              | w8 w6+w7 w4+w5+w1' w2+w0 [1]
+mulx wC, w3, w9          | w9 w8+w3 w6+w7 w4+w5+w1' w2+w0 [1]
+adcx w5, w4              | w9 w8+w3 w6+w7' w4+w1 w2+w0 [1]
+movq wC, rp[7]           | rp[7]=u[3]
+mulx wA, w5, wC          | w9 w8+w3 w6+w7+wC' w4+w1+w5 w2+w0 [1]
+adcx w7, w6              | w9 w8+w3' w6+wC w4+w1+w5 w2+w0 [1]
+movq wA, rp[5]           | rp[5]=u[1]
+mulx wB, w7, wA          | w9 w8+w3+wA' w6+wC+w7 w4+w1+w5 w2+w0 [1]
+movq sp, dd              | dd=v[2]
+adox w0, w2
+movq w2, rp[1]           | w9 w8+w3+wA' w6+wC+w7 w4+w1+w5" [2]
+mulx wB, w0, w2          | w9+w2 w8+w3+wA+w0' w6+wC+w7 w4+w1+w5" [2]
+movq x3, sp
+movq wB, rp[6]           | rp[6]=u[2]
+movq $0, wB
+adcx w3, w8              | w9+w2' w8+wA+w0 w6+wC+w7 w4+w1+w5" [2]
+adox w1, w4              | w9+w2' w8+wA+w0 w6+wC+w7" w4+w5 [2]
+mulx rp[7], w1, w3       | w3 w9+w2+w1' w8+wA+w0 w6+wC+w7" w4+w5 [2]
+adcx wB, w9              | w3 w9+w2+w1 w8+wA+w0 w6+wC+w7" w4+w5' [2]
+adox wC, w6              | w3 w9+w2+w1 w8+wA+w0" w6+w7 w4+w5' [2]
+mulx rp[4], wB, wC       | w3 w9+w2+w1 w8+wA+w0" w6+w7+wC w4+w5+wB' [2]
+adcx w5, w4              | w3 w9+w2+w1 w8+wA+w0" w6+w7+wC' w4+wB [2]
+adox wA, w8              | w3 w9+w2+w1" w8+w0 w6+w7+wC' w4+wB [2]
+mulx rp[5], w5, wA       | w3 w9+w2+w1" w8+w0+wA w6+w7+wC+w5' w4+wB [2]
+movq sp, dd              | dd=v[3]
+adcx w7, w6              | w3 w9+w2+w1" w8+w0+wA' w6+wC+w5 w4+wB [2]
+adox w2, w9              | w3" w9+w1 w8+w0+wA' w6+wC+w5 w4+wB [2]
+mulx rp[6], w2, w7       | w3+w7" w9+w1+w2 w8+w0+wA' w6+wC+w5 w4+wB [2]
+adcx w0, w8              | w3+w7" w9+w1+w2' w8+wA w6+wC+w5 w4+wB [2]
+movq $0, w0
+adox w0, w3              | w3+w7 w9+w1+w2' w8+wA w6+wC+w5 w4+wB" [2]
+mulx rp[7], sp, w0       | w0 w3+w7+sp w9+w1+w2' w8+wA w6+wC+w5 w4+wB" [2]
+adcx w1, w9              | w0 w3+w7+sp' w9+w2 w8+wA w6+wC+w5 w4+wB" [2]
+adox wB, w4
+movq w4, rp[2]           | w0 w3+w7+sp' w9+w2 w8+wA w6+wC+w5" [3]
+mulx rp[4], w1, wB       | w0 w3+w7+sp' w9+w2 w8+wA+wB w6+wC+w5+w1" [3]
+mulx rp[5], w4, dd       | w0 w3+w7+sp' w9+w2+dd w8+wA+wB+w4 w6+wC+w5+w1" [3]
+adcx w7, w3              | w0' w3+sp w9+w2+dd w8+wA+wB+w4 w6+wC+w5+w1" [3]
+movq $0, w7
+adox wC, w6              | w0' w3+sp w9+w2+dd w8+wA+wB+w4" w6+w5+w1 [3]
+adcx w7, w0              | w0 w3+sp w9+w2+dd w8+wA+wB+w4" w6+w5+w1' [3]
+adox wA, w8              | w0 w3+sp w9+w2+dd" w8+wB+w4 w6+w5+w1' [3]
+adcx w5, w6              | w0 w3+sp w9+w2+dd" w8+wB+w4' w6+w1 [3]
+movq sp, w5              | w0 w3+w5 w9+w2+dd" w8+wB+w4' w6+w1 [3]
+movq x4, sp
+adox w2, w9              | w0 w3+w5" w9+dd w8+wB+w4' w6+w1 [3]
+adcx wB, w8              | w0 w3+w5" w9+dd' w8+w4 w6+w1 [3]
+adox w5, w3              | w0" w3 w9+dd' w8+w4 w6+w1 [3]
+adcx w9, dd              | w0" w3' dd w8+w4 w6+w1 [3]
+adox w7, w0              | w0 w3' dd w8+w4 w6+w1" [3]
+adcx w7, w3              | w0' w3 dd w8+w4 w6+w1" [3]
+adox w1, w6
+movq w6, rp[3]           | w0' w3 dd w8+w4" [4]
+adcx w7, w0              | w0 w3 dd w8+w4" [4]
+adox w4, w8              | w0 w3 dd" w8 [4]
+movq w8, rp[4]           | w0 w3 dd" [5]
+adox w7, dd
+movq dd, rp[5]
+adox w7, w3
+movq w3, rp[6]
+adox w7, w0
+movq w0, rp[7]
 '''
 
 # mul4_broadwell_macro() wants registers not expressions
@@ -194,18 +183,24 @@ def replace_symbolic_vars_name(src, m):
         src = re.sub(r'\b%s\b' % k, v, src)
     return src
 
+g_array_patt = re.compile(r'\b([a-zA-Z0-9]+)\b\[(.+?)\]')
+def evaluate_row(s):
+    m = g_array_patt.search(s)
+    if m:
+        j = int(m.group(2))
+        if j == 0:
+            s = s.replace(m.group(), '(%s)' % m.group(1))
+        else:
+            s = s.replace(m.group(), '%s(%s)' % (j * 8, m.group(1)))
+    return s
+
+def chew_code(src):
+    src = cutoff_comments(src)
+    return [evaluate_row(x) for x in src]
+
 def do_asm_subroutine(tgt, code):
-    code = (code + '\nretq').replace('\n||save ', '\n pushq ').\
-            replace('\n||restore ', '\n popq ')
-    write_asm_procedure_header(tgt, 'mul4_broadwell')
-    change_map = ['vC ymm9', '128_vC xmm9', 'vZ xmm8', 'rp rdi', 'up rsi', 'dd rdx',
-            'w8 r12', 'w7 rbx', 'w1 rax', 'w2 rcx', 'w3 r8', 'w4 r9', 'w5 r10', 'w6 r11']
-    for i in change_map:
-        j = i.split(' ')
-        s = r'\b%s\b' % j[0]
-        t = '%' + j[1]
-        code = re.sub(s, t, code)
-    write_asm_inside(tgt, code)
+    code = chew_code(code)
+    cook_asm(tgt, code, g_var_map, True)
 
 def append_backslash(x, length):
     if isinstance(x, list):
@@ -589,11 +584,14 @@ def evaluate_if(s, dd, cond, stmt):
 if __name__ == '__main__':
     g_out = sys.argv[1]
 
-    # create one of two files: .h or .s
+    # after changes in g_code, macro probably needs more work
+    """
+    # create either .h or .s
     if g_out[-1] == 'h':
         with open(g_out, 'wb') as g_file:
             do_it(g_file, g_code)
         sys.exit(0)
+    """
 
     """
     GCC inserts extra lines:
@@ -605,3 +603,38 @@ if __name__ == '__main__':
     """
     with open(g_out, 'wb') as g_file:
         do_asm_subroutine(g_file, g_code)
+
+"""
+mulx p1 p6 p23
+vmovq xmm0, rbx               p0
+vmovq mem, xmm0               p23
+vmovq rbx, xmm0               p5
+pinsrq $1, rbx, xmm0          p23 p5
+vpextrq $0x1,%%xmm0,tgt       p0 p5
+push rbx                      p237 p4
+pop rbx                       p23
+movq mem, rbx                 p23
+movq rbx, mem                 p237 p4
+psrldq p5
+vperm2i128 $imm,ymm0,ymm0,ymm0 p5
+xorq p0156
+vperm2i128 p5
+add!sub                       p0156 p23
+adc!sbb                       p06 p23
+adox ?p06
+adcx ?p06
+vmovdqu mem, ymm0             p23
+vmovdqu ymm0, mem             p237 p4
+vpxor xmm0, xmm0              p015
+
+parameters: rdi, rsi, rdx, rcx, r8, r9
+general purpose registers: rax, rbx, rcx, rdx, rbp, rsi, rdi, rsp and r8-r15
+scratch registers: rax, rcx, rdx, rsi, rdi, r8-r11, ymm0-ymm15
+
+a rax
+b rbx
+c rcx
+d rdx
+S rsi
+D rdi
+"""

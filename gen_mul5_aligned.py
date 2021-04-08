@@ -1,5 +1,9 @@
 '''
 5x5 multiplication targeting Broadwell and Ryzen.
+
+On Skylake, removing vzeroupper and replacing movdqa with vmovdqa brings a
+ small benefit (a fraction of tick). On Ryzen, this modification is harmful
+ -- results in approximately 4 ticks slowdown.
 '''
 
 g_preamble = '''
@@ -193,15 +197,15 @@ def chew_line(i, s, align):
     if m:
         s = s.replace(m.group(), '%s' % (i + int(m.group(1))))
     s = re.sub(r'\bi\b', '%s' % i, s)
-    
+
     m = g_v_patt.match(s)
     if m:
         return extract_v(int(m.group(2)), m.group(1), align)
-    
+
     m = g_rp_patt.search(s)
     if m:
         s = s.replace(m.group(), '%s(rp)' % (8 * int(m.group(1))))
-    
+
     return s
 
 def muladd_code(i, jj, p, align):
@@ -209,12 +213,12 @@ def muladd_code(i, jj, p, align):
         rr = ['# mul_add %s' % i]
     else:
         rr = []
-    
+
     for j in jj:
         k = chew_line(i, j, align)
         if k:
             rr.append(k)
-    
+
     return [E.apply_s_permutation(j, p) for j in rr]
 
 def alignment_code(shift):
@@ -231,7 +235,7 @@ def do_it(o):
     code += alignment_code(0)
 
     P.cook_asm(o, code, E.g_var_map, True)
-    
+
 if __name__ == '__main__':
     with open(sys.argv[1], 'wb') as g_out:
         do_it(g_out)

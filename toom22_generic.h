@@ -50,6 +50,7 @@ void mpn_add_4k_plus2_4arg(mp_ptr, mp_limb_t, mp_srcptr, uint16_t);
 mp_limb_t mpn_sub_2k_plus2_inplace(mp_ptr, mp_srcptr, uint16_t);
 void mul7_2arg(mp_ptr, mp_srcptr);
 void mul5_aligned(mp_ptr, mp_srcptr, mp_srcptr);
+void mul4_broadwell(mp_ptr, mp_srcptr, mp_srcptr);
 void mul3(mp_ptr, mp_srcptr, mp_srcptr);
 void addmul_8x3(mp_ptr, mp_srcptr, mp_srcptr);
 }
@@ -1401,6 +1402,8 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         gain 20 ticks on Skylake, 11 ticks on Ryzen for 11x11 Toom22 multiplication
         */
         mul5_aligned(rp, ap, bp);
+    } else if constexpr (N == 4) {
+        mul4_broadwell(rp, ap, bp);
     } else if constexpr (N == 3) {
         mul3(rp, ap, bp);
     }

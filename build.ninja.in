@@ -1,5 +1,6 @@
 o = ./automagic
 toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,9,10}_zen.o $
+    $o/mul4_broadwell.s $
     $o/mul{5..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o $
     $o/mpn_sub_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul3.o $o/addmul_8x3.o $
     $o/mul11_{bwl,ryzen}.o
@@ -66,7 +67,7 @@ rule compile_c_code
 rule catenate
     command = cat $in > $out
 
-test4.exe: test4.cpp mul4_broadwell.s @int_h $o/mpn_le_4.h $o/mul4_broadwell.h
+test4.exe: test4.cpp mul4_broadwell.s @int_h $o/mpn_le_4.h
 
 test8_broadwell_125.exe: test8.cpp mul8_broadwell_125.s @int_h
 
@@ -110,6 +111,9 @@ benchm7_t03.exe: benchmark8.cpp mul7_t03.s @int_h benchmark-internal.c $
 
 test7_broadwell.exe: test8.cpp mul7_broadwell.s @int_h $
     [+flags -DSIZE=7 -DTESTED=mul7_broadwell]
+
+benchm4_broadwell.exe: benchmark8.cpp mul4_broadwell.s @int_h benchmark-internal.c $
+    [+flags -DSIZE=4 -DTESTED=mul4_broadwell]
 
 benchm7_broadwell.exe: benchmark8.cpp mul7_broadwell.s @int_h benchmark-internal.c $
     [+flags -DSIZE=7 -DTESTED=mul7_broadwell]
@@ -241,7 +245,7 @@ mpn_add_2_4arg.s: mpn_add_2_4arg
 subtract_lesser_from_bigger_%.h: subtract_lesser_from_bigger [+extra %]
 
 build $o/mul7_trice.s: create_c_code gen_mul7_trice.py gen_mul4.py $o/mul7_aligned.s
-    extra = $o/mul7_aligned`.s
+    extra = $o/mul7_aligned.s
 
 toom22_interpolate_@_raw.s: toom22_interpolate [16]
 
