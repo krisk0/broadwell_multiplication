@@ -490,7 +490,7 @@ N = 3 * 2**k, k >= 2
 Size 24 time (Skylake/Ryzen): 974/843
 Size 48 time: 3204/2772
 */
-template <uint16_t N>
+template<uint16_t N>
 void
 toom22_12_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     static_assert(N / 12 * 12 == N);
@@ -560,7 +560,7 @@ toom22_deg2_broadwell_careful(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr
 }
 
 // N: degree of two, 16 <= N < 2**16
-template <uint16_t N>
+template<uint16_t N>
 void
 toom22_deg2_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     if constexpr (N == 16) {
@@ -653,7 +653,7 @@ N even, 10 <= N
 
 scratch size: s(2*h) = 2*h + s(h)
 */
-template <uint16_t N>
+template<uint16_t N>
 void
 toom22_2x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     if constexpr (N == 12) {
@@ -976,7 +976,7 @@ toom22_8x_broadwell_6arg(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp,
 }
 
 // N: multiple of 8, 16 <= N
-template <uint16_t N>
+template<uint16_t N>
 void
 toom22_8x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     if constexpr ((N / 24 * 24 == N) && (itch::is_power_of_2_t<N / 24>())) {
@@ -1142,7 +1142,7 @@ return sign: 0 if u-w >= 0, else 1
 h >= TOOM_2._BOUND / 2
 */
 
-template <uint16_t N>
+template<uint16_t N>
 void
 mpn_sub_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     if constexpr ((N > 4) && (0 == (N & 3))) {
@@ -1210,7 +1210,7 @@ subtract_lesser_from_bigger(mp_ptr tgt, mp_srcptr a_p) {
     return less;
 }
 
-template <uint16_t h, uint16_t q>
+template<uint16_t h, uint16_t q>
 uint8_t
 v1(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     // place one subtraction result at rp + h
@@ -1267,7 +1267,7 @@ v3 is known to fit 2*h limbs, which means that limb at index 2*h need not be car
  calculating v3 = v2 + v0 + |v1|.
 */
 
-template <uint16_t h, uint16_t q>
+template<uint16_t h, uint16_t q>
 void
 interpolate(mp_ptr rp, mp_ptr scratch, uint8_t v1_sign) {
     if (v1_sign) {
@@ -1315,7 +1315,7 @@ toom22_itch_broadwell(uint16_t n, int16_t b) {
 }
 
 // N: odd, big enough
-template <uint16_t N>
+template<uint16_t N>
 void
 toom22_1x_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
     constexpr auto h = (N + 1) / 2;
@@ -1374,7 +1374,7 @@ mul_11(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     addmul_8x3(rp, bp, ap + 8);
 }
 
-template <uint16_t N, bool fear_of_page_break>
+template<uint16_t N, bool fear_of_page_break>
 void
 mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     if constexpr (N == 11) {
