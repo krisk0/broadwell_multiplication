@@ -1,16 +1,14 @@
 Low-level big-integer arithmetic subroutines in C/C++/asm.
 
-`mul8_zen()` multiplies 512-bit (8-limb) numbers faster than `GMP` subroutine `gmpn_mul(,, 8, , 8)` (both on Skylake and Ryzen).
+`mul8_zen()` multiplies 512-bit (8-limb) numbers faster than `GMP` subroutine `gmpn_mul(,, 8, , 8)` (both on Skylake and Ryzen). Such hand-optimized assembler subroutines exist for sizes 4…11.
 
-`toom22_mul16_broadwell()` multiplies 16-limb numbers faster than `gmpn_mul(,, 16, , 16)`.
-
-`toom22_deg2_broadwell()` multiplies k-limb numbers faster than `gmpn_toom22_mul()`, where k is a small degree of 2.
+Templated subroutine `toom22_broadwell_t<N>` multiplies N-limb numbers faster than `gmpn_mul(,, N, , N)`, for small values of N.
 
 # Status
 
 Work-in-progress. Code needs cleaning. Some subroutines might not work as expected. However, if there is a benchmark published for a procedure, then this procedure is thoroughly tested and expected to be bug-free.
 
-Currently my code outperforms GMP for at least the following limb sizes: 6, 7, 8, 16, 24, 32, 48, 64, 127.
+Currently my code outperforms GMP for at least the following limb sizes: 4…20, 24, 32, 48, 64, 72, 127. I am using Skylake and Ryzen desktops to run benchmarks (CPUs: Core i7-6700 @3.40GHz and Ryzen 7 3800X 8-Core).
 
 # Quick start
 
@@ -24,7 +22,7 @@ automagic/benchm8_zen.exe 0
 
 # Benchmarks
 
-subroutine | tacts 
+subroutine | tacts
 :---: | ---:
 mpn_mul_n 8 | 143
 gmpn_mul_basecase 8 | 133
@@ -38,7 +36,7 @@ toom22_broadwell_t 24 | 967
 mpn_mul_n 32 | 1678
 toom22_deg2_broadwell 32 | 1344
 
-Left column contains subroutine name and size indicator. For instance, 
+Left column contains subroutine name and size indicator. For instance,
 `gmpn_mul_basecase 16` indicates that `gmpn_mul_basecase(target, operand_a, 16, operand_b, 16)` was called.
 
 Right column contains count of CPU tacts (ticks), as returned by `__rdtsc()`.
@@ -76,7 +74,7 @@ where `/usr/bin/python2` is full path to your `Python2` interpreter, `flags` are
 
 *Q1*. Can I use other compiler than `GCC`?
 
-*A1*. Maybe, if it fully supports GCC-style inline `asm`.
+*A1*. Maybe, if it fully supports GCC-style inline `asm`. Oops, `clang` rejects to compile due to [if constexpr problem](https://stackoverflow.com/questions/54899466/constexpr-if-with-a-non-bool-condition).
 
 *Q2*. I found a bug in your code.
 
@@ -88,7 +86,7 @@ where `/usr/bin/python2` is full path to your `Python2` interpreter, `flags` are
 
 *Q4*. My benchmark of `GMP` code shows bigger tact numbers than found above in this README.
 
-*A4*. Did you install `GMP` via packet manager? Probably it is not optimized for Broadwell.
+*A4*. Did you install `GMP` via packet manager? Probably it is not optimized for your Broadwell or Ryzen. Symptom: no `mulx` and/or `adox` instruction in disassembled code.
 
 *Q5*. How do I know that installed `GMP` library is optimized for Broadwell or better CPU?
 
@@ -97,13 +95,14 @@ where `/usr/bin/python2` is full path to your `Python2` interpreter, `flags` are
 ```
 cd /tmp
 objdump -d /usr/lib64/libgmp.a > gmp.asm
-tar xf /distfiles/gmp-6.1.2.tar.xz 
+tar xf /distfiles/gmp-6.2.1.tar.xz
 ```
-, open `gmp.asm`, look at `__gmpn_mul_basecase` subroutine. The code should be similar to source found in `/tmp/gmp-6.1.2/mpn/x86_64/coreibwl/mul_basecase.asm`.
+, open `gmp.asm`, look at `__gmpn_mul_basecase` subroutine. The code should be similar to source found in
+`/tmp/portage/dev-libs/gmp-6.2.1/work/gmp-6.2.1/mpn/x86_64/coreibwl/mul_basecase.asm`. If optimized for Zen2, then source code is in `.../mpn/x86_64/zen1/` directory.
 
 *Q6*. My packet manager installed crippled (not microarch-optimized) GMP. How do I build `GMP` optimized for my CPU?
 
-*A6*. Under Gentoo Linux, use [my ebuild script](https://github.com/krisk0/razin/blob/master/ebuild/gmp-6.1.2-r99.ebuild). If you are not using `portage` packet manager, follow official [build instructions](https://gmplib.org/manual/Installing-GMP.html).
+*A6*. Under Gentoo Linux, use [my ebuild script](https://github.com/krisk0/razin/blob/master/ebuild/gmp-6.2.1-r99.ebuild). If you are not using `portage` packet manager, follow official [build instructions](https://gmplib.org/manual/Installing-GMP.html).
 
 *Q7*. Why do you generate C/assembler code instead of writing it directly?
 
