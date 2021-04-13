@@ -1,4 +1,4 @@
-Low-level big-integer arithmetic subroutines in C/C++/asm.
+Low-level big-integer arithmetic subroutines in C/C++/asm for modern Intel or AMD CPU.
 
 `mul8_zen()` multiplies 512-bit (8-limb) numbers faster than `GMP` subroutine `gmpn_mul(,, 8, , 8)` (both on Skylake and Ryzen). Such hand-optimized assembler subroutines exist for sizes 4…11.
 
