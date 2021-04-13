@@ -43,6 +43,8 @@ Left column contains subroutine name and size indicator. For instance,
 
 Right column contains count of CPU tacts (ticks), as returned by `__rdtsc()`.
 
+GMP benchmarks (`..._basecase`, `mpn_mul_n`) are for GMP version 6.1.2, GCC version 9.3.0.
+
 For stable result, don't forget to turn off turbo boost and fix CPU frequency when benchmarking.
 
 # Requirements
