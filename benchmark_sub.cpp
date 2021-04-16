@@ -43,7 +43,8 @@ subtr(mp_ptr u, mp_ptr v) {
         mpn_sub_n(t, u, v, size);
     }
     if constexpr (WHAT == 1) {
-        mpn_sub_1x(t, u, v, size);
+        uint16_t s = size;
+        mpn_sub_1x(t, u, v, s);
     }
     if constexpr (WHAT == 2) {
         mpn_sub_n(u, v, u, size);
