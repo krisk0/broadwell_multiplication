@@ -1406,8 +1406,9 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         mul4_broadwell(rp, ap, bp);
     } else if constexpr (N == 3) {
         mul3(rp, ap, bp);
-    }
-    else {
+    /*} else if constexpr (N == 2) {
+        mul2(rp, ap, bp);*/
+    } else {
         // call asm subroutine from GMP or something very similar
         MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
     }

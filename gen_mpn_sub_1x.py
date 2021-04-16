@@ -14,7 +14,7 @@ TODO: 64-bit dec is slower than 16-bit dec? If yes then must arrange it so that 
 g_code = '''
 movq (ap), w0
 movq nn, kk
-add $3, nn
+and $3, nn
 shr $2, kk
 subq (bp), w0
 .align 32
@@ -43,11 +43,11 @@ sbbq 8(bp), w1
 sbbq 16(bp), w2
 sbbq 24(bp), w3
 lea 32(bp), bp             | all 3 pointers grew
-movq w0, (rp)
-movq w1, 8(rp)
+movq w0, -32(rp)
+movq w1, -24(rp)
 dec kk
-movq w2, 16(rp)
-movq w3, 24(rp)
+movq w2, -16(rp)
+movq w3, -8(rp)
 jz done_long
 movq (ap), w0
 movq 8(ap), w1

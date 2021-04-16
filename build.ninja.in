@@ -175,7 +175,8 @@ test_toom22_generic_n.exe: test_toom22_generic.cpp $toom22_o @int_h $toom22_h $
 
 test_mpn_less.exe: test_mpn_less.cpp @int_h $o/mpn_le_8.h $o/mpn_less_3arg.h
 
-test_mpn_sub.exe: test_mpn_sub.cpp @int_h $o/mpn_sub_4k.h $o/mpn_sub_8.h
+test_mpn_sub.exe: test_mpn_sub.cpp @int_h $o/mpn_sub_4k.h $o/mpn_sub_8.h $
+    $o/mpn_sub_1x.h
 
 test_mpn_add_4k.exe: test_mpn_add_4k.cpp @int_h $o/mpn_add_4k_inplace.h
 
