@@ -85,7 +85,7 @@ call_baad() {
         auto r_p = g_tgt_baad + 0;                                       \
         auto a_p = g_src + 0;                                            \
         auto b_p = g_src + SIZE;                                         \
-        uint64_t n = SIZE;                                               \
+        auto n = SIZE;                                                   \
         mpn_sub_1x(r_p, a_p, b_p, n);                                    \
     }
 

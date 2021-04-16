@@ -3,17 +3,16 @@ n not a multiple of 4, n>4, a >= b
 
 mpn_sub_1x(r_p, a_p, b_p, n)
 
+n should be a 16-bit var
+
 r := a - b
 
 modify all 4 arguments
-
-TODO: 64-bit dec is slower than 16-bit dec? If yes then must arrange it so that counter
- is 16 bit
 '''
 
 g_code = '''
 movq (ap), w0
-movq nn, kk
+mov nn, kk
 and $3, nn
 shr $2, kk
 subq (bp), w0
@@ -62,14 +61,16 @@ import gen_mul4 as P
 
 def do_it(tgt):
     code = g_code.strip()
-    code = re.sub(r'\bw3\b', 'nn', code)
+    code = re.sub(r'\bw3\b', '%%rax', code)
+    scr = dict([('s%s' %i, 0) for i in range(3)])
+    scr['s3'] = 'uint16_t'
 
     data = {
             'macro_name': 'mpn_sub_1x',
             'scratch': ['w%s s%s' % (i, i) for i in range(3)] + ['kk s3'],
-            'vars_type': dict([('s%s' %i, 0) for i in range(4)]),
+            'vars_type': scr,
             'default_type': 'mp_limb_t',
-            'input_output': ['nn +r n', 'rp +r r_p', 'ap +r a_p', 'bp +r b_p'],
+            'input_output': ['nn +a n', 'rp +r r_p', 'ap +r a_p', 'bp +r b_p'],
             'clobber': 'memory cc',
             'source': os.path.basename(sys.argv[0]),
             'code_language': 'asm',
