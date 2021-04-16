@@ -314,6 +314,21 @@ subtract_in_place_then_add_t(mp_ptr tgt, mp_srcptr ab_p) {
     return result;
 }
 
+template<uint16_t N>
+mp_limb_t
+add_twice_inplace_t(mp_ptr tgt, mp_srcptr ab_p) {
+    auto n = (mp_limb_t)N;
+    mp_limb_t result;
+    if constexpr (((N & 3) == 2) && (N >= 6)) {
+        result = mpn_add_2k_plus2_inplace(tgt, ab_p, N / 4);
+        result ^= mpn_add_2k_plus2_inplace(tgt, ab_p + n, N / 4);
+    } else {
+        result = mpn_add_n(tgt, ab_p, tgt, n);
+        result ^= mpn_add_n(tgt, tgt, ab_p + n, n);
+    }
+    return result;
+}
+
 /*
 n := 4*loops + 1
 add n+1-word number t_s t_p[n-1] t_p[n-2] ... t_p[1] t_p[0] to y (of bigger length)
@@ -399,17 +414,17 @@ toom22_interpolate(mp_ptr ab_p, mp_ptr g_p, uint8_t sign, mp_size_t n) {
     mpn_add_n_plus_1(ab_p + (n / 2), t_senior, g_p, n);
 }
 
-/*
-n even, not a multiple of 4; 10 <= n < 2**16
-
-No gain no loss, this subroutine is unused
-*/
+// n even, not a multiple of 4; 10 <= n < 2**16
 template<uint16_t N>
 void
 toom22_interpolate_t(mp_ptr ab_p, mp_ptr g_p, uint8_t sign) {
     mp_limb_t t_senior;
     if (sign) {
-        t_senior = mpn_add_2_3arg(g_p, ab_p, N);
+        /*
+        Replaced mpn_add_2_3arg with add_twice_inplace_t<>. No gain on Skylake,
+         65 ticks on Ryzen.
+        */
+        t_senior = add_twice_inplace_t<N>(g_p, ab_p);
     } else {
         t_senior = subtract_in_place_then_add_t<N>(g_p, ab_p);
     }
