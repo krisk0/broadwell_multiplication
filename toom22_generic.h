@@ -47,6 +47,7 @@ void mul7_t03(mp_ptr, mp_srcptr, mp_srcptr);
     #define MUL11_SUBR mul11_bwl
 #endif
 void mpn_add_4k_plus2_4arg(mp_ptr, mp_limb_t, mp_srcptr, uint16_t);
+mp_limb_t mpn_add_2k_plus2_inplace(mp_ptr, mp_srcptr, uint16_t);
 mp_limb_t mpn_sub_2k_plus2_inplace(mp_ptr, mp_srcptr, uint16_t);
 void mul7_2arg(mp_ptr, mp_srcptr);
 void mul5_aligned(mp_ptr, mp_srcptr, mp_srcptr);
@@ -301,10 +302,15 @@ subtract_in_place_then_add_t(mp_ptr tgt, mp_srcptr ab_p) {
     mp_limb_t result;
     if constexpr (((N & 3) == 2) && (N >= 6)) {
         result = mpn_sub_2k_plus2_inplace(tgt, ab_p, N / 4);
+        result ^= mpn_add_2k_plus2_inplace(tgt, ab_p + n, N / 4);
+        /*
+        gain from calling mpn_add_2k_plus2_inplace() for 28x28 multiplication:
+         none on Skylake, 13 ticks on Ryzen
+        */
     } else {
         result = mpn_sub_n(tgt, ab_p, tgt, n);
+        result ^= mpn_add_n(tgt, tgt, ab_p + n, n);
     }
-    result ^= mpn_add_n(tgt, tgt, ab_p + n, n);
     return result;
 }
 

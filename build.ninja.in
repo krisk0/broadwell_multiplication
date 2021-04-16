@@ -2,7 +2,7 @@ o = ./automagic
 toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,9,10}_zen.o $
     $o/mul4_broadwell.s $
     $o/mul{5..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o $
-    $o/mpn_sub_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul3.o $o/addmul_8x3.o $
+    $o/mpn_{add,sub}_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul3.o $o/addmul_8x3.o $
     $o/mul11_{bwl,ryzen}.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
@@ -236,6 +236,9 @@ mpn_sub_inplace.h: mpn_sub_inplace
 mpn_sub_1x.h: mpn_sub_1x
 
 build $o/mpn_add_inplace.h: unroll_c_code gen_mpn_add_inplace.py $o/mpn_sub_inplace.h
+
+build $o/mpn_add_2k_plus2_inplace.s: unroll_c_code gen_mpn_add_2k_plus2_inplace.py $
+    $o/mpn_sub_2k_plus2_inplace.s
 
 mpn_sub_n_small.h: mpn_sub_n_small
 
