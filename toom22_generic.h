@@ -421,8 +421,8 @@ toom22_interpolate_t(mp_ptr ab_p, mp_ptr g_p, uint8_t sign) {
     mp_limb_t t_senior;
     if (sign) {
         /*
-        Replaced mpn_add_2_3arg with add_twice_inplace_t<>. No gain on Skylake,
-         65 ticks on Ryzen.
+        Replaced mpn_add_2_3arg with add_twice_inplace_t<>. For 28x28 multiplication,
+         no gain on Skylake, 65 ticks on Ryzen. Ryzen has problems with code cache?
         */
         t_senior = add_twice_inplace_t<N>(g_p, ab_p);
     } else {
@@ -1427,8 +1427,10 @@ mul_basecase_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
         mul4_broadwell(rp, ap, bp);
     } else if constexpr (N == 3) {
         mul3(rp, ap, bp);
-    /*} else if constexpr (N == 2) {
-        mul2(rp, ap, bp);*/
+    } else if constexpr (N == 2) {
+        mul2(rp, ap, bp);
+    } else if constexpr (N == 1) {
+        mul_1by1(rp, ap[0], bp[0]);
     } else {
         // call asm subroutine from GMP or something very similar
         MUL_BASECASE_SYMMETRIC(rp, ap, N, bp);
@@ -1464,5 +1466,18 @@ toom22_broadwell_t(mp_ptr rp, mp_ptr scratch, mp_srcptr ap, mp_srcptr bp) {
         }
     } else {
         force_call_toom22_broadwell<N>(rp, scratch, ap, bp);
+    }
+}
+
+template<uint16_t N>
+void
+toom22_3arg_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
+    auto constexpr s = itch::toom22_t<N>();
+
+    if constexpr(s) {
+        uint64_t scratch[s];
+        toom22_broadwell_t<N>(rp, scratch, ap, bp);
+    } else {
+        mul_basecase_t<N>(rp, ap, bp);
     }
 }

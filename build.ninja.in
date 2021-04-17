@@ -2,7 +2,7 @@ o = ./automagic
 toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,9,10}_zen.o $
     $o/mul4_broadwell.s $
     $o/mul{5..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o $
-    $o/mpn_{add,sub}_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul3.o $o/addmul_8x3.o $
+    $o/mpn_{add,sub}_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul{2,3}.o $o/addmul_8x3.o $
     $o/mul11_{bwl,ryzen}.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
@@ -151,12 +151,14 @@ test6_zen.exe: test6.cpp mul6_zen.s @int_h [+flags -DZEN=1]
 
 test16.exe: test16.cpp $toom22_o @int_h $toom22_h
 
+test_mul2.exe: test_whatever_mul.cpp $toom22_o @int_h $toom22_h $
+    [+flags -DSIZE=2 -DTESTED=mul2]
+
 test_mul3.exe: test_whatever_mul.cpp $toom22_o @int_h $toom22_h $
     [+flags -DSIZE=3 -DTESTED=mul3]
 
 test_mul11.exe: test_whatever_mul.cpp $toom22_o @int_h $toom22_h $
     [+flags -DSIZE=11 -DTESTED=mul_11]
-
 
 test_mul11_bwl.exe: test_mul_8shifts.cpp mul11_bwl.s @int_h $
     [+flags -DSIZE=11 -DTESTED=mul11_bwl]

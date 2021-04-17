@@ -1,5 +1,5 @@
 '''
-void mul_3(mp_ptr rp, mp_srcptr ap, mp_srcptr bp);
+void mul3(mp_ptr rp, mp_srcptr ap, mp_srcptr bp);
 
 multiply 3-limb number a by 3-limb number b. Place 6-limb result at rp.
 '''
@@ -8,7 +8,6 @@ g_var_map = 'rp,rdi up,rsi wB,rbp wA,rbx w9,r12 w8,r13 w7,r14 w6,r15 ' + \
     'w0,rax w1,r8 w2,r9 w3,r10 w4,r11 w5,rcx dd,rdx'
 
 g_code = '''
-vzeroupper
 movq dd[1], w6
 movq dd[2], w7
 movq dd[0], dd
