@@ -637,4 +637,10 @@ c rcx
 d rdx
 S rsi
 D rdi
+
+original MUL_TOOM33_THRESHOLD:
+ 73 skylake
+ 73 broadwell
+ 107 zen
+ 125 zen2
 """

@@ -32,7 +32,11 @@ see https://www.gnu.org/licenses/.  */
 #include "gmp-impl.h"
 #include "longlong.h"
 
-//#include
+#define AMD_ZEN 0
+
+namespace {
+#include "automagic/toom22.h"
+}
 
 extern "C" {
 void mpn_mul_n(mp_ptr, mp_srcptr, mp_srcptr, mp_size_t);
@@ -44,21 +48,10 @@ mpn_mul_n (mp_ptr p, mp_srcptr a, mp_srcptr b, mp_size_t n)
   ASSERT (n >= 1);
   ASSERT (! MPN_OVERLAP_P (p, 2 * n, a, n));
   ASSERT (! MPN_OVERLAP_P (p, 2 * n, b, n));
-  __asm__ __volatile__("vmovdqa %%xmm0,%%xmm0":::"memory");
 
-  if (BELOW_THRESHOLD (n, MUL_TOOM22_THRESHOLD))
-    {
-      mpn_mul_basecase (p, a, n, b, n);
-    }
-  else if (BELOW_THRESHOLD (n, MUL_TOOM33_THRESHOLD))
-    {
-      /* Allocate workspace of fixed size on stack: fast! */
-      mp_limb_t ws[mpn_toom22_mul_itch (MUL_TOOM33_THRESHOLD_LIMIT-1,
-					MUL_TOOM33_THRESHOLD_LIMIT-1)];
-      ASSERT (MUL_TOOM33_THRESHOLD <= MUL_TOOM33_THRESHOLD_LIMIT);
-      mpn_toom22_mul (p, a, n, b, n, ws);
-    }
-  else if (BELOW_THRESHOLD (n, MUL_TOOM44_THRESHOLD))
+  #include "automagic/mpn_mul_n_switch.h"
+  
+  if (BELOW_THRESHOLD (n, MUL_TOOM44_THRESHOLD))
     {
       mp_ptr ws;
       TMP_SDECL;

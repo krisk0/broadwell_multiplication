@@ -2,8 +2,8 @@ o = ./automagic
 toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,9,10}_zen.o $
     $o/mul4_broadwell.s $
     $o/mul{5..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o $
-    $o/mpn_{add,sub}_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul{2,3}.o $o/addmul_8x3.o $
-    $o/mul11_{bwl,ryzen}.o
+    $o/mpn_{add,sub}_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul{2,3}.o $
+    o/addmul_8x3.o $o/mul11_{bwl,ryzen}.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
 build some_benchmarks: phony $
@@ -12,7 +12,6 @@ build some_benchmarks: phony $
     benchm16_toom22_wide.exe $
     benchm{32,55,64}_toom22_gmp.exe benchm{32,64}_official.exe $
     benchm{32,64}_toom22_n.exe $
-    # MUL_TOOM33_THRESHOLD = 73 for skylake
     benchm{28,32,48,55,64,72}_toom22_gmp.exe $
     benchm{96,111}_toom.exe $
     benchm_xx_official.exe $
