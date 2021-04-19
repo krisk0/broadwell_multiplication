@@ -47,6 +47,8 @@ sed -i "2i // This file modified by `basename $0`" $t
 cat $here/mpn.makefile >> mpn/Makefile.am
 cat $here/root.makefile >> Makefile.am
 
+python2 $here/copy_magic.py $tgt/mpn
+
 autoconf
 aclocal
 automake

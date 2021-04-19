@@ -3,7 +3,7 @@ toom22_o = $o/toom22_interpolate_16.o $o/addmul_1_adox.o $o/mul{6,9,10}_zen.o $
     $o/mul4_broadwell.s $
     $o/mul{5..8}_aligned.o $o/mul7_t03.o $o/mpn_add_4k_plus2_4arg.o $
     $o/mpn_{add,sub}_2k_plus2_inplace.o $o/mul7_2arg.o $o/mul{2,3}.o $
-    o/addmul_8x3.o $o/mul11_{bwl,ryzen}.o
+    $o/addmul_8x3.o $o/mul11_{bwl,ryzen}.o
 toom22_h = toom22_generic.h $o/toom22_generic_aux.h
 
 build some_benchmarks: phony $
@@ -42,7 +42,7 @@ build tests: phony test4.exe test16.exe test_mpn_less.exe $
     test_itch_broadwell.exe test8_{broadwell_125,skylake}.exe test7_broadwell.exe $
     test7_t03.exe test{5..8}_aligned.exe test7_2arg.exe test6_rz.exe $
     test_mpn_add_4k_plus2_4arg.exe test_mpn_sub_2k_plus2_inplace.exe $
-    test_mul{3,11}.exe test_addmul_8x3.exe
+    test_mul3.exe test_addmul_8x3.exe
 
 build exe: phony tests some_benchmarks
 
@@ -156,8 +156,8 @@ test_mul2.exe: test_whatever_mul.cpp $toom22_o @int_h $toom22_h $
 test_mul3.exe: test_whatever_mul.cpp $toom22_o @int_h $toom22_h $
     [+flags -DSIZE=3 -DTESTED=mul3]
 
-test_mul11.exe: test_whatever_mul.cpp $toom22_o @int_h $toom22_h $
-    [+flags -DSIZE=11 -DTESTED=mul_11]
+test_mul11_slow.exe: test_whatever_mul.cpp $toom22_o @int_h $toom22_h $
+    [+flags -DSIZE=11 -DTESTED=mul_11_slow]
 
 test_mul11_bwl.exe: test_mul_8shifts.cpp mul11_bwl.s @int_h $
     [+flags -DSIZE=11 -DTESTED=mul11_bwl]

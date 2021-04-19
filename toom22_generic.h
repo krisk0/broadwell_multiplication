@@ -28,7 +28,7 @@ void dump_number(const mp_limb_t* p, unsigned n);
 extern "C" {
 void __gmpn_mul_basecase(mp_ptr, mp_srcptr up, mp_size_t, mp_srcptr, mp_size_t);
 mp_limb_t __gmpn_addmul_1_adox(mp_ptr, mp_srcptr, mp_size_t, mp_limb_t);
-void mul_11(mp_ptr, mp_srcptr, mp_srcptr);
+void mul_11_slow(mp_ptr, mp_srcptr, mp_srcptr);
 void mul10_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul9_zen(mp_ptr, mp_srcptr, mp_srcptr);
 void mul8_zen(mp_ptr, mp_srcptr, mp_srcptr);
@@ -53,6 +53,7 @@ void mul7_2arg(mp_ptr, mp_srcptr);
 void mul5_aligned(mp_ptr, mp_srcptr, mp_srcptr);
 void mul4_broadwell(mp_ptr, mp_srcptr, mp_srcptr);
 void mul3(mp_ptr, mp_srcptr, mp_srcptr);
+void mul2(mp_ptr, mp_srcptr, mp_srcptr);
 void addmul_8x3(mp_ptr, mp_srcptr, mp_srcptr);
 }
 
@@ -1387,7 +1388,7 @@ addmul_8x3_slow(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
 215 ticks on Ryzen, 2 ticks slower than __gmpn_mul_basecase(11)
 */
 void
-mul_11(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
+mul_11_slow(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
     mul_basecase_t<8>(rp, ap, bp);
     rp += 8;
     mul_basecase_t<3>(rp + 8, ap + 8, bp + 8);
