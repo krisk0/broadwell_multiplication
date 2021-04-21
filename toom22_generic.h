@@ -189,6 +189,23 @@ subtract_lesser_from_bigger_1x(mp_ptr tgt, mp_srcptr a, uint16_t n_arg) {
 }
 
 template<uint16_t N>
+void
+mpn_sub_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
+    if constexpr ((N > 4) && (0 == (N & 3))) {
+        uint16_t l = (N / 4) - 1;
+        mpn_sub_4k(rp, ap, bp, l);
+    } else {
+        if constexpr (N == 7) {
+            mpn_sub7(rp, ap, bp);
+        } else if constexpr (N == 6) {
+            mpn_sub6(rp, ap, bp);
+        } else {
+            mpn_sub_n(rp, ap, bp, N);
+        }
+    }
+}
+
+template<uint16_t N>
 uint8_t
 subtract_lesser_from_bigger_1x_t(mp_ptr tgt, mp_srcptr a) {
     uint64_t n = N;
@@ -197,19 +214,10 @@ subtract_lesser_from_bigger_1x_t(mp_ptr tgt, mp_srcptr a) {
     auto b_tail = a_tail + n;                 // one limb past tail of b
     mpn_less_3arg(less, a_tail, b_tail);
 
-    if constexpr (N == 7) {
-        // this speeds up 14x14 multiplication by 8 ticks (369 instead of 377)
-        if (less) {
-            mpn_sub7(tgt, a_tail, a);
-        } else {
-            mpn_sub7(tgt, a, a_tail);
-        }
+    if (less) {
+        mpn_sub_t<N>(tgt, a_tail, a);
     } else {
-        if (less) {
-            mpn_sub_n(tgt, a_tail, a, n);
-        } else {
-            mpn_sub_n(tgt, a, a_tail, n);
-        }
+        mpn_sub_t<N>(tgt, a, a_tail);
     }
 
     return less;
@@ -1163,22 +1171,6 @@ return sign: 0 if u-w >= 0, else 1
 
 h >= TOOM_2._BOUND / 2
 */
-
-template<uint16_t N>
-void
-mpn_sub_t(mp_ptr rp, mp_srcptr ap, mp_srcptr bp) {
-    if constexpr ((N > 4) && (0 == (N & 3))) {
-        uint16_t l = (N / 4) - 1;
-        mpn_sub_4k(rp, ap, bp, l);
-    } else {
-        if constexpr (N == 6) {
-            mpn_sub6(rp, ap, bp);
-        }
-        else {
-            mpn_sub_n(rp, ap, bp, N);
-        }
-    }
-}
 
 template<uint16_t h, uint16_t q>
 void

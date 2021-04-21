@@ -47,5 +47,6 @@ g_mpn = os.path.dirname(sys.argv[0])
 g_path = sys.argv[1:]
 
 g_run_us = scan_for_files(g_mpn, g_path)
+# TODO: don't create implicit rule if rule to make the file already exists
 g_run_us[1] += implicit_rules(g_run_us[0])
 modify_makefile(g_mpn + 'Makefile', g_run_us[1])
