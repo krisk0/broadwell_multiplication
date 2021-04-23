@@ -2,6 +2,7 @@
 
 Copyright 1991, 1993, 1994, 1996-2003, 2005, 2008, 2009 Free Software
 Foundation, Inc.
+Copyright 2021 Крыськов Денис.
 
 This file is part of the GNU MP Library.
 

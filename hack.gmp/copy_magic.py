@@ -12,17 +12,23 @@ Non-trivial makefile rules go to all.rule. Example:
 $(o)/toom22_interpolate_16.s: $(o)/toom22_interpolate_16_raw.s $(o)/mpn_add_2_4arg.s
     cat $^ > $@
 
-TODO: omit some subroutines (such as addmul_8x3)
+Put into the two directories
+ * python scripts
+ * piece of makefile make.rules
 '''
 
-import os, re, sys
+import os, re, shutil, sys
 
-g_ignored_dependency = ['addmul_1_adox.o']
+g_ignored_dependency = ['addmul_1_adox.o', 'cstdint_gmp.h']
 
 g_tgt_dir = sys.argv[1] + '/'
 g_output_dir = [g_tgt_dir + 'x86_64/coreibwl', g_tgt_dir + 'x86_64/zen']
 g_ninja = os.path.realpath(os.path.dirname(sys.argv[0]) + '/../build.ninja')
 g_src_dir = os.path.dirname(g_ninja)
+
+def is_banned(f):
+    f = os.path.basename(f)
+    return f in g_ignored_dependency
 
 '''
 Extract rule from ninja file. Return everything after :, including extra line if it
@@ -53,7 +59,7 @@ def extract_dep_0(rule):
     for r in rule.split(' '):
         if (r[:3] == '$o/'):
             s = r[3:]
-            if (s.find('test') == -1) and (not s in g_ignored_dependency):
+            if (s.find('test') == -1) and (not is_banned(s)):
                 res.append(s)
     return res
 
@@ -90,6 +96,7 @@ def ninja_to_make(pp, rr, inp, d):
         d = d[3:]
     if r[0] == 'catenate':
         r = r[1:]
+        r = [x for x in r if not is_banned(x)]
         x = ('$(o)/%s: ' % d) + ' '.join(r)
         x = x.replace('$o/', '$(o)/')
         rr.append(x)
@@ -137,29 +144,50 @@ def find_s_and_h(ninja):
 
 '''
 Find microarch-specific subroutines by analyzing '#if AMD_ZEN' directive.
-Return result as two lists.
+
+Find microarch-agnostic subroutines by browsing body of mul_basecase_t<>()
+Return result as tuple: [Intel subroutines,AMD subroutines],agnostic subroutines
 '''
-def find_microarch_asm_subroutines(toom22_h):
+def find_asm_subroutines(toom22_h):
     i,phase = open(toom22_h, 'rb'),0
+    '''
+    0 before #if
+    1 AMD stuff
+    2 Intel stuff
+    3 before mul_basecase_t
+    4 inside mul_basecase_t
+    '''
     p = re.compile('#if AMD_ZEN')
     v = re.compile(r'\s+void (\S+)\(')
-    res = [[], []]
+    u = re.compile('mul_basecase_t')
+    a = re.compile(r' +\b(mul\S+)\(rp, ap, bp\);')
+    spe,agn = [[], []],[]
     for j in i:
         if (phase == 0) and (p.match(j)):
             phase = 1
         elif phase == 1:
             m = v.match(j)
             if m:
-                res[1].append(m.group(1))
+                spe[1].append(m.group(1))
             elif j[:5] == '#else':
                 phase = 2
         elif phase == 2:
             m = v.match(j)
             if m:
-                res[0].append(m.group(1))
-            elif j[:5] == '#endif':
+                spe[0].append(m.group(1))
+            elif j[:6] == '#endif':
+                phase = 3
+        elif phase == 3:
+            m = u.match(j)
+            if m:
+                phase = 4
+        elif phase == 4:
+            m = a.match(j)
+            if m:
+                agn.append(m.group(1))
+            elif j[0] == '}':
                 break
-    return res
+    return spe,agn
 
 def filter_file_list(ff, n):
     i = [i for i in range(len(ff)) if ff[i][1] == n]
@@ -198,31 +226,103 @@ def filter_files_and_rules(fl_arg, ru_arg, ban):
         filter_subr(fl, ru, i)
     return fl,ru
 
-def extract_script_names(rr):
-    res = []
-    for r in rr:
-        p = r.find(':')
-        if p == -1:
+def do_rename(m, s):
+    for k_v in m:
+        s = re.sub(r'\b' + k_v[0] + r'\b', k_v[1], s)
+    return s
+
+def rename_simple(d, s_f):
+    return [(do_rename(d, i[0]), do_rename(d, i[1])) for i in s_f]
+
+def rename_general(d, rr):
+    return [do_rename(d, r) for r in rr]
+
+g_patt_rule_start = re.compile(r'.+/(\S+):\s*(.+)')
+g_patt_python2_rule = re.compile(r'\s\$\(PYTHON2\) (.+)')
+# Returns dict script -> target
+def script_to_target(simple, general):
+    res,i = dict(simple),0
+    while True:
+        i = next_rule_index(general, i)
+        if not i:
+            break
+        m = g_patt_python2_rule.match(general[1 + i])
+        if not m:
             continue
-        q = r[1 + p].split(' ')
-        res += [t for t in q if t[-3:] == '.py']
+        scr = m.group(1).split(' ')[0]
+        m = g_patt_rule_start.match(general[i])
+        tgt = m.group(1)
+        if scr == '$<':
+            scr = m.group(2).split(' ')[0]
+        res[scr] = tgt
     return res
 
-def rename_and_store(tgt, ff, rr):
-    ss = set([i[0] for i in ff] + extract_script_names(rr))
-    # TODO: renaming should occur here
-    ss = sorted(list(ss))
-    with open(tgt + '/.scripts', 'wb') as s:
-        s.write('\n'.join(ss) + '\n')
-    with open(tgt + '/all.rules', 'wb') as r:
-        for x in rr:
-            r.write(x + '\n')
-            if x and (x[0] == '\t'):
-                r.write('\n')
+def extract_scripts(tgt, mm):
+    res = set(tgt)
+    for m in mm:
+        k = g_patt_rule_start.match(m)
+        if k:
+            for i in k.group(2).split(' '):
+                if i[-3:] == '.py':
+                    res.add(i)
+    return res
 
-def store_result(tgt_dir, all_sh, all_rules, forbidden):
+g_patt_mul_digit = re.compile('(mul[0-9]+)(.*)')
+'''
+Returns dict old->new where old is src file name without directory, and list
+ of all scripts to be copied under new name.
+'''
+def rename_map(simple, general, mul):
+    st = script_to_target(simple, general)
+    #ts = dict([(i[1], i[0]) for i in st.items()])
+    re_map = dict()
+    for s in mul:
+        m = g_patt_mul_digit.match(s)
+        if not m:
+            die("Don't know how to rename " + s)
+        n = m.group(1)
+        if m.group(2):
+            re_map[s + '.s'] = n + '.s'
+            re_map[s + '.o'] = n + '.o'
+    for s_t in st.items():
+        n = s_t[1]
+        try:
+            n = re_map[n]
+        except:
+            pass
+        if n[-2] != '.':
+            die('Strange target %s -- no comma in place')
+        re_map[s_t[0]] = n[:-1] + 'py'
+    sc = st.keys()
+    sc = extract_scripts(sc, general)
+    for s in sc:
+        if (not re_map.has_key(s)) and (s[:4] == 'gen_'):
+            re_map[s] = s[4:]
+    return re_map,sc
+
+def rename_and_store(tgt, ff, rr, mul):
+    re,sc = rename_map(ff, rr, mul)
+    with open(tgt + '/rename.keys', 'wb') as k:
+        k.write('\n'.join(re.keys()) + '\n')
+    pp = re.items()
+    ff_new = rename_simple(pp, ff)
+    rr_new = rename_general(pp, rr)
+    for s in sc:
+        shutil.copy(g_src_dir + '/' + s, tgt + '/' + re[s])
+    with open(tgt + '/make.rules', 'wb') as t:
+        for r in rr_new:
+            t.write(r + '\n')
+            if r and (r[0] == '\t'):
+                t.write('\n')
+    ff_new.sort()
+    with open(tgt + '/trivial.targets', 'wb') as s:
+        tt = [i[1] for i in ff_new]
+        s.write('\n'.join(tt) + '\n')
+    return re
+
+def store_result(tgt_dir, all_sh, all_rules, forbidden, mul_subr):
     all_sh,all_rules = filter_files_and_rules(all_sh, all_rules, forbidden)
-    rename_and_store(tgt_dir, all_sh, all_rules)
+    return rename_and_store(tgt_dir, all_sh, all_rules, mul_subr)
 
 g_patt_import = re.compile(r'import (\S+) as \b\S+')
 '''
@@ -287,10 +387,49 @@ def add_python_dependencies(simple, general):
     general += general_new
     return simple_ok
 
+def next_rule_index(rr, i):
+    while True:
+        i += 1
+        if i >= len(rr):
+            return
+        if g_patt_rule_start.match(rr[i]):
+            return i
+
+'''
+Use $< if possible.
+
+If general rule is trivial, move it to simple
+'''
+def clean_rules(simple, general):
+    i,to_delete = 0,[]
+    while True:
+        i = next_rule_index(general, i)
+        if not i:
+            break
+        m = g_patt_rule_start.match(general[i])
+        if m.group(2).find(' ') == -1:
+            simple.append((m.group(2), m.group(1)))
+            to_delete.append(i)
+            continue
+        s = r'\b%s\b' % (m.group(2).split(' ')[0])
+        general[i + 1] = re.sub(s, '$<', general[i + 1])
+    for i in range(len(to_delete) - 1, -1, -1):
+        j = to_delete[i]
+        del general[j + 1]
+        del general[j]
+
 g_all_sh,g_rules = find_s_and_h(g_ninja)
-# TODO: remove duplicate rules?
+# TODO: remove duplicate rules? For now, there are none.
 g_all_sh = add_python_dependencies(g_all_sh, g_rules)
-g_readonly_header = os.path.dirname(g_ninja) + '/toom22_generic.h'
-g_specific_asm_subroutines = find_microarch_asm_subroutines(g_readonly_header)
-store_result(g_output_dir[0], g_all_sh, g_rules, g_specific_asm_subroutines[1])
-store_result(g_output_dir[1], g_all_sh, g_rules, g_specific_asm_subroutines[0])
+clean_rules(g_all_sh, g_rules)
+g_readonly_header = g_src_dir + '/toom22_generic.h'
+g_specific_asm,g_general_mul = find_asm_subroutines(g_readonly_header)
+g_rename_map = []
+for g_i in range(2):
+    g_rename_map.append(store_result(g_output_dir[g_i], g_all_sh, g_rules,
+        g_specific_asm[(1 + g_i) % 2], g_general_mul + g_specific_asm[g_i]))
+'''
+for g_i in range(2):
+    patch_header(g_output_dir[0] + '/toom22_generic.h', g_specific_asm[i],
+            g_general_mul, g_rename_map[i])
+'''
