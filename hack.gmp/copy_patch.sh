@@ -40,9 +40,12 @@ cp $here/mul_n.cpp mpn/x86_64/coreibwl/
 sed 's:e AMD_ZEN 0:e AMD_ZEN 1:' mpn/x86_64/coreibwl/mul_n.cpp > \
     mpn/x86_64/zen/mul_n.cpp
 cp $here/{gen_mpn_mul_n_switch,initiate_unroll}.py mpn/
-t=mpn/automagic/toom22.h
+t=mpn/automagic/toom22.hh
 grep -v bordeless-alloc.h $here/../toom22_generic.h > $t
-sed -i '/^#if __znver2__/,/^$/d' $t
+sed -i                            \
+    -e '/^#if __znver2__/,/^$/d'   \
+    -e '/^#if AMD_ZEN/,/^#endif$/d' \
+    $t
 sed -i "2i // This file modified by `basename $0`" $t
 cat $here/mpn.makefile >> mpn/Makefile.am
 cat $here/root.makefile >> Makefile.am

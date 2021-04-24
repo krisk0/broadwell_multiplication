@@ -19,7 +19,7 @@ Put into the two directories
 
 import os, re, shutil, sys
 
-g_ignored_dependency = ['addmul_1_adox.o', 'cstdint_gmp.h']
+g_ignored_dependency = ['addmul_1_adox.o', 'cstdint_gmp.h', 'mul7_t03.o']
 
 g_tgt_dir = sys.argv[1] + '/'
 g_output_dir = [g_tgt_dir + 'x86_64/coreibwl', g_tgt_dir + 'x86_64/zen']
@@ -184,7 +184,9 @@ def find_asm_subroutines(toom22_h):
         elif phase == 4:
             m = a.match(j)
             if m:
-                agn.append(m.group(1))
+                s = m.group(1)
+                if not s + '.o' in g_ignored_dependency:
+                    agn.append(s)
             elif j[0] == '}':
                 break
     return spe,agn
@@ -300,10 +302,20 @@ def rename_map(simple, general, mul):
             re_map[s] = s[4:]
     return re_map,sc
 
+def subroutine_rename_map(dd, mul_subr):
+    oo = dict()
+    for k_v in dd.items():
+        k = k_v[0]
+        if k[-2:] != '.s':
+            continue
+        oo[k[:-2]] = '__gmpn_' + k_v[1][:-2]
+    for s in mul_subr:
+        if not oo.has_key(s):
+            oo[s] = '__gmpn_' + s
+    return oo
+
 def rename_and_store(tgt, ff, rr, mul):
     re,sc = rename_map(ff, rr, mul)
-    with open(tgt + '/rename.keys', 'wb') as k:
-        k.write('\n'.join(re.keys()) + '\n')
     pp = re.items()
     ff_new = rename_simple(pp, ff)
     rr_new = rename_general(pp, rr)
@@ -318,7 +330,7 @@ def rename_and_store(tgt, ff, rr, mul):
     with open(tgt + '/trivial.targets', 'wb') as s:
         tt = [i[1] for i in ff_new]
         s.write('\n'.join(tt) + '\n')
-    return re
+    return subroutine_rename_map(re, mul)
 
 def store_result(tgt_dir, all_sh, all_rules, forbidden, mul_subr):
     all_sh,all_rules = filter_files_and_rules(all_sh, all_rules, forbidden)
@@ -418,18 +430,32 @@ def clean_rules(simple, general):
         del general[j + 1]
         del general[j]
 
+g_patt_mul_capital = re.compile(r'MUL([0-9]+)_SUBR\(')
+'''
+Filter file tgt + 'h', renaming subroutines. Store result at tgt. dd is rename map.
+
+Also change MULx_SUBR( to __gmpn_mulx( where x is a number
+'''
+def patch_header(tgt, dd):
+    src = tgt + 'h'
+    with open(tgt, 'wb') as o, open(src, 'rb') as i:
+        for j in i:
+            for d in dd.items():
+                j = re.sub(r'\b%s\b' % d[0], d[1], j)
+            m = g_patt_mul_capital.search(j)
+            if m:
+                j = j.replace(m.group(), '__gmpn_mul%s(' % m.group(1))
+            o.write(j)
+    os.remove(src)
+
 g_all_sh,g_rules = find_s_and_h(g_ninja)
 # TODO: remove duplicate rules? For now, there are none.
 g_all_sh = add_python_dependencies(g_all_sh, g_rules)
 clean_rules(g_all_sh, g_rules)
 g_readonly_header = g_src_dir + '/toom22_generic.h'
 g_specific_asm,g_general_mul = find_asm_subroutines(g_readonly_header)
-g_rename_map = []
 for g_i in range(2):
-    g_rename_map.append(store_result(g_output_dir[g_i], g_all_sh, g_rules,
-        g_specific_asm[(1 + g_i) % 2], g_general_mul + g_specific_asm[g_i]))
-'''
-for g_i in range(2):
-    patch_header(g_output_dir[0] + '/toom22_generic.h', g_specific_asm[i],
-            g_general_mul, g_rename_map[i])
-'''
+    g_subr_rename = store_result(g_output_dir[g_i], g_all_sh, g_rules,
+        g_specific_asm[(1 + g_i) % 2], g_general_mul + g_specific_asm[g_i])
+    if g_i == 0:
+        patch_header(g_tgt_dir + 'automagic/toom22.h', g_subr_rename)
