@@ -59,6 +59,7 @@ void addmul_8x3(mp_ptr, mp_srcptr, mp_srcptr);
 
 template<uint16_t> void toom22_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
 template<uint16_t> void toom22_8x_broadwell_t(mp_ptr, mp_ptr, mp_srcptr, mp_srcptr);
+
 /*
 returns -1 if w is not a degree of two, or scratch size for toom22_generic(..., w).
 
@@ -1257,11 +1258,11 @@ template<uint16_t N>
 void
 mpn_sub_inplace_t(mp_ptr rp, mp_ptr ap) {
     if constexpr ((N / 4 * 4 == N) && (N >= 8)) {
-        // 1 tick speedup for N=12 => 1 tick speedup of toom22_broadwell_t<13>()
+        // 1 tick speedup for N=12
         auto loop_count = N / 4 - 1;
-        auto ap_copy = ap, rp_copy = rp;
+        auto rp_copy = rp;
         // TODO: can catch another tick or two
-        mpn_sub_4k(rp, ap_copy, rp_copy, loop_count);
+        mpn_sub_4k(rp, ap, rp_copy, loop_count);
     } else {
         (void)mpn_sub_n(rp, ap, rp, N);
     }
