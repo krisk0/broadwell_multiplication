@@ -16,7 +16,10 @@ Currently my code outperforms GMP for at least the following limb sizes: 4…20,
 python2 configure.py
 ninja
 automagic/test4.exe
-automagic/benchm8_zen.exe 0
+automagic/benchm8_official.exe 0
+ninja more_benchmarks
+automagic/benchm8_basecase.exe 0
+automagic/benchm8_toom22_t.exe 0
 ```
 , where 0 is a randomness generator seed.
 
