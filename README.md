@@ -8,7 +8,7 @@ Templated subroutine `toom22_broadwell_t<N>` multiplies N-limb numbers faster th
 
 Work-in-progress. Code needs cleaning. Some subroutines might not work as expected. However, if there is a benchmark published for a procedure, then this procedure is thoroughly tested and expected to be bug-free.
 
-Currently my code outperforms GMP for at least the following limb sizes: 4…20, 24, 32, 48, 64, 72, 127. I am using Skylake and Ryzen desktops to run benchmarks (CPUs: Core i7-6700 @3.40GHz and Ryzen 7 3800X 8-Core).
+Currently my code outperforms GMP for at least the following limb sizes: 4…20, 22, 24, 32, 48, 64, 72, 127. I am using Skylake and Ryzen desktops to run benchmarks (CPUs: Core i7-6700 @3.40GHz and Ryzen 7 3800X 8-Core).
 
 # Quick start
 
