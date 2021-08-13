@@ -1,28 +1,29 @@
 '''
-Copy some gen_*.py scripts to two directories.
+Copy some gen_*.py scripts to three directories: coreibwl, zen, bwl_and_zen
 
-Rename files so foo.s.py makes foo.s, foo.h.py makes foo.h .
+Rename files so foo.s.py makes foo.s, foo.h.py makes foo.h
 
-Patch mul4.s.py so subroutine name is __g prepended to old name.
+Patch mul4.s.py so subroutine name is __g prepended to old name
 
-Multiplication subroutines should be called __gmpn_mul_N (for instance
- __gmpn_mul_11).
+Multiplication subroutines valid for a fixed size should be called __gmpn_mul_N
+ (for instance __gmpn_mul_11)
 
-Non-trivial makefile rules go to all.rule. Example:
+Non-trivial makefile rules go to make.rules. Example:
 $(o)/toom22_interpolate_16.s: $(o)/toom22_interpolate_16_raw.s $(o)/mpn_add_2_4arg.s
     cat $^ > $@
 
-Put into the two directories
+Put into one of the three directories
  * python scripts
- * piece of makefile make.rules
+ * file called make.rules
+ * file called trivial.targets
 '''
 
 import os, re, shutil, sys
 
-g_ignored_dependency = ['addmul_1_adox.o', 'cstdint_gmp.h', 'mul7_t03.o']
+g_ignored_dependency = ['addmul_1_adox.o', 'cstdint_gmp.h', 'mul7_t03.o', 'mul6.h']
 
-g_tgt_dir = sys.argv[1] + '/'
-g_output_dir = [g_tgt_dir + 'x86_64/coreibwl', g_tgt_dir + 'x86_64/zen']
+g_tgt_dir = sys.argv[1] + '/x86_64/'
+g_output_dir = [g_tgt_dir + 'coreibwl', g_tgt_dir + 'zen', g_tgt_dir + 'bwl_and_zen']
 g_ninja = os.path.realpath(os.path.dirname(sys.argv[0]) + '/../build.ninja')
 g_src_dir = os.path.dirname(g_ninja)
 
@@ -38,7 +39,7 @@ def extract_ninja_rule(i, p):
     while True:
         j = i.readline()
         if not j:
-            die('rule for not found')
+            die('rule not found')
         if p.match(j):
             break
     p = j.find(':')
@@ -286,6 +287,7 @@ def rename_map(simple, general, mul):
         if m.group(2):
             re_map[s + '.s'] = n + '.s'
             re_map[s + '.o'] = n + '.o'
+    #print 'rename_map() st =\n%s', '\n'.join(['\t%s -> %s' % i for i in st.items()])
     for s_t in st.items():
         n = s_t[1]
         try:
@@ -294,7 +296,7 @@ def rename_map(simple, general, mul):
             pass
         if n[-2] != '.':
             die('Strange target %s -- no comma in place')
-        re_map[s_t[0]] = n[:-1] + 'py'
+        re_map[s_t[0]] = n + '.py'
     sc = st.keys()
     sc = extract_scripts(sc, general)
     for s in sc:
@@ -314,6 +316,7 @@ def subroutine_rename_map(dd, mul_subr):
             oo[s] = '__gmpn_' + s
     return oo
 
+"""
 def rename_and_store(tgt, ff, rr, mul):
     re,sc = rename_map(ff, rr, mul)
     pp = re.items()
@@ -335,6 +338,7 @@ def rename_and_store(tgt, ff, rr, mul):
 def store_result(tgt_dir, all_sh, all_rules, forbidden, mul_subr):
     all_sh,all_rules = filter_files_and_rules(all_sh, all_rules, forbidden)
     return rename_and_store(tgt_dir, all_sh, all_rules, mul_subr)
+"""
 
 g_patt_import = re.compile(r'import (\S+) as \b\S+')
 '''
@@ -448,14 +452,58 @@ def patch_header(tgt, dd):
             o.write(j)
     os.remove(src)
 
+def really_copy_and_rename(tgt, src, rr, ff):
+    try:
+        os.mkdir(tgt)
+    except:
+        pass
+    for f in ff:
+        try:
+            t = rr[f]
+        except:
+            t = f
+        shutil.copy(src + f, tgt + t)
+
+'''
+return file rename map:
+ old name -> new name
+directory not included
+'''
+def copy_and_rename(easy, hard, asm_general, asm_specific):
+    rr,ll = rename_map(easy, hard, asm_general)
+    """
+    TODO
+    remove from ll scripts that make microarch-specific files
+    add those scripts to a list of platform-specific files
+    copy platform-specific files to coreibwl and zen
+    """
+    print 'rename map:\n%s' % '\n'.join(['\t%s -> %s' % i for i in rr.items()])
+    really_copy_and_rename(g_output_dir[2] + '/', g_src_dir + '/', rr, ll)
+    assert 0
+    return rr
+
 g_all_sh,g_rules = find_s_and_h(g_ninja)
 # TODO: remove duplicate rules? For now, there are none.
 g_all_sh = add_python_dependencies(g_all_sh, g_rules)
 clean_rules(g_all_sh, g_rules)
 g_readonly_header = g_src_dir + '/toom22_generic.h'
 g_specific_asm,g_general_mul = find_asm_subroutines(g_readonly_header)
+
+print 'Trivial rules:', g_all_sh
+'''
+TODO:
+ rename map should be common for bwl and zen
+ all python scripts go to bwl_and_zen/
+ make.rules are different for bwl and zen, go to coreibwl/ and zen/
+'''
+
+g_platform_specific = g_specific_asm[0] + g_specific_asm[1]
+g_file_rename = copy_and_rename(g_all_sh, g_rules, g_general_mul, g_specific_asm)
+
+"""
 for g_i in range(2):
     g_subr_rename = store_result(g_output_dir[g_i], g_all_sh, g_rules,
         g_specific_asm[(1 + g_i) % 2], g_general_mul + g_specific_asm[g_i])
     if g_i == 0:
-        patch_header(g_tgt_dir + 'automagic/toom22.h', g_subr_rename)
+        patch_header(g_tgt_dir_ + 'automagic/toom22.h', g_subr_rename)
+"""

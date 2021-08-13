@@ -58,9 +58,6 @@ autoconf
 aclocal
 automake
 
-export CFLAGS="-O2 -march=native -fno-stack-protector"
-export CPPFLAGS="$CFLAGS"
-
 # No more dummy files, copy .cpp rules into mpn/Makefile
 python2 $here/copy_makefile_rule.py .cpp.o,.cpp.lo Makefile.in mpn/Makefile.in
 # , and make .cpp suffix known
@@ -70,6 +67,9 @@ sed -n '/^CXXCOMPILE/,/^am__v_CXXLD_1/p' Makefile.in >> mpn/Makefile.in
 
 # GNU automake inserts both CFLAGS and CPPFLAGS into COMPILE variable, then uses
 #  the variable to compile C code. Is this bug or feature?
+
+export CFLAGS="-O2 -march=native -fno-stack-protector"
+export CPPFLAGS="$CFLAGS"
 
 time ./configure --prefix=${tgt}.inst > /tmp/configure-make.log
 time make -j7 >> /tmp/configure-make.log

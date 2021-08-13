@@ -12,9 +12,8 @@ def read_rules(res, src):
 
 def copy_py_files(res, tgt, src):
     for x in os.listdir(src):
-        y = x[:-3]
-        if y == '.py':
-            res[0].append(y)
+        if x[-3:] == '.py':
+            res[0].append(x[:-3])
             shutil.copy(src + '/' + x, tgt)
         elif x[:-5] == '.rule':
             read_rules(res[1], src + '/' + x)
@@ -33,7 +32,7 @@ create makefile-style rules:
 def implicit_rules(ff):
     result = []
     for f in ff:
-        g = f[:-2]
+        g = f[-2:]
         if (g == '.s') or (g == '.h'):
             result.append('%s: %s.py\n' % (f, f))
             result.append('\t$(PYTHON2) $< $@\n\n')
